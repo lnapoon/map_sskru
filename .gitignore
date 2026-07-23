@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+
+# Django
+db.sqlite3
+*.log
+
+# Node (Legacy)
+node_modules/
+npm-debug.log
+
+# System
+.DS_Store

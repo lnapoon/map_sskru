@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SSKRU Campus 3D - แผนที่นำทางมหาวิทยาลัยราชภัฏศรีสะเกษ</title>
+  
+  <!-- Meta Descriptions for SEO -->
+  <meta name="description" content="ระบบแผนผังนำทาง 3D มหาวิทยาลัยราชภัฏศรีสะเกษ ปฏิวัติระบบนำทางวิทยาเขตด้วยระบบ GPS-Pixel Calibrated, ค้นหาตึกแบบสะดวกรวดเร็ว และการแสดงผลข้อมูลตึกแบบ Landing Page สุดล้ำสมัย">
+  <meta name="keywords" content="แผนที่ มรภ.ศก, มหาวิทยาลัยราชภัฏศรีสะเกษ, นำทางอาคาร, แผนที่ตึก, มรภ ศก, SSKRU Map, Sisaket Rajabhat University">
+  <meta name="author" content="Sisaket Rajabhat University">
+
+  <!-- Open Graph Meta Tags -->
+  <meta property="og:title" content="SSKRU Campus 3D - มิติใหม่แห่งการนำทาง มรภ.ศรีสะเกษ">
+  <meta property="og:description" content="สัมผัสประสบการณ์นำทางระดับพรีเมียม ค้นหาคณะ ค้นหาตึก ค้นหาเส้นทางบนแผนผัง 3D พร้อมระบบ GPS คำนวณเวลาทำการ Real-time">
+  <meta property="og:type" content="website">
+
+  <!-- Google Font: Outfit (For numbers/English) & Sarabun (For Thai) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+  <!-- App Custom Styles -->
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <div class="app-container">
+    
+    <!-- ==========================================
+         1. TOP NAVBAR (Modern Floating Glass Header)
+         ========================================== -->
+    <header class="top-navbar" role="banner">
+      <div class="nav-brand" id="btn-logo-reset">
+        <div class="brand-logo">
+          <i class="fa-solid fa-graduation-cap"></i>
+        </div>
+        <div class="brand-text">
+          <h2>SSKRU CAMPUS 3D</h2>
+          <p>Sisaket Rajabhat University</p>
+        </div>
+      </div>
+      
+      <!-- Integrated Search Box -->
+      <div class="nav-search-wrapper">
+        <div class="nav-search-bar">
+          <i class="fa-solid fa-magnifying-glass search-bar-icon"></i>
+          <input 
+            type="search" 
+            id="search-input" 
+            placeholder="ค้นหาชื่อตึก, คณะ หรืออักษรย่อ (วศ., ครุ, วกป)..." 
+            autocomplete="off"
+            aria-label="ค้นหาสถานที่ภายในมหาวิทยาลัย"
+          />
+          <button id="btn-search-clear" class="search-clear-btn" aria-label="ล้างการค้นหา">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <div class="autocomplete-dropdown" id="search-suggestions" role="listbox" aria-label="ผลการค้นหาแนะนำ"></div>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="nav-actions">
+        <button class="nav-btn primary" id="btn-nav-trigger" aria-label="วางแผนเส้นทางเดินเท้า">
+          <i class="fa-solid fa-route"></i> นำทางเดินเท้า
+        </button>
+        <button class="nav-btn secondary" id="btn-univ-info-trigger" aria-label="ข้อมูลติดต่อมหาวิทยาลัย">
+          <i class="fa-solid fa-circle-info"></i> ข้อมูลติดต่อ
+        </button>
+        <button class="nav-btn secondary" id="btn-admin-login" aria-label="เข้าสู่ระบบแอดมิน">
+          <i class="fa-solid fa-lock"></i> แอดมิน
+        </button>
+      </div>
+
+      <!-- Mobile Hamburger Toggle -->
+      <button class="mobile-menu-toggle" id="btn-mobile-menu" aria-label="เปิดเมนูการใช้งาน">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+    </header>
+
+    <!-- ==========================================
+         1.1 ADMIN CONTROL BAR (Visible in Admin Mode)
+         ========================================== -->
+    <div class="admin-control-bar" id="admin-panel" style="display: none;">
+      <div class="admin-status">
+        <span class="admin-badge"><i class="fa-solid fa-user-shield"></i> โหมดผู้จัดการแอดมิน</span>
+        <span class="admin-server-status" id="admin-server-status-pill"><i class="fa-solid fa-server"></i> หลังบ้าน: <span id="server-status-text">เชื่อมต่อระบบ</span></span>
+        <span style="font-size: 11px; opacity: 0.85;">* ลากมาร์กเกอร์เพื่อย้ายตำแหน่ง หรือเปิดตารางหลังบ้านเพื่อจัดการข้อมูล</span>
+      </div>
+      <div class="admin-actions">
+        <button class="admin-btn highlight" id="btn-admin-dashboard"><i class="fa-solid fa-database"></i> ตารางจัดการหลังบ้าน</button>
+        <button class="admin-btn" id="btn-admin-add"><i class="fa-solid fa-plus"></i> เพิ่มอาคารใหม่</button>
+        <button class="admin-btn" id="btn-admin-export"><i class="fa-solid fa-code"></i> Export โค้ด</button>
+        <button class="admin-btn danger" id="btn-admin-logout"><i class="fa-solid fa-power-off"></i> ออกระบบ</button>
+      </div>
+    </div>
+
+    <!-- ==========================================
+         2. MAP VIEWPORT (Creative Canvas Backdrop)
+         ========================================== -->
+    <main class="map-viewport" aria-label="แผนผังแบบโต้ตอบ">
+      <div id="map"></div>
+    </main>
+
+    <!-- ==========================================
+         3. BOTTOM CAROUSEL CONTAINER (Building Browser)
+         ========================================== -->
+    <div class="carousel-container" id="carousel-panel" aria-label="แถบเลือกรายการตึกอาคาร">
+      <div class="carousel-header">
+        <div class="carousel-title-row">
+          <h3><i class="fa-regular fa-compass"></i> สำรวจสถานที่ภายในวิทยาเขต</h3>
+          <span class="carousel-counter" id="carousel-item-counter">18 ตึกอาคาร</span>
+        </div>
+        <!-- Integrated category tabs -->
+        <nav class="category-tabs" id="category-filter" aria-label="กรองประเภทสถานที่">
+          <button class="category-tab active" data-category="all">ทั้งหมด</button>
+          <button class="category-tab" data-category="academic">คณะ/อาคารเรียน</button>
+          <button class="category-tab" data-category="office">สำนักงานกลาง</button>
+          <button class="category-tab" data-category="facility">บริการ/กิจกรรม</button>
+          <button class="category-tab" data-category="library">วิทยบริการ/ไอที</button>
+          <button class="category-tab" data-category="other">อื่นๆ</button>
+        </nav>
+      </div>
+      
+      <!-- Horizontal Carousel Cards Scrollbar -->
+      <div class="building-carousel" id="building-carousel-wrapper" role="list">
+        <!-- Building Cards are dynamically rendered via app.js -->
+        <div class="loading-placeholder-carousel">
+          <i class="fa-solid fa-circle-notch fa-spin"></i> กำลังโหลดข้อมูล...
+        </div>
+      </div>
+    </div>
+
+    <!-- ==========================================
+         4. FLOATING MAP CONTROLS & VIEW MODE SWITCHER
+         ========================================== -->
+    <div class="view-mode-pill" id="view-mode-pill">
+      <button class="view-pill-btn active" id="btn-view-3d">
+        <i class="fa-solid fa-cube"></i> ผัง 3D วิทยาเขต
+      </button>
+      <button class="view-pill-btn aerial-style" id="btn-view-aerial">
+        <i class="fa-solid fa-satellite-dish"></i> มุมสูง Google Maps
+      </button>
+      <button class="view-pill-btn grab-style" id="btn-view-grab-nav">
+        <i class="fa-solid fa-motorcycle"></i> นำทาง Grab Real-time
+      </button>
+    </div>
+
+    <div class="map-control-overlay">
+      <button class="map-control-btn" id="btn-map-zoom-in" aria-label="ซูมเข้า"><i class="fa-solid fa-plus"></i></button>
+      <button class="map-control-btn" id="btn-map-zoom-out" aria-label="ซูมออก"><i class="fa-solid fa-minus"></i></button>
+      <button class="map-control-btn" id="btn-map-my-location" aria-label="แสดงตำแหน่งของฉันบนแผนผัง">
+        <i class="fa-solid fa-location-crosshairs"></i>
+      </button>
+      <button class="map-control-btn" id="btn-map-reset" aria-label="กลับสู่กึ่งกลางวิทยาเขต">
+        <i class="fa-solid fa-compass"></i>
+      </button>
+    </div>
+
+    <!-- ==========================================
+         5. PATHFINDER (DIJKSTRA & GRAB MOTION) NAVIGATION PANEL
+         ========================================== -->
+    <section class="navigation-panel" id="nav-routes-panel" aria-label="ระบบนำทางเส้นทางเดินและ Grab Real-time">
+      <header class="nav-header">
+        <h2><i class="fa-solid fa-route"></i> ระบบนำทางวิทยาเขต (Real-time Navigation)</h2>
+        <button class="nav-header-close" id="btn-nav-panel-close" aria-label="ปิดระบบนำทาง">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </header>
+
+      <div class="nav-body">
+
+        <!-- Travel Mode Selector Tabs (Walk, Bike, Grab Bike, Car) -->
+        <div class="travel-mode-tabs" id="travel-mode-selector">
+          <button class="travel-mode-btn active" data-mode="walk" title="เดินเท้า">
+            <i class="fa-solid fa-person-walking"></i> เดินเท้า
+          </button>
+          <button class="travel-mode-btn" data-mode="bike" title="จักรยาน">
+            <i class="fa-solid fa-bicycle"></i> จักรยาน
+          </button>
+          <button class="travel-mode-btn grab-brand" data-mode="grab" title="Grab / มอเตอร์ไซค์">
+            <i class="fa-solid fa-motorcycle"></i> Grab Rider
+          </button>
+          <button class="travel-mode-btn" data-mode="car" title="รถยนต์">
+            <i class="fa-solid fa-car"></i> รถยนต์
+          </button>
+        </div>
+
+        <div class="nav-selector-group">
+          <!-- Start selector -->
+          <div class="nav-input-box">
+            <label for="select-nav-source">จุดเริ่มต้น</label>
+            <div class="nav-select-wrapper">
+              <select id="select-nav-source" class="nav-select">
+                <option value="">-- เลือกสถานที่เริ่มต้น --</option>
+                <option value="my_location">📍 ตำแหน่งปัจจุบันของคุณ (GPS)</option>
+              </select>
+            </div>
+          </div>
+          <!-- Destination selector -->
+          <div class="nav-input-box">
+            <label for="select-nav-dest">จุดหมายปลายทาง</label>
+            <div class="nav-select-wrapper">
+              <select id="select-nav-dest" class="nav-select">
+                <option value="">-- เลือกสถานที่ปลายทาง --</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Calculated routing steps & Grab Motion Controls -->
+        <div class="nav-results-container" id="nav-results-wrapper">
+          
+          <div class="nav-summary-card">
+            <div class="nav-summary-row">
+              <span class="nav-summary-lbl"><i class="fa-solid fa-ruler-horizontal"></i> ระยะทางจริง</span>
+              <span class="nav-summary-val" id="nav-summary-distance">0 เมตร</span>
+            </div>
+            <div class="nav-summary-row">
+              <span class="nav-summary-lbl"><i class="fa-regular fa-clock"></i> เวลาประมาณ</span>
+              <span class="nav-summary-val" id="nav-summary-time">0 นาที</span>
+            </div>
+          </div>
+
+          <!-- GRAB MOTION SIMULATION CONTROLLER CARD -->
+          <div class="grab-motion-card" id="grab-motion-card">
+            <div class="grab-motion-header">
+              <div class="grab-badge">
+                <i class="fa-solid fa-circle-play pulse"></i> <span id="grab-motion-status-title">ระบบนำทาง Grab Rider พร้อมลุย</span>
+              </div>
+              <div class="grab-progress-pill" id="grab-progress-text">0%</div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="grab-progress-track">
+              <div class="grab-progress-fill" id="grab-progress-fill" style="width: 0%;"></div>
+            </div>
+
+            <!-- Action Controls -->
+            <div class="grab-motion-controls">
+              <button class="grab-ctrl-btn primary" id="btn-grab-motion-start">
+                <i class="fa-solid fa-play" id="icon-grab-play"></i> <span id="lbl-grab-play">เริ่มเคลื่อนที่</span>
+              </button>
+              <button class="grab-ctrl-btn secondary" id="btn-grab-motion-reset">
+                <i class="fa-solid fa-rotate-left"></i> เริ่มใหม่
+              </button>
+              <button class="grab-ctrl-btn speed-btn" id="btn-grab-motion-speed" title="สลับความเร็วอนิเมชัน">
+                <i class="fa-solid fa-gauge-high"></i> <span id="lbl-grab-speed">1x</span>
+              </button>
+            </div>
+
+            <div class="grab-motion-option-row">
+              <label class="grab-toggle-label">
+                <input type="checkbox" id="chk-grab-follow-cam" checked>
+                <span class="toggle-slider"></span>
+                <span class="toggle-text"><i class="fa-solid fa-video"></i> หมุนกล้องติดตามไอคอนเคลื่อนที่ (Follow Cam)</span>
+              </label>
+            </div>
+          </div>
+
+          <h4 style="font-size: 12px; font-weight: 700; color: var(--text-primary); margin: 16px 0 10px; text-transform: uppercase;">
+            <i class="fa-solid fa-list-check"></i> ขั้นตอนนำทางทีละอาคาร
+          </h4>
+          <div class="nav-route-steps" id="nav-route-steps-container" role="list">
+            <!-- Steps are dynamically loaded -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         6. BUILDING DETAILS PANEL / MOBILE SHEET
+         ========================================== -->
+    <section class="info-panel" id="building-info-panel" aria-label="รายละเอียดอาคารที่เลือก">
+      <div class="info-panel-drag-handle" id="panel-drag-handle"></div>
+      
+      <!-- Visual banner container -->
+      <div class="info-panel-header">
+        <button class="info-panel-close" id="btn-panel-close" aria-label="ปิดกล่องข้อมูล">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+        <div id="panel-image-container" style="height: 100%; width: 100%;">
+          <!-- Creative color-coded gradients will be loaded -->
+        </div>
+      </div>
+      
+      <!-- Description body -->
+      <div class="info-panel-body">
+        <div class="building-header-info">
+          <h2 class="building-title-th" id="panel-title-th">อาคารเรียน</h2>
+          <div class="building-title-en" id="panel-title-en">Building</div>
+          
+          <div class="building-badge-row">
+            <span class="building-cat-badge" id="panel-badge-category">หมวดหมู่</span>
+            <span class="building-status-badge" id="panel-badge-status">
+              <span class="status-dot-pulse"></span>
+              <span id="panel-status-text">ปิดบริการ...</span>
+            </span>
+          </div>
+        </div>
+
+        <p class="building-description" id="panel-description">
+          คำอธิบายตึกอาคาร...
+        </p>
+
+        <div class="building-meta-details">
+          <!-- Operating times -->
+          <div class="meta-detail-item">
+            <div class="meta-icon"><i class="fa-regular fa-clock"></i></div>
+            <div class="meta-content">
+              <div class="meta-label">เวลาเปิดทำการหน่วยงาน</div>
+              <div class="meta-val" id="panel-meta-hours">-</div>
+            </div>
+          </div>
+          <!-- Extensions -->
+          <div class="meta-detail-item" id="panel-meta-phone-row">
+            <div class="meta-icon"><i class="fa-solid fa-phone"></i></div>
+            <div class="meta-content">
+              <div class="meta-label">เบอร์ติดต่อภายในอาคาร</div>
+              <div class="meta-val" id="panel-meta-phone">-</div>
+            </div>
+          </div>
+          <!-- Physical coordinate -->
+          <div class="meta-detail-item">
+            <div class="meta-icon"><i class="fa-solid fa-location-dot"></i></div>
+            <div class="meta-content">
+              <div class="meta-label">พิกัดแผนที่ (Latitude, Longitude)</div>
+              <div class="meta-val" id="panel-meta-coords">-</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="info-panel-actions">
+        <button class="btn-action btn-primary" id="btn-action-gmaps" aria-label="นำทางภายนอกด้วย Google Maps">
+          <i class="fa-solid fa-diamond-turn-right"></i> นำทางมาที่นี่
+        </button>
+        <button class="btn-action btn-secondary" id="btn-action-share" aria-label="แชร์ข้อมูลและลิงก์ตึกนี้">
+          <i class="fa-regular fa-share-from-square"></i> แชร์ตำแหน่ง
+        </button>
+        <button class="btn-action btn-secondary btn-call" id="btn-action-call" aria-label="โทรติดต่อ">
+          <i class="fa-solid fa-phone"></i> โทรติดต่ออาคาร
+        </button>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ==========================================
+       7. MODALS & TOAST NOTIFICATIONS
+       ========================================== -->
+  <!-- Geofence & Contact Info Modal -->
+  <div class="modal-overlay" id="custom-modal-overlay">
+    <div class="modal-content-card">
+      <div class="modal-body">
+        <div class="modal-icon warning" id="modal-status-icon">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <h3 class="modal-title" id="modal-title-text">อยู่นอกพื้นที่</h3>
+        <p class="modal-desc" id="modal-desc-text">
+          ข้อความระบบ...
+        </p>
+        <div class="modal-actions">
+          <button class="modal-btn btn-primary" id="btn-modal-ok">ตกลง</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Actions Drawer Menu (Floating Menu Overlay) -->
+  <div class="modal-overlay" id="mobile-menu-overlay">
+    <div class="modal-content-card" style="max-width: 320px; border-radius: var(--radius-md);">
+      <div class="modal-body" style="padding: 15px; text-align: left;">
+        <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; color: var(--primary-color);">
+          <i class="fa-solid fa-ellipsis-vertical"></i> เมนูการใช้งาน
+        </h3>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <button class="footer-contact-btn" id="btn-mob-nav" style="text-align: left; justify-content: flex-start; padding: 12px;">
+            <i class="fa-solid fa-route"></i> นำทางเดินเท้าภายในวิทยาเขต
+          </button>
+          <button class="footer-contact-btn" id="btn-mob-info" style="text-align: left; justify-content: flex-start; padding: 12px;">
+            <i class="fa-solid fa-circle-info"></i> ข้อมูลติดต่อมหาวิทยาลัย
+          </button>
+        </div>
+        <div style="margin-top: 15px; text-align: right;">
+          <button class="modal-btn btn-secondary" id="btn-mob-menu-close" style="padding: 6px 15px; min-width: 80px;">ปิดเมนู</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       7.1 ADMIN MODALS
+       ========================================== -->
+  <!-- Admin Login Modal -->
+  <div class="modal-overlay" id="admin-login-overlay">
+    <div class="modal-content-card" style="max-width: 380px;">
+      <div class="modal-body" style="padding: 24px;">
+        <div class="modal-icon info" style="color: var(--primary-color);"><i class="fa-solid fa-user-shield"></i></div>
+        <h3 class="modal-title">เข้าสู่ระบบแอดมิน</h3>
+        <form id="admin-login-form" style="margin-top: 15px; display: flex; flex-direction: column; gap: 12px; text-align: left;">
+          <div class="nav-input-box">
+            <label style="font-size:10px; font-weight:bold; color:var(--text-secondary);">ชื่อผู้ใช้งาน (Username)</label>
+            <input type="text" id="admin-username" required class="search-input" style="box-shadow:none; padding: 0 15px; height:40px; border-radius:8px; width: 100%; border:1px solid var(--border-color);" placeholder="admin">
+          </div>
+          <div class="nav-input-box">
+            <label style="font-size:10px; font-weight:bold; color:var(--text-secondary);">รหัสผ่าน (Password)</label>
+            <input type="password" id="admin-password" required class="search-input" style="box-shadow:none; padding: 0 15px; height:40px; border-radius:8px; width: 100%; border:1px solid var(--border-color);" placeholder="admin1234">
+          </div>
+          <div style="margin-top: 10px; display: flex; gap: 10px; justify-content: flex-end;">
+            <button type="button" class="modal-btn btn-secondary" id="btn-admin-login-cancel">ยกเลิก</button>
+            <button type="submit" class="modal-btn btn-primary" style="background: var(--primary-color); color: white;">เข้าสู่ระบบ</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Building Add/Edit Form Modal -->
+  <div class="modal-overlay" id="building-form-overlay">
+    <div class="modal-content-card" style="max-width: 480px;">
+      <div class="modal-body" style="padding: 24px; text-align: left;">
+        <h3 class="modal-title" id="building-form-title" style="margin-bottom:15px; color:var(--primary-color); border-bottom:1px solid var(--border-color); padding-bottom:8px;"><i class="fa-solid fa-edit"></i> จัดการข้อมูลตึกอาคาร</h3>
+        <form id="building-editor-form" style="display: flex; flex-direction: column; gap: 12px;">
+          <input type="hidden" id="edit-building-id">
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="nav-input-box">
+              <label style="font-size:10px; font-weight:bold; color:var(--text-secondary);">รหัสตึก (ตัวเลข/C)</label>
+              <input type="text" id="edit-building-num" required class="search-input" style="box-shadow:none; padding: 0 12px; height:38px; border-radius:6px; border:1px solid var(--border-color); width: 100%;">
+            </div>
+            <div class="nav-input-box">
+              <label style="font-size:10px; font-weight:bold; color:var(--text-secondary);">หมวดหมู่</label>
+              <div class="nav-select-wrapper">
+                <select id="edit-building-category" class="nav-select" style="height:38px; border-radius:6px; width: 100%;">
+                  <option value="academic">เรียน/คณะ</option>
+                  <option value="office">สำนักงาน</option>
+                  <option value="facility">บริการ</option>
+                  <option value="library">ไอที/สมุด</option>
+                  <option value="other">อื่นๆ</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="nav-input-box">
+            <label style="font-size:10px; font-weight:bold; color:var(--text-secondary);">ชื่อตึกอาคาร (ภาษาไทย)</label>
+            <input type="text" id="edit-building-name" required class="search-input" style="box-shadow:none; padding: 0 12px; height:38px; border-radius:6px; border:1px solid var(--border-color); width: 100%;">
+          </div>
+
+          <div class="nav-input-box">
+            <label style="font-size:10px; font-weight:bold; color:var(--text-secondary);">ชื่อตึกอาคาร (ภาษาอังกฤษ)</label>
+            <input type="text" id="edit-building-name-en" required class="search-input" style="box-shadow:none; padding: 0 12px; height:38px; border-radius:6px; border:1px solid var(--border-color); width: 100%;">
+          </div>
+
+          <div class="nav-input-box">
+            <label style="font-size:10px; font-weight:bold; color:var(--text-secondary);">คำอธิบาย / รายละเอียดเพิ่มเติม</label>
+            <textarea id="edit-building-desc" class="search-input" style="box-shadow:none; padding: 10px 12px; height:70px; border-radius:6px; font-family:inherit; resize:none; border:1px solid var(--border-color); width: 100%;"></textarea>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="nav-input-box">
+              <label style="font-size:10px; font-weight:bold; color:var(--text-secondary);">เบอร์โทรศัพท์ติดต่อภายใน</label>
+              <input type="text" id="edit-building-phone" class="search-input" style="box-shadow:none; padding: 0 12px; height:38px; border-radius:6px; border:1px solid var(--border-color); width: 100%;">
+            </div>
+            <div class="nav-input-box">
+              <label style="font-size:10px; font-weight:bold; color:var(--text-secondary);">พิกัดแผนที่พิกเซล [Y, X]</label>
+              <input type="text" id="edit-building-coords" required readonly class="search-input" style="box-shadow:none; padding: 0 12px; height:38px; border-radius:6px; background:#f1f5f9; border:1px solid var(--border-color); width: 100%;">
+            </div>
+          </div>
+
+          <div class="nav-input-box">
+            <label style="font-size:10px; font-weight:bold; color:var(--text-secondary);">พิกัด GPS จริง [Lat, Lng] (สำหรับ Google Maps)</label>
+            <input type="text" id="edit-building-real-coords" required placeholder="15.117620, 104.359200" class="search-input" style="box-shadow:none; padding: 0 12px; height:38px; border-radius:6px; border:1px solid var(--border-color); width: 100%;">
+          </div>
+
+          <div style="margin-top: 15px; display: flex; gap: 10px;">
+            <button type="button" class="modal-btn" id="btn-building-delete" style="background:#ef4444; color:white; border:none; display:none; border-radius:8px; font-weight:bold; cursor:pointer; padding: 8px 16px;">ลบตึกนี้</button>
+            <div style="display: flex; gap: 10px; margin-left: auto;">
+              <button type="button" class="modal-btn btn-secondary" id="btn-building-form-cancel">ยกเลิก</button>
+              <button type="submit" class="modal-btn btn-primary" id="btn-building-form-submit" style="background:var(--primary-color); color:white;">บันทึก</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Backend Data Dashboard Modal -->
+  <div class="modal-overlay" id="admin-dashboard-overlay">
+    <div class="modal-content-card admin-dashboard-card">
+      <div class="modal-body" style="padding: 24px; text-align: left;">
+        <div class="admin-dashboard-header">
+          <div>
+            <h3 class="modal-title" style="color:var(--primary-color); display: flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-server"></i> ระบบบริหารจัดการข้อมูลหลังบ้าน (Backend Admin Dashboard)
+            </h3>
+            <p style="font-size:12px; color:var(--text-secondary); margin-top:4px;">
+              จัดการข้อมูลอาคาร พิกัด และสถานที่ในวิทยาเขต มรภ.ศรีสะเกษ โดยตรงจากไฟล์หลังบ้าน <code>data/buildings.json</code>
+            </p>
+          </div>
+          <button class="modal-btn btn-secondary" id="btn-dash-close" style="padding: 6px 14px;"><i class="fa-solid fa-xmark"></i> ปิด</button>
+        </div>
+
+        <!-- Dashboard Stat Cards -->
+        <div class="dash-stats-grid">
+          <div class="dash-stat-card">
+            <span class="dash-stat-val" id="dash-total-buildings">0</span>
+            <span class="dash-stat-lbl">อาคารทั้งหมด</span>
+          </div>
+          <div class="dash-stat-card academic">
+            <span class="dash-stat-val" id="dash-academic-count">0</span>
+            <span class="dash-stat-lbl">คณะ/เรียน</span>
+          </div>
+          <div class="dash-stat-card office">
+            <span class="dash-stat-val" id="dash-office-count">0</span>
+            <span class="dash-stat-lbl">สำนักงาน</span>
+          </div>
+          <div class="dash-stat-card facility">
+            <span class="dash-stat-val" id="dash-facility-count">0</span>
+            <span class="dash-stat-lbl">บริการ/กิจกรรม</span>
+          </div>
+          <div class="dash-stat-card library">
+            <span class="dash-stat-val" id="dash-library-count">0</span>
+            <span class="dash-stat-lbl">ไอที/สมุด</span>
+          </div>
+        </div>
+
+        <!-- Dashboard Toolbar -->
+        <div class="dash-toolbar">
+          <div class="dash-search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="dash-search-input" placeholder="ค้นหาตามชื่อตึก, รหัส หรือหมวดหมู่...">
+          </div>
+          <div class="dash-toolbar-actions">
+            <button class="admin-btn highlight" id="btn-dash-add"><i class="fa-solid fa-plus"></i> เพิ่มอาคารใหม่</button>
+            <button class="admin-btn" id="btn-dash-export"><i class="fa-solid fa-download"></i> สำรองข้อมูล JSON</button>
+          </div>
+        </div>
+
+        <!-- Table Container -->
+        <div class="dash-table-wrapper">
+          <table class="dash-table">
+            <thead>
+              <tr>
+                <th style="width: 50px;">รหัส</th>
+                <th>ชื่ออาคาร (ไทย)</th>
+                <th>ชื่ออาคาร (EN)</th>
+                <th>หมวดหมู่</th>
+                <th>พิกัดพิกเซล [Y, X]</th>
+                <th>พิกัด GPS จริง</th>
+                <th>เบอร์โทร</th>
+                <th style="text-align: center; width: 110px;">การจัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="dash-table-body">
+              <!-- Dynamically rendered -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Export Code Modal -->
+  <div class="modal-overlay" id="export-modal-overlay">
+    <div class="modal-content-card" style="max-width: 600px;">
+      <div class="modal-body" style="padding: 24px; text-align: left;">
+        <h3 class="modal-title" style="color:var(--primary-color);"><i class="fa-solid fa-code"></i> ส่งออกข้อมูล (Export Config)</h3>
+        <p style="font-size:12px; color:var(--text-secondary); margin-bottom: 12px;">คัดลอกโค้ดอาร์เรย์ด้านล่างนี้นำไปวางแทนที่ตัวแปร <code>BUILDINGS</code> ในไฟล์ <code>app.js</code> เพื่อให้การอัปเดตมีผลถาวร</p>
+        <textarea id="export-textarea" readonly class="search-input" style="box-shadow:none; padding: 12px; height:240px; border-radius:8px; font-family: monospace; font-size:11px; resize:none; background:#0f172a; color:#38bdf8; border:none; width:100%;"></textarea>
+        <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: flex-end;">
+          <button class="modal-btn btn-secondary" id="btn-export-copy">คัดลอกโค้ด</button>
+          <button class="modal-btn btn-primary" id="btn-export-close" style="background:var(--primary-color); color:white;">ปิดหน้าต่าง</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sliding Toast Alert -->
+  <div class="toast-container" id="toast-bar">
+    <i class="fa-solid fa-circle-check" style="color: var(--color-open);"></i>
+    <span id="toast-message">คัดลอกพิกัดอาคารเรียบร้อยแล้ว</span>
+  </div>
+
+  <!-- ==========================================
+       8. SCRIPTS
+       ========================================== -->
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  
+  <!-- Main Application Script -->
+  <script src="app.js"></script>
+
+</body>
+</html>
