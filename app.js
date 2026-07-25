@@ -991,8 +991,11 @@ function renderMarkers() {
         <div class="marker-pin-wrapper marker-${b.category} ${isSelected ? 'active-pin' : ''}">
           <div class="pin-3d-shadow"></div>
           <div class="pin-3d-pulse"></div>
-          <div class="marker-pin"></div>
-          <span class="marker-number">${displayNum}</span>
+          <div class="marker-pin">
+            <div class="marker-pin-inner">
+              <span class="marker-number">${displayNum}</span>
+            </div>
+          </div>
           <div class="marker-3d-badge">${displayNum}. ${b.name}</div>
         </div>
       `,
