@@ -821,7 +821,7 @@ function initMap() {
     maxBoundsViscosity: 1.0
   });
 
-  L.imageOverlay("images/Map.png?v=3.2", IMAGE_BOUNDS).addTo(map);
+  L.imageOverlay("images/Map.png?v=3.3", IMAGE_BOUNDS).addTo(map);
   map.fitBounds(campusBounds, { padding: [10, 10] });
   renderMarkers();
 }
