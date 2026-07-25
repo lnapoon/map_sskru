@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login — SSKRU Campus Map</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #1a4fa0;
+      --primary-dark: #0d2c5e;
+      --primary-light: #2563eb;
+      --accent: #f59e0b;
+      --danger: #ef4444;
+      --success: #10b981;
+      --bg: #f0f4f8;
+      --surface: #ffffff;
+      --text: #1e293b;
+      --text-secondary: #64748b;
+      --border: rgba(0,0,0,0.08);
+      --shadow: 0 20px 60px rgba(0,0,0,0.15);
+    }
+
+    body {
+      font-family: 'Sarabun', 'Outfit', sans-serif;
+      background: linear-gradient(135deg, #0d2c5e 0%, #1a4fa0 40%, #2563eb 70%, #1e40af 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Animated background blobs */
+    body::before, body::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.25;
+      animation: float 8s ease-in-out infinite alternate;
+    }
+    body::before {
+      width: 500px; height: 500px;
+      background: #3b82f6;
+      top: -150px; left: -150px;
+    }
+    body::after {
+      width: 400px; height: 400px;
+      background: #f59e0b;
+      bottom: -100px; right: -100px;
+      animation-delay: -4s;
+    }
+    @keyframes float {
+      from { transform: translate(0, 0) scale(1); }
+      to { transform: translate(30px, 20px) scale(1.05); }
+    }
+
+    .login-card {
+      background: rgba(255,255,255,0.97);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 24px;
+      padding: 48px 44px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: var(--shadow);
+      position: relative;
+      z-index: 10;
+      animation: slideUp 0.5s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(40px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .login-logo {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .logo-circle {
+      width: 80px; height: 80px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      border-radius: 22px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px;
+      box-shadow: 0 8px 24px rgba(26,79,160,0.35);
+      font-size: 36px;
+    }
+    .login-logo h1 {
+      font-size: 22px; font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.3px;
+    }
+    .login-logo p {
+      font-size: 13px; color: var(--text-secondary);
+      margin-top: 4px;
+    }
+    .admin-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: white;
+      font-size: 11px; font-weight: 600;
+      padding: 4px 12px; border-radius: 20px;
+      margin-top: 8px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .divider {
+      height: 1px; background: var(--border);
+      margin: 24px 0;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-label {
+      display: block;
+      font-size: 13px; font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      letter-spacing: 0.3px;
+    }
+    .input-wrapper {
+      position: relative;
+    }
+    .input-icon {
+      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+      color: var(--text-secondary); font-size: 15px;
+      pointer-events: none;
+    }
+    .form-input {
+      width: 100%;
+      padding: 13px 14px 13px 42px;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      font-size: 15px;
+      font-family: inherit;
+      color: var(--text);
+      background: #f8fafc;
+      transition: all 0.2s;
+      outline: none;
+    }
+    .form-input:focus {
+      border-color: var(--primary-light);
+      background: white;
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+    }
+    .toggle-password {
+      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer;
+      color: var(--text-secondary); font-size: 15px;
+      padding: 4px;
+    }
+    .toggle-password:hover { color: var(--primary); }
+
+    .error-banner {
+      display: flex; align-items: center; gap: 10px;
+      background: #fef2f2; border: 1px solid #fecaca;
+      color: var(--danger); border-radius: 10px;
+      padding: 12px 14px; font-size: 13px;
+      margin-bottom: 20px;
+      animation: shake 0.4s ease;
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-8px); }
+      75% { transform: translateX(8px); }
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: white;
+      border: none; border-radius: 12px;
+      font-size: 16px; font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      letter-spacing: 0.3px;
+      transition: all 0.2s;
+      box-shadow: 0 4px 16px rgba(26,79,160,0.35);
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      margin-top: 8px;
+    }
+    .btn-login:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(26,79,160,0.4);
+    }
+    .btn-login:active { transform: translateY(0); }
+
+    .back-link {
+      text-align: center; margin-top: 20px;
+    }
+    .back-link a {
+      color: var(--text-secondary); font-size: 13px;
+      text-decoration: none;
+      display: inline-flex; align-items: center; gap: 6px;
+      transition: color 0.2s;
+    }
+    .back-link a:hover { color: var(--primary); }
+
+    .security-note {
+      display: flex; align-items: center; gap: 8px;
+      background: #f0fdf4; border: 1px solid #bbf7d0;
+      border-radius: 10px; padding: 10px 14px;
+      font-size: 12px; color: #166534;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="login-card">
+  <div class="login-logo">
+    <div class="logo-circle">🎓</div>
+    <h1>SSKRU Campus Map</h1>
+    <p>มหาวิทยาลัยราชภัฏศรีสะเกษ</p>
+    <span class="admin-badge">
+      <i class="fa-solid fa-shield-halved"></i>
+      ระบบผู้ดูแล
+    </span>
+  </div>
+
+  <div class="divider"></div>
+
+  {% if error %}
+  <div class="error-banner">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    {{ error }}
+  </div>
+  {% endif %}
+
+  <form method="POST" action="/admin/">
+    {% csrf_token %}
+    <div class="form-group">
+      <label class="form-label">ชื่อผู้ใช้ (Username)</label>
+      <div class="input-wrapper">
+        <i class="fa-solid fa-user input-icon"></i>
+        <input
+          type="text"
+          name="username"
+          class="form-input"
+          placeholder="กรอกชื่อผู้ใช้"
+          autocomplete="username"
+          autofocus
+          required
+        >
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">รหัสผ่าน (Password)</label>
+      <div class="input-wrapper">
+        <i class="fa-solid fa-lock input-icon"></i>
+        <input
+          type="password"
+          name="password"
+          id="passwordInput"
+          class="form-input"
+          placeholder="กรอกรหัสผ่าน"
+          autocomplete="current-password"
+          required
+        >
+        <button type="button" class="toggle-password" onclick="togglePwd()">
+          <i class="fa-solid fa-eye" id="eyeIcon"></i>
+        </button>
+      </div>
+    </div>
+
+    <button type="submit" class="btn-login">
+      <i class="fa-solid fa-right-to-bracket"></i>
+      เข้าสู่ระบบ Admin
+    </button>
+  </form>
+
+  <div class="security-note">
+    <i class="fa-solid fa-shield-check"></i>
+    การเข้าถึงระบบนี้ถูกบันทึกและตรวจสอบทุกครั้ง
+  </div>
+
+  <div class="back-link">
+    <a href="/">
+      <i class="fa-solid fa-arrow-left"></i>
+      กลับไปหน้าแผนที่
+    </a>
+  </div>
+</div>
+
+<script>
+function togglePwd() {
+  const input = document.getElementById('passwordInput');
+  const icon = document.getElementById('eyeIcon');
+  if (input.type === 'password') {
+    input.type = 'text';
+    icon.className = 'fa-solid fa-eye-slash';
+  } else {
+    input.type = 'password';
+    icon.className = 'fa-solid fa-eye';
+  }
+}
+</script>
+</body>
+</html>

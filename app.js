@@ -567,26 +567,49 @@ let userPixelCoords = null;
 let userMarker = null;
 let activeFilters = 'all';
 
-// Real-time Grab Motion Navigator States
-let activeTravelMode = 'walk'; // 'walk', 'bike', 'grab', 'car'
+// Active Navigation & Event Tracking States
+let activeTravelMode = 'walk'; // 'walk', 'bike', 'motorcycle', 'car'
 let currentRouteCoords = [];   // Array of [y, x]
-let grabRiderMarker = null;
-let grabAnimId = null;
-let isGrabAnimating = false;
-let grabProgress = 0; // 0.0 to 1.0
-let grabSpeedMultiplier = 1; // 1, 2, 4
+let navAnimMarker = null;
+let navAnimId = null;
+let isNavActive = false;
+let navProgress = 0;
 let targetBuildingName = "";
 
 const TRAVEL_MODES = {
-  walk: { mps: 1.2, icon: 'fa-person-walking', label: 'เดินเท้า' },
-  bike: { mps: 3.5, icon: 'fa-bicycle', label: 'จักรยาน' },
-  grab: { mps: 7.0, icon: 'fa-motorcycle', label: 'Grab Rider' },
-  car:  { mps: 5.5, icon: 'fa-car', label: 'รถยนต์' }
+  walk:       { mps: 1.2, icon: 'fa-person-walking', label: 'เดินเท้า' },
+  bike:       { mps: 3.5, icon: 'fa-bicycle', label: 'จักรยาน' },
+  motorcycle: { mps: 7.5, icon: 'fa-motorcycle', label: 'มอเตอร์ไซค์' },
+  car:        { mps: 6.0, icon: 'fa-car', label: 'รถยนต์' }
 };
 
-// Admin Mode & Server Sync States
-let isAdminMode = false;
-let isServerConnected = false;
+// User Session ID for Visitor Tracking
+function getSessionId() {
+  let sid = sessionStorage.getItem('sskru_session_id');
+  if (!sid) {
+    sid = 's_' + Math.random().toString(36).substring(2, 11) + '_' + Date.now();
+    sessionStorage.setItem('sskru_session_id', sid);
+  }
+  return sid;
+}
+
+// Track user event to analytics API
+function trackEvent(eventType, eventData = '') {
+  try {
+    fetch('/api/track', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: eventType,
+        data: eventData,
+        session_id: getSessionId(),
+        path: window.location.pathname,
+        referrer: document.referrer
+      })
+    }).catch(() => {});
+  } catch (e) {}
+}
+
 let adminBuildings = [];
 
 /* ==========================================================================
@@ -595,9 +618,9 @@ let adminBuildings = [];
 document.addEventListener("DOMContentLoaded", () => {
   initMap();
   setupEventListeners();
-  setupAdminEventListeners();
   updateRealTimeStatus();
   loadBuildingsData();
+  trackEvent('page_view', 'SSKRU Campus Map Loaded');
 
   setInterval(updateRealTimeStatus, 30000);
 });
@@ -1057,6 +1080,7 @@ function getBuildingStatus(b) {
 
 function selectBuilding(b) {
   selectedBuilding = b;
+  trackEvent('building_select', b.name);
   const displayNum = b.id === 21 ? "C" : b.id;
 
   const card = document.getElementById(`b-card-${b.id}`);
@@ -1123,10 +1147,24 @@ function selectBuilding(b) {
   txtStatus.textContent = status.isOpen ? 'เปิดให้บริการ' : 'ปิดให้บริการ';
   txtHours.textContent = status.hoursText;
 
+  // Reset tabs to default
+  document.querySelectorAll(".info-tab-btn").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".info-tab-pane").forEach(p => p.classList.remove("active"));
+  const defaultTabBtn = document.querySelector('.info-tab-btn[data-tab="info"]');
+  const defaultTabPane = document.getElementById("tab-info");
+  if (defaultTabBtn) defaultTabBtn.classList.add("active");
+  if (defaultTabPane) defaultTabPane.classList.add("active");
+
   document.getElementById("building-info-panel").classList.add("active");
 
+  // Smart Navigation Button — opens in-app route, or external maps on mobile
   document.getElementById("btn-action-gmaps").onclick = () => {
-    startDirectNavigationToBuilding(b.id);
+    openSmartNavigation(b);
+  };
+
+  // Save Button
+  document.getElementById("btn-action-save").onclick = () => {
+    showToast(`📌 บันทึก "${b.name}" สำเร็จ (ฟีเจอร์บัญชีผู้ใช้)`);
   };
 
   document.getElementById("btn-action-share").onclick = () => {
@@ -1736,12 +1774,55 @@ function calculateWalkingRoute() {
   });
 
   resultPanel.classList.add("active");
+  trackEvent('navigate', targetBuildingName);
+}
 
-  // Place initial Grab rider marker at start of route
-  resetGrabRiderMotion();
+// ─── Real Google Maps Navigation Trigger ─────────────────────────────
+function startActiveTurnByTurnNav() {
+  const srcVal = document.getElementById("select-nav-source").value;
+  const destVal = document.getElementById("select-nav-dest").value;
 
-  // Auto start Grab rider animation
-  startGrabRiderMotion();
+  if (!destVal) {
+    showToast("กรุณาเลือกจุดหมายปลายทางก่อนเริ่มนำทาง");
+    return;
+  }
+
+  const destBuilding = adminBuildings.find(b => b.id === Number(destVal));
+  if (!destBuilding || !destBuilding.realCoords) {
+    showToast("ไม่พบพิกัดจุดหมายปลายทาง");
+    return;
+  }
+
+  const travelModeMap = {
+    walk: 'walking',
+    bike: 'bicycling',
+    motorcycle: 'two-wheeler',
+    car: 'driving'
+  };
+  const gmode = travelModeMap[activeTravelMode] || 'walking';
+  let gmapsUrl = '';
+
+  if (srcVal === "my_location") {
+    gmapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${destBuilding.realCoords[0]},${destBuilding.realCoords[1]}&travelmode=${gmode}`;
+  } else {
+    const srcBuilding = adminBuildings.find(b => b.id === Number(srcVal));
+    if (srcBuilding && srcBuilding.realCoords) {
+      gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${srcBuilding.realCoords[0]},${srcBuilding.realCoords[1]}&destination=${destBuilding.realCoords[0]},${destBuilding.realCoords[1]}&travelmode=${gmode}`;
+    } else {
+      gmapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${destBuilding.realCoords[0]},${destBuilding.realCoords[1]}&travelmode=${gmode}`;
+    }
+  }
+
+  trackEvent('navigate', destBuilding.name);
+  window.open(gmapsUrl, '_blank');
+}
+
+function stopActiveTurnByTurnNav() {
+  isNavActive = false;
+  if (navAnimId) cancelAnimationFrame(navAnimId);
+  if (navAnimMarker) { map.removeLayer(navAnimMarker); navAnimMarker = null; }
+  document.getElementById("nav-hud-overlay").style.display = "none";
+  document.getElementById("carousel-panel").style.display = "block";
 }
 
 function startDirectNavigationToBuilding(bId) {
@@ -1758,20 +1839,15 @@ function startDirectNavigationToBuilding(bId) {
 }
 
 function closeNavigationPanel() {
-  pauseGrabRiderMotion();
-  if (grabRiderMarker) {
-    map.removeLayer(grabRiderMarker);
-    grabRiderMarker = null;
+  stopActiveTurnByTurnNav();
+  if (routePolyline) {
+    map.removeLayer(routePolyline);
+    routePolyline = null;
   }
   document.getElementById("nav-routes-panel").classList.remove("active");
   document.getElementById("select-nav-source").value = "";
   document.getElementById("select-nav-dest").value = "";
   document.getElementById("nav-results-wrapper").classList.remove("active");
-
-  if (routePolyline) {
-    map.removeLayer(routePolyline);
-    routePolyline = null;
-  }
 }
 
 /* ==========================================================================
@@ -2097,25 +2173,100 @@ function setupEventListeners() {
     );
   };
 
-  const mobMenu = document.getElementById("mobile-menu-overlay");
-  document.getElementById("btn-mobile-menu").onclick = () => {
-    mobMenu.classList.add("active");
-  };
+  // ============ SIDE DRAWER ============
+  document.getElementById("btn-hamburger").onclick = () => openSideDrawer();
+  document.getElementById("btn-drawer-close").onclick = () => closeSideDrawer();
+  document.getElementById("drawer-backdrop").onclick = () => closeSideDrawer();
 
-  document.getElementById("btn-mob-menu-close").onclick = () => {
-    mobMenu.classList.remove("active");
-  };
-
-  document.getElementById("btn-mob-nav").onclick = () => {
-    mobMenu.classList.remove("active");
+  document.getElementById("btn-drawer-nav").onclick = () => {
+    closeSideDrawer();
     document.getElementById("nav-routes-panel").classList.add("active");
     closeInfoPanel();
   };
 
-  document.getElementById("btn-mob-info").onclick = () => {
-    mobMenu.classList.remove("active");
+  document.getElementById("btn-drawer-my-location").onclick = () => {
+    closeSideDrawer();
+    trackUserLocation();
+  };
+
+  document.getElementById("btn-drawer-info").onclick = () => {
+    closeSideDrawer();
     document.getElementById("btn-univ-info-trigger").click();
   };
+
+  const btnDrawerAdmin = document.getElementById("btn-drawer-admin");
+  if (btnDrawerAdmin) {
+    btnDrawerAdmin.onclick = () => {
+      closeSideDrawer();
+      window.location.href = "/admin/";
+    };
+  }
+
+  document.getElementById("btn-drawer-share").onclick = () => {
+    closeSideDrawer();
+    const shareData = {
+      title: "SSKRU Campus Map",
+      text: "ระบบแผนผังนำทาง 3D มหาวิทยาลัยราชภัฏศรีสะเกษ",
+      url: window.location.href
+    };
+    if (navigator.share) {
+      navigator.share(shareData).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      showToast("คัดลอกลิงก์แล้ว!");
+    }
+  };
+
+  // ============ MOBILE SEARCH PANEL ============
+  const mobileSearchPanel = document.getElementById("mobile-search-panel");
+  const mobileInput = document.getElementById("search-input-mobile");
+  const mobileDropdown = document.getElementById("search-suggestions-mobile");
+  const mobileClear = document.getElementById("btn-search-clear-mobile");
+
+  document.getElementById("btn-mobile-search").onclick = () => {
+    mobileSearchPanel.classList.add("active");
+    setTimeout(() => mobileInput?.focus(), 100);
+  };
+
+  document.getElementById("btn-mobile-search-close").onclick = () => {
+    mobileSearchPanel.classList.remove("active");
+  };
+
+  document.getElementById("btn-nav-trigger-mobile")?.addEventListener("click", () => {
+    document.getElementById("nav-routes-panel").classList.add("active");
+    closeInfoPanel();
+  });
+
+  if (mobileInput) {
+    mobileInput.addEventListener("input", (e) => handleMobileSearchInput(e, mobileDropdown));
+    mobileInput.addEventListener("focus", (e) => handleMobileSearchInput(e, mobileDropdown));
+  }
+
+  if (mobileClear) {
+    mobileClear.onclick = () => {
+      if (mobileInput) mobileInput.value = "";
+      mobileDropdown.style.display = "none";
+      mobileClear.style.display = "none";
+    };
+  }
+
+  // ============ INFO PANEL TABS ============
+  const infoPanelEl = document.getElementById("building-info-panel");
+  document.querySelectorAll(".info-tab-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const tabId = btn.getAttribute("data-tab");
+      document.querySelectorAll(".info-tab-btn").forEach(b => b.classList.remove("active"));
+      document.querySelectorAll(".info-tab-pane").forEach(p => p.classList.remove("active"));
+      btn.classList.add("active");
+      const pane = document.getElementById(`tab-${tabId}`);
+      if (pane) pane.classList.add("active");
+    });
+  });
+
+  // ============ SWIPE GESTURE — Bottom Sheets ============
+  setupSwipeGesture(infoPanelEl, () => closeInfoPanel());
+  const navPanelEl = document.getElementById("nav-routes-panel");
+  setupSwipeGesture(navPanelEl, () => closeNavigationPanel());
 
   document.getElementById("btn-logo-reset").onclick = () => {
     closeInfoPanel();
@@ -2138,16 +2289,18 @@ function setupEventListeners() {
     map.fitBounds(IMAGE_BOUNDS, { padding: [15, 15] });
   };
 
+  // Active Navigation HUD controls
+  document.getElementById("btn-start-active-nav")?.addEventListener("click", startActiveTurnByTurnNav);
+  document.getElementById("btn-hud-stop")?.addEventListener("click", stopActiveTurnByTurnNav);
+
   // View mode switcher pill
   const btnView3D = document.getElementById("btn-view-3d");
   const btnViewAerial = document.getElementById("btn-view-aerial");
-  const btnViewGrabNav = document.getElementById("btn-view-grab-nav");
 
-  if (btnView3D && btnViewAerial && btnViewGrabNav) {
+  if (btnView3D && btnViewAerial) {
     btnView3D.onclick = () => {
       btnView3D.classList.add("active");
       btnViewAerial.classList.remove("active");
-      btnViewGrabNav.classList.remove("active");
       document.getElementById("map").classList.remove("aerial-mode");
       closeNavigationPanel();
       map.fitBounds(IMAGE_BOUNDS, { padding: [15, 15] });
@@ -2156,24 +2309,12 @@ function setupEventListeners() {
     btnViewAerial.onclick = () => {
       btnViewAerial.classList.add("active");
       btnView3D.classList.remove("active");
-      btnViewGrabNav.classList.remove("active");
       document.getElementById("map").classList.add("aerial-mode");
       showToast("สลับเข้าสู่มุมมองนำทางมุมสูง (Google Maps Style)");
       if (document.getElementById("select-nav-source").value && document.getElementById("select-nav-dest").value) {
         calculateWalkingRoute();
       } else {
         map.fitBounds(IMAGE_BOUNDS, { padding: [25, 25] });
-      }
-    };
-
-    btnViewGrabNav.onclick = () => {
-      btnViewGrabNav.classList.add("active");
-      btnView3D.classList.remove("active");
-      btnViewAerial.classList.remove("active");
-      document.getElementById("nav-routes-panel").classList.add("active");
-      closeInfoPanel();
-      if (document.getElementById("select-nav-source").value && document.getElementById("select-nav-dest").value) {
-        calculateWalkingRoute();
       }
     };
   }
@@ -2193,127 +2334,169 @@ function setupEventListeners() {
       }
     });
   }
-
-  // Grab Motion Controls
-  const btnGrabStart = document.getElementById("btn-grab-motion-start");
-  const btnGrabReset = document.getElementById("btn-grab-motion-reset");
-  const btnGrabSpeed = document.getElementById("btn-grab-motion-speed");
-  const lblGrabSpeed = document.getElementById("lbl-grab-speed");
-
-  if (btnGrabStart) {
-    btnGrabStart.onclick = () => {
-      if (isGrabAnimating) {
-        pauseGrabRiderMotion();
-      } else {
-        startGrabRiderMotion();
-      }
-    };
-  }
-
-  if (btnGrabReset) {
-    btnGrabReset.onclick = () => {
-      resetGrabRiderMotion();
-    };
-  }
-
-  if (btnGrabSpeed) {
-    btnGrabSpeed.onclick = () => {
-      if (grabSpeedMultiplier === 1) grabSpeedMultiplier = 2;
-      else if (grabSpeedMultiplier === 2) grabSpeedMultiplier = 4;
-      else grabSpeedMultiplier = 1;
-
-      if (lblGrabSpeed) lblGrabSpeed.textContent = `${grabSpeedMultiplier}x`;
-    };
-  }
 }
 
 // Bind admin action events
 function setupAdminEventListeners() {
   const loginOverlay = document.getElementById("admin-login-overlay");
   const loginForm = document.getElementById("admin-login-form");
+  const btnAdminLogin = document.getElementById("btn-admin-login");
 
-  document.getElementById("btn-admin-login").onclick = () => {
-    if (isAdminMode) {
-      exitAdminMode();
-    } else {
-      document.getElementById("admin-username").value = "";
-      document.getElementById("admin-password").value = "";
-      loginOverlay.classList.add("active");
-    }
-  };
+  if (btnAdminLogin) {
+    btnAdminLogin.onclick = () => {
+      window.location.href = "/admin/";
+    };
+  }
 
-  document.getElementById("btn-admin-login-cancel").onclick = () => {
-    loginOverlay.classList.remove("active");
-  };
-
-  loginForm.onsubmit = async (e) => {
-    e.preventDefault();
-    const user = document.getElementById("admin-username").value.trim();
-    const pass = document.getElementById("admin-password").value.trim();
-
-    try {
-      const response = await fetch('/api/admin/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: user, password: pass })
-      });
-      const data = await response.json();
-      if (data.success) {
-        loginOverlay.classList.remove("active");
-        enterAdminMode();
-        return;
-      }
-    } catch (err) {
-      // Fallback check if server offline
-      if (user === "admin" && pass === "admin1234") {
-        loginOverlay.classList.remove("active");
-        enterAdminMode();
-        return;
-      }
-    }
-
-    alert("ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง (รหัสเริ่มต้น: admin / admin1234)");
-  };
-
-  document.getElementById("btn-admin-dashboard").onclick = openAdminDashboard;
-  document.getElementById("btn-dash-close").onclick = () => {
-    document.getElementById("admin-dashboard-overlay").classList.remove("active");
-  };
-  document.getElementById("btn-dash-add").onclick = () => {
-    openAddBuildingForm(512, 768);
-  };
-  document.getElementById("btn-dash-export").onclick = openExportModal;
-
-  document.getElementById("dash-search-input")?.addEventListener("input", renderAdminDashboardTable);
-
-  document.getElementById("btn-admin-add").onclick = () => {
-    openAddBuildingForm(512, 768);
-  };
-
-  document.getElementById("btn-admin-export").onclick = openExportModal;
-
-  document.getElementById("btn-admin-logout").onclick = () => {
-    exitAdminMode();
-  };
-
-  document.getElementById("btn-building-form-cancel").onclick = () => {
-    document.getElementById("building-form-overlay").classList.remove("active");
-  };
-
-  document.getElementById("building-editor-form").onsubmit = handleBuildingFormSubmit;
-  document.getElementById("btn-building-delete").onclick = handleBuildingDelete;
-
-  document.getElementById("btn-export-close").onclick = () => {
-    document.getElementById("export-modal-overlay").classList.remove("active");
-  };
-
-  document.getElementById("btn-export-copy").onclick = () => {
-    const textarea = document.getElementById("export-textarea");
-    textarea.select();
-    navigator.clipboard.writeText(textarea.value).then(() => {
-      showToast("คัดลอกรหัสข้อมูลลงคลิปบอร์ดแล้ว");
-    }).catch(() => {
-      showToast("ไม่สามารถคัดลอกได้โดยอัตโนมัติ");
+  if (loginForm && loginOverlay) {
+    document.getElementById("btn-admin-login-cancel")?.addEventListener("click", () => {
+      loginOverlay.classList.remove("active");
     });
-  };
+  }
+
+  const btnAdminDashboard = document.getElementById("btn-admin-dashboard");
+  if (btnAdminDashboard) btnAdminDashboard.onclick = openAdminDashboard;
+  document.getElementById("btn-dash-close")?.addEventListener("click", () => {
+    document.getElementById("admin-dashboard-overlay")?.classList.remove("active");
+  });
+  document.getElementById("btn-dash-add")?.addEventListener("click", () => {
+    openAddBuildingForm(512, 768);
+  });
+  document.getElementById("btn-admin-export")?.addEventListener("click", openExportModal);
+  document.getElementById("dash-search-input")?.addEventListener("input", renderAdminDashboardTable);
 }
+
+
+/* ==========================================================================
+   v2.0 — Side Drawer, Smart Navigation, Mobile Search, Swipe Gesture
+   ========================================================================== */
+
+function openSideDrawer() {
+  document.getElementById("side-drawer").classList.add("open");
+  document.getElementById("drawer-backdrop").classList.add("active");
+  document.body.style.overflow = 'hidden';
+}
+
+function closeSideDrawer() {
+  document.getElementById("side-drawer").classList.remove("open");
+  document.getElementById("drawer-backdrop").classList.remove("active");
+  document.body.style.overflow = '';
+}
+
+/**
+ * Smart Navigation: Opens in-app route for desktop,
+ * or external maps app for mobile (Android → Google Maps, iOS → Apple Maps)
+ */
+function openSmartNavigation(b) {
+  const lat = b.realCoords[0];
+  const lng = b.realCoords[1];
+
+  const travelModeMap = {
+    walk: 'walking',
+    bike: 'bicycling',
+    motorcycle: 'two-wheeler',
+    car: 'driving'
+  };
+  const gmode = travelModeMap[activeTravelMode] || 'walking';
+  const gmapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=${gmode}`;
+
+  trackEvent('navigate', b.name);
+  window.open(gmapsUrl, '_blank');
+}
+
+/**
+ * Mobile search input handler for the mobile search panel
+ */
+function handleMobileSearchInput(e, dropdown) {
+  const query = e.target.value.trim().toLowerCase();
+  const clearBtn = document.getElementById("btn-search-clear-mobile");
+
+  if (!query) {
+    dropdown.style.display = "none";
+    if (clearBtn) clearBtn.style.display = "none";
+    return;
+  }
+
+  if (clearBtn) clearBtn.style.display = "flex";
+
+  const matches = adminBuildings.filter(b =>
+    b.name.toLowerCase().includes(query) ||
+    b.nameEn.toLowerCase().includes(query) ||
+    b.id.toString() === query ||
+    (b.id === 21 && query === "c") ||
+    b.tags.some(t => t.toLowerCase().includes(query))
+  );
+
+  dropdown.innerHTML = "";
+
+  if (matches.length === 0) {
+    dropdown.innerHTML = `<div style="padding: 15px; text-align: center; color: var(--text-secondary); font-size: 13px;"><i class="fa-solid fa-circle-question"></i> ไม่พบอาคารที่ค้นหา</div>`;
+    dropdown.style.display = "block";
+    return;
+  }
+
+  matches.forEach(b => {
+    const displayNum = b.id === 21 ? "C" : b.id;
+    const item = document.createElement("div");
+    item.className = "autocomplete-item";
+    item.innerHTML = `
+      <div class="autocomplete-icon">${displayNum}</div>
+      <div class="autocomplete-text">
+        <div class="autocomplete-title">${b.name}</div>
+        <div class="autocomplete-subtitle">${b.nameEn}</div>
+      </div>
+    `;
+    item.onclick = () => {
+      selectBuilding(b);
+      document.getElementById("mobile-search-panel").classList.remove("active");
+      dropdown.style.display = "none";
+    };
+    dropdown.appendChild(item);
+  });
+
+  dropdown.style.display = "block";
+}
+
+/**
+ * Setup swipe-down gesture to dismiss a bottom sheet panel
+ * @param {HTMLElement} panelEl - The panel element
+ * @param {Function} closeCallback - Function to call when dismissed
+ */
+function setupSwipeGesture(panelEl, closeCallback) {
+  if (!panelEl) return;
+
+  let startY = 0;
+  let startX = 0;
+  let isDragging = false;
+
+  panelEl.addEventListener("touchstart", (e) => {
+    // Only trigger from drag handle or panel header
+    const handle = panelEl.querySelector(".panel-drag-handle, .info-panel-drag-handle");
+    if (handle && handle.contains(e.target)) {
+      startY = e.touches[0].clientY;
+      startX = e.touches[0].clientX;
+      isDragging = true;
+    }
+  }, { passive: true });
+
+  panelEl.addEventListener("touchmove", (e) => {
+    if (!isDragging) return;
+    const dy = e.touches[0].clientY - startY;
+    const dx = Math.abs(e.touches[0].clientX - startX);
+    // Vertical swipe only
+    if (dy > 0 && dy > dx) {
+      panelEl.style.transform = `translateY(${dy}px)`;
+    }
+  }, { passive: true });
+
+  panelEl.addEventListener("touchend", (e) => {
+    if (!isDragging) return;
+    isDragging = false;
+    const dy = e.changedTouches[0].clientY - startY;
+    panelEl.style.transform = '';
+    if (dy > 80) {
+      closeCallback();
+    }
+  }, { passive: true });
+}
+

@@ -1,0 +1,43 @@
+{
+  "name": "SSKRU Campus Map - แผนที่นำทาง มรภ.ศรีสะเกษ",
+  "short_name": "SSKRU Map",
+  "description": "ระบบแผนผังนำทาง 3D มหาวิทยาลัยราชภัฏศรีสะเกษ ค้นหาตึกและนำทางได้จริง",
+  "theme_color": "#1a4fa0",
+  "background_color": "#0c1913",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "start_url": "/",
+  "scope": "/",
+  "lang": "th",
+  "icons": [
+    {
+      "src": "images/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["navigation", "education", "maps"],
+  "shortcuts": [
+    {
+      "name": "ค้นหาอาคาร",
+      "short_name": "ค้นหา",
+      "description": "ค้นหาตึกอาคารภายในมหาวิทยาลัย",
+      "url": "/?action=search",
+      "icons": [{ "src": "images/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "นำทางภายในวิทยาเขต",
+      "short_name": "นำทาง",
+      "description": "วางแผนเส้นทางเดินเท้า",
+      "url": "/?action=navigate",
+      "icons": [{ "src": "images/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
