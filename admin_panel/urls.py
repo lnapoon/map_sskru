@@ -17,8 +17,4 @@ urlpatterns = [
     path('api/auth/status/',                      views.auth_status_api,             name='auth_status'),
     path('api/auth/student_login/',               views.student_login_api,           name='student_login_api'),
 
-    # ClickUp Integration API
-    path('api/clickup/sync/',                     views.clickup_sync_api,            name='clickup_sync'),
-    path('api/clickup/config/',                   views.clickup_config_api,          name='clickup_config'),
-    path('api/clickup/status/',                   views.clickup_status_api,          name='clickup_status'),
 ]

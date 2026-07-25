@@ -449,9 +449,7 @@
     <button class="header-btn" id="btn-admin-theme-toggle" onclick="toggleAdminTheme()" title="สลับโทนสี (สว่าง/มืด)">
       <i class="fa-solid fa-moon"></i>
     </button>
-    <button class="header-btn" onclick="openClickUpModal()" style="background: linear-gradient(135deg, #7b68ee, #5f48ea); color: white; border: none; font-weight:600;">
-      <i class="fa-solid fa-cloud-arrow-down"></i> ซิงก์ ClickUp
-    </button>
+
     <button class="header-btn" onclick="refreshData()">
       <i class="fa-solid fa-rotate"></i> รีเฟรช
     </button>
@@ -640,7 +638,7 @@
                   {% if b.realCoords %}{{ b.realCoords.0 }}, {{ b.realCoords.1 }}{% else %}—{% endif %}
                 </td>
                 <td>
-                  <button class="btn btn-ghost btn-sm" onclick='editBuilding({{ b|safe }})'>
+                  <button class="btn btn-ghost btn-sm" onclick="editBuilding({{ b.id }})">
                     <i class="fa-solid fa-pen"></i>
                   </button>
                   <button class="btn btn-danger btn-sm" onclick="deleteBuilding({{ b.id }}, '{{ b.name }}')">
@@ -862,42 +860,7 @@
   </div>
 </div>
 
-<!-- ClickUp Settings & Sync Modal -->
-<div class="modal-overlay" id="clickup-modal">
-  <div class="modal-box">
-    <div class="modal-header">
-      <h3 style="display:flex; align-items:center; gap:8px;">
-        <i class="fa-solid fa-cloud-arrow-down" style="color: #7b68ee;"></i> ตั้งค่า & ซิงก์ฐานข้อมูล ClickUp
-      </h3>
-      <button class="modal-close" onclick="closeClickUpModal()"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    <div class="modal-body">
-      <div style="background:#f5f3ff; border:1.5px solid #ddd6fe; border-radius:10px; padding:12px; margin-bottom:16px; font-size:13px; color:#5b21b6;">
-        <i class="fa-solid fa-circle-info"></i> เชื่อมต่อ ClickUp List (<code>https://app.clickup.com/90182915429/v/l/2kzn45b5-398</code>) เพื่อใช้เป็นฐานข้อมูลหลักของอาคาร
-      </div>
-      <div class="form-group">
-        <label class="form-label">ClickUp Personal API Token (pk_...)</label>
-        <input type="password" class="form-control" id="clickup-token-input" placeholder="วาง pk_xxxxxxxxxxxx จาก ClickUp Settings > Apps ที่นี่">
-      </div>
-      <div class="form-group">
-        <label class="form-label">ClickUp List ID (หรือ ลิงก์ List View)</label>
-        <input type="text" class="form-control" id="clickup-list-input" value="2kzn45b5-398" placeholder="2kzn45b5-398">
-      </div>
-      <div id="clickup-status-box" style="margin-top:12px; font-size:13px; display:none; padding:10px; border-radius:8px;"></div>
-    </div>
-    <div class="modal-footer" style="justify-content: space-between;">
-      <button class="btn btn-ghost" onclick="testClickUpConfig()">
-        <i class="fa-solid fa-plug"></i> ทดสอบเชื่อมต่อ
-      </button>
-      <div style="display:flex; gap:8px;">
-        <button class="btn btn-ghost" onclick="closeClickUpModal()">ปิด</button>
-        <button class="btn btn-primary" onclick="syncFromClickUpNow()" style="background:#7b68ee; border:none;">
-          <i class="fa-solid fa-rotate"></i> ซิงก์ข้อมูลทันที
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
+
 
 <!-- Toast -->
 <div class="toast" id="toast">
@@ -1016,6 +979,7 @@ function filterBuildings() {
 }
 
 // ─── Building CRUD ─────────────────────────────────────────────────────────
+const buildingsData = {{ buildings_json|safe }};
 let editingId = null;
 
 function openAddBuilding() {
@@ -1029,7 +993,9 @@ function openAddBuilding() {
   document.getElementById('building-modal').classList.add('open');
 }
 
-function editBuilding(b) {
+function editBuilding(id) {
+  const b = typeof id === 'object' ? id : buildingsData.find(x => x.id === id);
+  if (!b) return;
   editingId = b.id;
   document.getElementById('modal-title').textContent = 'แก้ไขอาคาร #' + b.id;
   document.getElementById('form-id').value     = b.id;
@@ -1124,78 +1090,6 @@ function showToast(msg, type='success') {
   icon.className = type === 'success' ? 'fa-solid fa-circle-check' : 'fa-solid fa-triangle-exclamation';
   setTimeout(() => el.classList.remove('show'), 3500);
 }
-
-// ─── ClickUp Integration ───────────────────────────────────────────────────
-function openClickUpModal() {
-  document.getElementById('clickup-modal').classList.add('open');
-  fetch('/admin/api/clickup/config/')
-    .then(r => r.json())
-    .then(data => {
-      if (data.list_id) document.getElementById('clickup-list-input').value = data.list_id;
-    });
-}
-
-function closeClickUpModal() {
-  document.getElementById('clickup-modal').classList.remove('open');
-}
-
-async function testClickUpConfig() {
-  const token = document.getElementById('clickup-token-input').value.trim();
-  const listId = document.getElementById('clickup-list-input').value.trim();
-  const statusBox = document.getElementById('clickup-status-box');
-
-  statusBox.style.display = 'block';
-  statusBox.style.background = '#f1f5f9';
-  statusBox.style.color = '#334155';
-  statusBox.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังทดสอบเชื่อมต่อกับ ClickUp API...';
-
-  const res = await fetch('/admin/api/clickup/config/', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ api_token: token, list_id: listId })
-  });
-  const data = await res.json();
-  if (data.success) {
-    statusBox.style.color = '#065f46';
-    statusBox.style.background = '#d1fae5';
-    statusBox.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${data.message}`;
-    showToast('เชื่อมต่อ ClickUp สำเร็จ!', 'success');
-  } else {
-    statusBox.style.color = '#991b1b';
-    statusBox.style.background = '#fee2e2';
-    statusBox.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> ${data.message}`;
-    showToast(data.message, 'error');
-  }
-}
-
-async function syncFromClickUpNow() {
-  const token = document.getElementById('clickup-token-input').value.trim();
-  const listId = document.getElementById('clickup-list-input').value.trim();
-
-  if (token) {
-    await fetch('/admin/api/clickup/config/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ api_token: token, list_id: listId })
-    });
-  }
-
-  showToast('กำลังซิงก์ข้อมูลอาคารจาก ClickUp...', 'success');
-  const res = await fetch('/admin/api/clickup/sync/', { method: 'POST' });
-  const data = await res.json();
-
-  if (data.success) {
-    showToast(data.message, 'success');
-    setTimeout(() => location.reload(), 1200);
-  } else {
-    showToast(data.message || 'ซิงก์ข้อมูลล้มเหลว', 'error');
-  }
-}
-
-// Close clickup modal on backdrop click
-document.getElementById('clickup-modal').addEventListener('click', function(e) {
-  if (e.target === this) closeClickUpModal();
-});
 
 // ─── Student Management ───────────────────────────────────────────────────
 
