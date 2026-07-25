@@ -282,9 +282,11 @@
     </div>
 
     <!-- ==========================================
-         MAP VIEWPORT
+         MAP VIEWPORT & 3D CANVAS OVERLAY
          ========================================== -->
-    <main class="map-viewport" aria-label="แผนผังแบบโต้ตอบ">
+    <main class="map-viewport" id="map-viewport" aria-label="แผนผังแบบโต้ตอบ">
+      <div class="lighting-overlay" id="lighting-overlay"></div>
+      <canvas id="ambient-particles" class="ambient-particles"></canvas>
       <div id="map"></div>
     </main>
 
@@ -292,13 +294,20 @@
          FLOATING MAP CONTROLS
          ========================================== -->
     <div class="map-control-overlay">
-      <button class="map-control-btn" id="btn-map-zoom-in" aria-label="ซูมเข้า"><i class="fa-solid fa-plus"></i></button>
-      <button class="map-control-btn" id="btn-map-zoom-out" aria-label="ซูมออก"><i class="fa-solid fa-minus"></i></button>
+      <button class="map-control-btn" id="btn-map-zoom-in" aria-label="ซูมเข้า" title="ซูมเข้า"><i class="fa-solid fa-plus"></i></button>
+      <button class="map-control-btn" id="btn-map-zoom-out" aria-label="ซูมออก" title="ซูมออก"><i class="fa-solid fa-minus"></i></button>
       <div class="map-control-divider"></div>
-      <button class="map-control-btn gps-btn" id="btn-map-my-location" aria-label="ตำแหน่งปัจจุบัน">
+      <button class="map-control-btn active-3d-btn" id="btn-3d-tilt" aria-label="เปิด/ปิดเอฟเฟกต์มุมมอง 3D" title="สลับโหมดมุมมอง 3D Isometric">
+        <i class="fa-solid fa-cube"></i>
+      </button>
+      <button class="map-control-btn" id="btn-3d-lighting" aria-label="โหมดบรรยากาศ 3D" title="สลับบรรยากาศแสง (กลางวัน / พลบค่ำ / กลางคืน)">
+        <i class="fa-solid fa-sun" id="icon-3d-lighting"></i>
+      </button>
+      <div class="map-control-divider"></div>
+      <button class="map-control-btn gps-btn" id="btn-map-my-location" aria-label="ตำแหน่งปัจจุบัน" title="ระบุตำแหน่งของฉัน">
         <i class="fa-solid fa-location-crosshairs"></i>
       </button>
-      <button class="map-control-btn" id="btn-map-reset" aria-label="กลับสู่กึ่งกลาง">
+      <button class="map-control-btn" id="btn-map-reset" aria-label="กลับสู่กึ่งกลาง" title="มุมมองปกติ">
         <i class="fa-solid fa-compress"></i>
       </button>
     </div>
@@ -310,7 +319,12 @@
       <div class="carousel-header">
         <div class="carousel-title-row">
           <h3><i class="fa-regular fa-compass"></i> สำรวจสถานที่</h3>
-          <span class="carousel-counter" id="carousel-item-counter">21 ตึกอาคาร</span>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="carousel-counter" id="carousel-item-counter">21 ตึกอาคาร</span>
+            <button class="btn-tour-3d" id="btn-tour-3d" title="นำทางทัวร์ชมวิทยาเขต 3D แบบอัตโนมัติ">
+              <i class="fa-solid fa-video"></i> ทัวร์ 3D
+            </button>
+          </div>
         </div>
         <nav class="category-tabs" id="category-filter" aria-label="กรองประเภท">
           <button class="category-tab active" data-category="all">ทั้งหมด</button>

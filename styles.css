@@ -3091,3 +3091,168 @@ body.dark-theme .toast-container {
     max-width: 100vw;
   }
 }
+
+/* ==========================================================================
+   18. INTERACTIVE 3D MAP & LIGHTING FX
+   ========================================== */
+.map-viewport {
+  perspective: 1200px;
+  overflow: hidden;
+  position: relative;
+}
+
+#map {
+  transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1), filter 0.5s ease;
+  transform-style: preserve-3d;
+}
+
+.map-viewport.tilt-enabled #map {
+  transform: perspective(1000px) rotateX(10deg) rotateY(-3deg) scale(1.02);
+}
+
+/* 3D Lighting Overlay FX */
+.lighting-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 400;
+  transition: background 0.8s ease, opacity 0.8s ease;
+  opacity: 0;
+}
+
+.lighting-overlay.sunset {
+  opacity: 1;
+  background: radial-gradient(circle at 70% 30%, rgba(251, 146, 60, 0.25) 0%, rgba(194, 65, 12, 0.15) 50%, rgba(15, 23, 42, 0.4) 100%),
+              linear-gradient(to bottom, rgba(245, 158, 11, 0.15), rgba(180, 83, 9, 0.25));
+  mix-blend-mode: color-burn;
+}
+
+.lighting-overlay.night {
+  opacity: 1;
+  background: radial-gradient(circle at 50% 40%, rgba(30, 58, 138, 0.3) 0%, rgba(15, 23, 42, 0.75) 100%),
+              linear-gradient(to bottom, rgba(15, 23, 42, 0.6), rgba(2, 6, 23, 0.85));
+  mix-blend-mode: multiply;
+}
+
+.ambient-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 401;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+
+.ambient-particles.active {
+  opacity: 1;
+}
+
+/* 3D Floating Tour Button */
+.btn-tour-3d {
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  color: white;
+  border: none;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.35);
+  transition: all 0.25s ease;
+}
+
+.btn-tour-3d:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 18px rgba(124, 58, 237, 0.5);
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+}
+
+.btn-tour-3d.active {
+  animation: pulse-tour 1.5s infinite alternate;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+@keyframes pulse-tour {
+  0% { box-shadow: 0 0 0 0 rgba(239,68,68,0.5); }
+  100% { box-shadow: 0 0 0 10px rgba(239,68,68,0); }
+}
+
+.map-control-btn.active-3d-btn {
+  background: #2563eb;
+  color: white;
+  box-shadow: 0 0 12px rgba(37,99,235,0.5);
+}
+
+/* 3D Pin Animations */
+.marker-pin-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform-style: preserve-3d;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.marker-pin-wrapper:hover {
+  transform: translateY(-8px) scale(1.15);
+  z-index: 999;
+}
+
+.pin-3d-shadow {
+  position: absolute;
+  bottom: -4px;
+  width: 24px;
+  height: 8px;
+  background: rgba(15, 23, 42, 0.35);
+  border-radius: 50%;
+  filter: blur(2px);
+  transform: rotateX(60deg);
+  transition: all 0.3s ease;
+}
+
+.marker-pin-wrapper:hover .pin-3d-shadow {
+  transform: rotateX(60deg) scale(1.4);
+  opacity: 0.6;
+}
+
+.pin-3d-pulse {
+  position: absolute;
+  bottom: -2px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--primary-light);
+  opacity: 0;
+  animation: pinPulse 2s infinite ease-out;
+}
+
+@keyframes pinPulse {
+  0% { transform: scale(0.3); opacity: 0.8; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+.marker-3d-badge {
+  position: absolute;
+  bottom: 42px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(8px);
+  color: white;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 10.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: all 0.25s ease;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.marker-pin-wrapper:hover .marker-3d-badge {
+  opacity: 1;
+  transform: translateY(0);
+}
