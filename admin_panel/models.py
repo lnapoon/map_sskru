@@ -52,3 +52,19 @@ class AdminSession(models.Model):
 
     def __str__(self):
         return f"Session {self.token[:16]}... (active={self.is_active})"
+
+
+class Student(models.Model):
+    """ข้อมูลนักศึกษาสำหรับเข้าสู่ระบบแผนที่"""
+    student_id = models.CharField(max_length=20, unique=True, verbose_name="รหัสนักศึกษา")
+    name = models.CharField(max_length=255, verbose_name="ชื่อ-นามสกุล")
+    is_active = models.BooleanField(default=True, verbose_name="สถานะใช้งาน")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'นักศึกษา'
+        verbose_name_plural = 'นักศึกษาทั้งหมด'
+
+    def __str__(self):
+        return f"{self.student_id} - {self.name}"

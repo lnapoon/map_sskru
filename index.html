@@ -63,27 +63,26 @@
         <div class="drawer-close-btn" id="btn-drawer-close" aria-label="ปิดเมนู">
           <i class="fa-solid fa-xmark"></i>
         </div>
-        <div class="drawer-avatar">
+        <div class="drawer-avatar" id="drawer-avatar-icon">
           <i class="fa-solid fa-graduation-cap"></i>
         </div>
         <div class="drawer-user-info">
-          <div class="drawer-username">SSKRU Campus Map</div>
-          <div class="drawer-subtitle">มหาวิทยาลัยราชภัฏศรีสะเกษ</div>
+          <div class="drawer-username" id="drawer-username">SSKRU Campus Map</div>
+          <div class="drawer-subtitle" id="drawer-subtitle">มหาวิทยาลัยราชภัฏศรีสะเกษ</div>
         </div>
       </div>
 
       <!-- Nav Items -->
       <nav class="drawer-nav" role="navigation" aria-label="เมนูนำทาง">
-        <button class="drawer-nav-item" id="btn-drawer-nav">
-          <div class="drawer-nav-icon primary"><i class="fa-solid fa-route"></i></div>
-          <span>นำทางภายในวิทยาเขต</span>
+        <!-- User Profile Button -->
+        <button class="drawer-nav-item" id="btn-drawer-profile">
+          <div class="drawer-nav-icon purple"><i class="fa-solid fa-user-circle"></i></div>
+          <span>โปรไฟล์ของฉัน</span>
           <i class="fa-solid fa-chevron-right drawer-nav-arrow"></i>
         </button>
-        <button class="drawer-nav-item" id="btn-drawer-my-location">
-          <div class="drawer-nav-icon blue"><i class="fa-solid fa-location-crosshairs"></i></div>
-          <span>ตำแหน่งของฉัน (GPS)</span>
-          <i class="fa-solid fa-chevron-right drawer-nav-arrow"></i>
-        </button>
+
+        <div class="drawer-divider"></div>
+
         <button class="drawer-nav-item" id="btn-drawer-info">
           <div class="drawer-nav-icon orange"><i class="fa-solid fa-circle-info"></i></div>
           <span>ข้อมูลติดต่อมหาวิทยาลัย</span>
@@ -100,11 +99,80 @@
 
         <div class="drawer-divider"></div>
 
+        <!-- Logout Button -->
+        <button class="drawer-nav-item drawer-nav-logout" id="btn-drawer-logout">
+          <div class="drawer-nav-icon danger"><i class="fa-solid fa-right-from-bracket"></i></div>
+          <span>ออกจากระบบ</span>
+          <i class="fa-solid fa-chevron-right drawer-nav-arrow"></i>
+        </button>
+
+        <div class="drawer-divider"></div>
+
         <div class="drawer-version-badge">
           <i class="fa-solid fa-map-location-dot"></i>
           SSKRU Campus Map v3.0
         </div>
       </nav>
+    </aside>
+
+    <!-- ==========================================
+         USER PROFILE PANEL (Slide-in from right)
+         ========================================== -->
+    <div class="profile-panel-backdrop" id="profile-panel-backdrop"></div>
+    <aside class="profile-panel" id="profile-panel" aria-label="โปรไฟล์ผู้ใช้">
+      <div class="profile-panel-header">
+        <button class="profile-panel-close" id="btn-profile-close"><i class="fa-solid fa-xmark"></i></button>
+        <h3>โปรไฟล์ผู้ใช้</h3>
+      </div>
+      <div class="profile-panel-body">
+        <!-- Avatar -->
+        <div class="profile-avatar-section">
+          <div class="profile-avatar-large" id="profile-avatar-large">
+            <i class="fa-solid fa-user-graduate"></i>
+          </div>
+          <div class="profile-name" id="profile-name">ผู้ใช้งาน</div>
+          <div class="profile-role-badge" id="profile-role-badge">นักศึกษา</div>
+        </div>
+
+        <!-- Info Cards -->
+        <div class="profile-info-cards">
+          <div class="profile-info-card">
+            <div class="profile-info-icon"><i class="fa-solid fa-id-card"></i></div>
+            <div class="profile-info-detail">
+              <div class="profile-info-label">รหัสประจำตัว</div>
+              <div class="profile-info-value" id="profile-student-id">—</div>
+            </div>
+          </div>
+          <div class="profile-info-card">
+            <div class="profile-info-icon"><i class="fa-solid fa-shield-halved"></i></div>
+            <div class="profile-info-detail">
+              <div class="profile-info-label">สิทธิ์การใช้งาน</div>
+              <div class="profile-info-value" id="profile-access-level">ดูแผนที่และค้นหาอาคาร</div>
+            </div>
+          </div>
+          <div class="profile-info-card">
+            <div class="profile-info-icon"><i class="fa-solid fa-university"></i></div>
+            <div class="profile-info-detail">
+              <div class="profile-info-label">สถาบัน</div>
+              <div class="profile-info-value">มหาวิทยาลัยราชภัฏศรีสะเกษ</div>
+            </div>
+          </div>
+          <div class="profile-info-card">
+            <div class="profile-info-icon"><i class="fa-solid fa-clock"></i></div>
+            <div class="profile-info-detail">
+              <div class="profile-info-label">เข้าใช้งานล่าสุด</div>
+              <div class="profile-info-value" id="profile-last-access">—</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="profile-actions">
+          <button class="profile-action-btn logout" id="btn-profile-logout">
+            <i class="fa-solid fa-right-from-bracket"></i> ออกจากระบบ
+          </button>
+        </div>
+      </div>
     </aside>
 
     <!-- ==========================================
@@ -147,21 +215,21 @@
 
       <!-- Desktop Action Buttons -->
       <div class="nav-actions" id="nav-desktop-actions">
-        <button class="nav-btn primary" id="btn-nav-trigger" aria-label="วางแผนเส้นทาง">
-          <i class="fa-solid fa-route"></i> นำทางภายในวิทยาเขต
-        </button>
         <button class="nav-btn secondary" id="btn-univ-info-trigger" aria-label="ข้อมูลมหาวิทยาลัย">
           <i class="fa-solid fa-circle-info"></i> ข้อมูลติดต่อ
         </button>
+        <button class="nav-icon-btn theme-toggle-btn" id="btn-theme-toggle" aria-label="สลับโทนสี" title="สลับโทนสี (สว่าง/มืด)">
+          <i class="fa-solid fa-moon"></i>
+        </button>
       </div>
 
-      <!-- Mobile Search & GPS buttons -->
+      <!-- Mobile Actions -->
       <div class="nav-mobile-actions">
+        <button class="nav-icon-btn theme-toggle-btn" id="btn-theme-toggle-mobile" aria-label="สลับโทนสี" title="สลับโทนสี (สว่าง/มืด)">
+          <i class="fa-solid fa-moon"></i>
+        </button>
         <button class="nav-icon-btn" id="btn-mobile-search" aria-label="ค้นหา">
           <i class="fa-solid fa-magnifying-glass"></i>
-        </button>
-        <button class="nav-icon-btn accent" id="btn-nav-trigger-mobile" aria-label="นำทาง">
-          <i class="fa-solid fa-route"></i>
         </button>
       </div>
     </header>
@@ -260,76 +328,7 @@
       </div>
     </div>
 
-    <!-- ==========================================
-         PATHFINDER NAVIGATION PANEL
-         ========================================== -->
-    <section class="navigation-panel" id="nav-routes-panel" aria-label="ระบบนำทาง">
-      <div class="panel-drag-handle"></div>
-      <header class="nav-header">
-        <h2><i class="fa-solid fa-route"></i> นำทางวิทยาเขต</h2>
-        <button class="nav-header-close" id="btn-nav-panel-close" aria-label="ปิด">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </header>
-
-      <div class="nav-body">
-        <!-- Travel Mode Tabs (4 Modes) -->
-        <div class="travel-mode-tabs" id="travel-mode-selector">
-          <button class="travel-mode-btn active" data-mode="walk" title="เดินเท้า">
-            <i class="fa-solid fa-person-walking"></i> เดินเท้า
-          </button>
-          <button class="travel-mode-btn" data-mode="bike" title="จักรยาน">
-            <i class="fa-solid fa-bicycle"></i> จักรยาน
-          </button>
-          <button class="travel-mode-btn" data-mode="motorcycle" title="รถจักรยานยนต์">
-            <i class="fa-solid fa-motorcycle"></i> มอเตอร์ไซค์
-          </button>
-          <button class="travel-mode-btn" data-mode="car" title="รถยนต์">
-            <i class="fa-solid fa-car"></i> รถยนต์
-          </button>
-        </div>
-
-        <div class="nav-selector-group">
-          <div class="nav-input-box">
-            <label for="select-nav-source">จุดเริ่มต้น</label>
-            <div class="nav-select-wrapper">
-              <select id="select-nav-source" class="nav-select">
-                <option value="">-- เลือกจุดเริ่มต้น --</option>
-                <option value="my_location">📍 ตำแหน่งปัจจุบัน (GPS)</option>
-              </select>
-            </div>
-          </div>
-          <div class="nav-input-box">
-            <label for="select-nav-dest">จุดหมายปลายทาง</label>
-            <div class="nav-select-wrapper">
-              <select id="select-nav-dest" class="nav-select">
-                <option value="">-- เลือกจุดหมาย --</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <!-- Route Results -->
-        <div class="nav-results-container" id="nav-results-wrapper">
-          <div class="nav-summary-card">
-            <div class="nav-summary-row">
-              <span class="nav-summary-lbl"><i class="fa-solid fa-ruler-horizontal"></i> ระยะทาง</span>
-              <span class="nav-summary-val" id="nav-summary-distance">0 เมตร</span>
-            </div>
-            <div class="nav-summary-row">
-              <span class="nav-summary-lbl"><i class="fa-regular fa-clock"></i> เวลาประมาณ</span>
-              <span class="nav-summary-val" id="nav-summary-time">0 นาที</span>
-            </div>
-            <button class="btn-start-navigation-mode" id="btn-start-active-nav" style="width: 100%; margin-top: 12px; padding: 12px; background: linear-gradient(135deg, #4285f4, #1a73e8); color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(26,115,232,0.35);">
-              <i class="fa-solid fa-location-arrow"></i> เปิดนำทางบน Google Maps
-            </button>
-          </div>
-
-          <h4 class="route-steps-title"><i class="fa-solid fa-list-check"></i> ขั้นตอนนำทาง</h4>
-          <div class="nav-route-steps" id="nav-route-steps-container" role="list"></div>
-        </div>
-      </div>
-    </section>
+    <!-- Navigation panel removed - replaced with location display -->
 
     <!-- ==========================================
          BUILDING INFO PANEL / BOTTOM SHEET
@@ -419,9 +418,9 @@
 
       <!-- Action Buttons — Google Maps Style (4 buttons) -->
       <div class="info-panel-actions">
-        <button class="action-btn-card" id="btn-action-gmaps" aria-label="นำทางมาที่นี่">
-          <div class="action-btn-icon navigate"><i class="fa-solid fa-diamond-turn-right"></i></div>
-          <span>นำทาง</span>
+        <button class="action-btn-card" id="btn-action-gmaps" aria-label="เปิดใน Google Maps">
+          <div class="action-btn-icon navigate"><i class="fa-solid fa-map-location-dot"></i></div>
+          <span>ดูใน Maps</span>
         </button>
         <button class="action-btn-card" id="btn-action-save" aria-label="บันทึกสถานที่">
           <div class="action-btn-icon save"><i class="fa-regular fa-bookmark"></i></div>
@@ -459,29 +458,7 @@
     </div>
   </div>
 
-  <!-- Admin Login Modal -->
-  <div class="modal-overlay" id="admin-login-overlay">
-    <div class="modal-content-card" style="max-width: 380px;">
-      <div class="modal-body" style="padding: 24px;">
-        <div class="modal-icon info" style="color: var(--primary-color);"><i class="fa-solid fa-user-shield"></i></div>
-        <h3 class="modal-title">เข้าสู่ระบบแอดมิน</h3>
-        <form id="admin-login-form" style="margin-top: 15px; display: flex; flex-direction: column; gap: 12px; text-align: left;">
-          <div class="nav-input-box">
-            <label style="font-size:10px; font-weight:bold; color:var(--text-secondary);">ชื่อผู้ใช้งาน</label>
-            <input type="text" id="admin-username" required class="form-input" placeholder="admin">
-          </div>
-          <div class="nav-input-box">
-            <label style="font-size:10px; font-weight:bold; color:var(--text-secondary);">รหัสผ่าน</label>
-            <input type="password" id="admin-password" required class="form-input" placeholder="admin1234">
-          </div>
-          <div style="margin-top: 10px; display: flex; gap: 10px; justify-content: flex-end;">
-            <button type="button" class="modal-btn btn-secondary" id="btn-admin-login-cancel">ยกเลิก</button>
-            <button type="submit" class="modal-btn btn-primary" style="background: var(--primary-color); color: white;">เข้าสู่ระบบ</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
+
 
   <!-- Building Form Modal -->
   <div class="modal-overlay" id="building-form-overlay">

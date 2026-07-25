@@ -12,7 +12,7 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
       --primary: #1a4fa0; --primary-dark: #0d2c5e; --primary-light: #2563eb;
-      --accent: #f59e0b; --danger: #ef4444; --success: #10b981; --warning: #f59e0b;
+      --accent: #f59e0b; --accent-gold: #d4ac0d; --danger: #ef4444; --success: #10b981; --warning: #f59e0b;
       --info: #3b82f6;
       --bg: #f0f4f8; --surface: #ffffff; --surface2: #f8fafc;
       --text: #1e293b; --text-secondary: #64748b; --text-muted: #94a3b8;
@@ -21,6 +21,17 @@
       --header-h: 60px;
       --radius: 14px;
       --shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+
+    body.dark-theme {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface2: #334155;
+      --text: #ffffff;
+      --text-secondary: #cbd5e1;
+      --text-muted: #94a3b8;
+      --border: rgba(255,255,255,0.12);
+      --shadow: 0 4px 20px rgba(0,0,0,0.4);
     }
     html, body { height: 100%; }
     body { font-family: 'Sarabun', 'Outfit', sans-serif; background: var(--bg); color: var(--text); display: flex; overflow: hidden; }
@@ -333,8 +344,31 @@
       display: flex; align-items: center; gap: 10px;
     }
     .toast.show { transform: translateY(0); opacity: 1; }
-    .toast.success { background: var(--success); }
-    .toast.error   { background: var(--danger); }
+    /* ─── DARK THEME OVERRIDES FOR DASHBOARD ─── */
+    body.dark-theme .top-header { background: #1e293b; border-color: #334155; }
+    body.dark-theme .header-title { color: #ffffff; }
+    body.dark-theme .header-btn { background: #1e293b; color: #ffffff; border-color: #475569; }
+    body.dark-theme .header-btn:hover { background: #334155; }
+    body.dark-theme .card { background: #1e293b; border: 1px solid #334155; color: #ffffff; }
+    body.dark-theme .card-header { border-color: #334155; }
+    body.dark-theme .card-title { color: #ffffff; }
+    body.dark-theme .stat-card { background: #1e293b; border: 1px solid #334155; }
+    body.dark-theme .stat-value { color: #ffffff; }
+    body.dark-theme .stat-label { color: #cbd5e1; }
+    body.dark-theme .table th { background: #0f172a; color: #ffffff; border-color: #334155; }
+    body.dark-theme .table td { color: #ffffff; border-color: #334155; }
+    body.dark-theme .table tbody tr:hover { background: rgba(255,255,255,0.05); }
+    body.dark-theme .form-input, body.dark-theme .form-select, body.dark-theme .form-textarea {
+      background: #0f172a; color: #ffffff; border-color: #475569;
+    }
+    body.dark-theme .search-input { background: #0f172a; color: #ffffff; border-color: #475569; }
+    body.dark-theme .modal-container { background: #1e293b; color: #ffffff; border: 1px solid #334155; }
+    body.dark-theme .modal-header { border-color: #334155; }
+    body.dark-theme .modal-footer { border-color: #334155; background: #0f172a; }
+    body.dark-theme .top-name { color: #ffffff; }
+    body.dark-theme .top-list-item { border-color: #334155; }
+    body.dark-theme .donut-label { color: #ffffff; }
+    body.dark-theme .donut-pct { color: #60a5fa; }
   </style>
 </head>
 <body>
@@ -363,6 +397,10 @@
       <div class="nav-icon"><i class="fa-solid fa-building"></i></div>
       จัดการอาคาร
       <span class="nav-badge">{{ total_buildings }}</span>
+    </button>
+    <button class="nav-item" onclick="showSection('students')" id="nav-students">
+      <div class="nav-icon"><i class="fa-solid fa-user-graduate"></i></div>
+      จัดการนักศึกษา
     </button>
     <button class="nav-item" onclick="showSection('visitors')" id="nav-visitors">
       <div class="nav-icon"><i class="fa-solid fa-users"></i></div>
@@ -408,6 +446,12 @@
       <span><span class="status-dot"></span> ระบบออนไลน์</span>
       <span id="current-time"></span>
     </div>
+    <button class="header-btn" id="btn-admin-theme-toggle" onclick="toggleAdminTheme()" title="สลับโทนสี (สว่าง/มืด)">
+      <i class="fa-solid fa-moon"></i>
+    </button>
+    <button class="header-btn" onclick="openClickUpModal()" style="background: linear-gradient(135deg, #7b68ee, #5f48ea); color: white; border: none; font-weight:600;">
+      <i class="fa-solid fa-cloud-arrow-down"></i> ซิงก์ ClickUp
+    </button>
     <button class="header-btn" onclick="refreshData()">
       <i class="fa-solid fa-rotate"></i> รีเฟรช
     </button>
@@ -515,6 +559,32 @@
             <div class="empty-state"><i class="fa-solid fa-building"></i><p>ยังไม่มีข้อมูลการเข้าชมอาคาร</p></div>
             {% endif %}
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ SECTION: STUDENTS ══ -->
+    <section class="section" id="section-students">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="margin: 0;">รายชื่อนักศึกษาที่ได้รับสิทธิ์เข้าใช้งาน</h2>
+        <button class="btn btn-primary" onclick="openStudentModal()"><i class="fa-solid fa-plus"></i> เพิ่มนักศึกษา</button>
+      </div>
+      <div class="card p-0">
+        <div class="table-container">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>รหัสนักศึกษา</th>
+                <th>ชื่อ-นามสกุล</th>
+                <th>สถานะ</th>
+                <th>วันที่เพิ่ม</th>
+                <th style="text-align:center;">จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="students-table-body">
+              <!-- Students populated by JS -->
+            </tbody>
+          </table>
         </div>
       </div>
     </section>
@@ -699,6 +769,29 @@
      MODALS
 ══════════════════════════════════════════════ -->
 <!-- Add/Edit Building Modal -->
+<div class="modal-overlay" id="student-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="student-modal-title"><i class="fa-solid fa-user-plus"></i> เพิ่มนักศึกษา</h3>
+      <button class="close-modal" onclick="closeStudentModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">รหัสนักศึกษา</label>
+        <input type="text" class="form-input" id="form-student-id" placeholder="กรุณาป้อนรหัสนักศึกษา">
+      </div>
+      <div class="form-group">
+        <label class="form-label">ชื่อ-นามสกุล</label>
+        <input type="text" class="form-input" id="form-student-name" placeholder="เช่น นายภูพิรัฐ แซ่โค้ว">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeStudentModal()">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveStudent()">บันทึกข้อมูล</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="building-modal">
   <div class="modal">
     <div class="modal-header">
@@ -769,6 +862,43 @@
   </div>
 </div>
 
+<!-- ClickUp Settings & Sync Modal -->
+<div class="modal-overlay" id="clickup-modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 style="display:flex; align-items:center; gap:8px;">
+        <i class="fa-solid fa-cloud-arrow-down" style="color: #7b68ee;"></i> ตั้งค่า & ซิงก์ฐานข้อมูล ClickUp
+      </h3>
+      <button class="modal-close" onclick="closeClickUpModal()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <div style="background:#f5f3ff; border:1.5px solid #ddd6fe; border-radius:10px; padding:12px; margin-bottom:16px; font-size:13px; color:#5b21b6;">
+        <i class="fa-solid fa-circle-info"></i> เชื่อมต่อ ClickUp List (<code>https://app.clickup.com/90182915429/v/l/2kzn45b5-398</code>) เพื่อใช้เป็นฐานข้อมูลหลักของอาคาร
+      </div>
+      <div class="form-group">
+        <label class="form-label">ClickUp Personal API Token (pk_...)</label>
+        <input type="password" class="form-control" id="clickup-token-input" placeholder="วาง pk_xxxxxxxxxxxx จาก ClickUp Settings > Apps ที่นี่">
+      </div>
+      <div class="form-group">
+        <label class="form-label">ClickUp List ID (หรือ ลิงก์ List View)</label>
+        <input type="text" class="form-control" id="clickup-list-input" value="2kzn45b5-398" placeholder="2kzn45b5-398">
+      </div>
+      <div id="clickup-status-box" style="margin-top:12px; font-size:13px; display:none; padding:10px; border-radius:8px;"></div>
+    </div>
+    <div class="modal-footer" style="justify-content: space-between;">
+      <button class="btn btn-ghost" onclick="testClickUpConfig()">
+        <i class="fa-solid fa-plug"></i> ทดสอบเชื่อมต่อ
+      </button>
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-ghost" onclick="closeClickUpModal()">ปิด</button>
+        <button class="btn btn-primary" onclick="syncFromClickUpNow()" style="background:#7b68ee; border:none;">
+          <i class="fa-solid fa-rotate"></i> ซิงก์ข้อมูลทันที
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Toast -->
 <div class="toast" id="toast">
   <i class="fa-solid fa-circle-check" id="toast-icon"></i>
@@ -800,6 +930,7 @@ function showSection(name) {
   const titles = {
     overview: ['ภาพรวม', 'ระบบ'],
     buildings: ['จัดการ', 'อาคาร'],
+    students: ['จัดการ', 'นักศึกษา'],
     visitors: ['ผู้เข้าชม', 'ทั้งหมด'],
     analytics: ['สถิติ', 'การใช้งาน'],
   };
@@ -944,7 +1075,9 @@ async function saveBuilding() {
   const method = editingId ? 'PUT' : 'POST';
 
   const res = await fetch(url, {
-    method, headers: { 'Content-Type': 'application/json' },
+    method, 
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'same-origin',
     body: JSON.stringify(payload)
   });
   const data = await res.json();
@@ -960,7 +1093,10 @@ async function saveBuilding() {
 
 async function deleteBuilding(id, name) {
   if (!confirm(`ยืนยันลบอาคาร "${name}"?`)) return;
-  const res = await fetch(`/admin/api/buildings/${id}/`, { method: 'DELETE' });
+  const res = await fetch(`/admin/api/buildings/${id}/`, { 
+    method: 'DELETE',
+    credentials: 'same-origin'
+  });
   const data = await res.json();
   if (data.success) {
     showToast('ลบอาคารสำเร็จ', 'success');
@@ -989,9 +1125,180 @@ function showToast(msg, type='success') {
   setTimeout(() => el.classList.remove('show'), 3500);
 }
 
-// Close modal on backdrop click
-document.getElementById('building-modal').addEventListener('click', function(e) {
-  if (e.target === this) closeModal();
+// ─── ClickUp Integration ───────────────────────────────────────────────────
+function openClickUpModal() {
+  document.getElementById('clickup-modal').classList.add('open');
+  fetch('/admin/api/clickup/config/')
+    .then(r => r.json())
+    .then(data => {
+      if (data.list_id) document.getElementById('clickup-list-input').value = data.list_id;
+    });
+}
+
+function closeClickUpModal() {
+  document.getElementById('clickup-modal').classList.remove('open');
+}
+
+async function testClickUpConfig() {
+  const token = document.getElementById('clickup-token-input').value.trim();
+  const listId = document.getElementById('clickup-list-input').value.trim();
+  const statusBox = document.getElementById('clickup-status-box');
+
+  statusBox.style.display = 'block';
+  statusBox.style.background = '#f1f5f9';
+  statusBox.style.color = '#334155';
+  statusBox.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังทดสอบเชื่อมต่อกับ ClickUp API...';
+
+  const res = await fetch('/admin/api/clickup/config/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ api_token: token, list_id: listId })
+  });
+  const data = await res.json();
+  if (data.success) {
+    statusBox.style.color = '#065f46';
+    statusBox.style.background = '#d1fae5';
+    statusBox.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${data.message}`;
+    showToast('เชื่อมต่อ ClickUp สำเร็จ!', 'success');
+  } else {
+    statusBox.style.color = '#991b1b';
+    statusBox.style.background = '#fee2e2';
+    statusBox.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> ${data.message}`;
+    showToast(data.message, 'error');
+  }
+}
+
+async function syncFromClickUpNow() {
+  const token = document.getElementById('clickup-token-input').value.trim();
+  const listId = document.getElementById('clickup-list-input').value.trim();
+
+  if (token) {
+    await fetch('/admin/api/clickup/config/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ api_token: token, list_id: listId })
+    });
+  }
+
+  showToast('กำลังซิงก์ข้อมูลอาคารจาก ClickUp...', 'success');
+  const res = await fetch('/admin/api/clickup/sync/', { method: 'POST' });
+  const data = await res.json();
+
+  if (data.success) {
+    showToast(data.message, 'success');
+    setTimeout(() => location.reload(), 1200);
+  } else {
+    showToast(data.message || 'ซิงก์ข้อมูลล้มเหลว', 'error');
+  }
+}
+
+// Close clickup modal on backdrop click
+document.getElementById('clickup-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeClickUpModal();
+});
+
+// ─── Student Management ───────────────────────────────────────────────────
+
+function openStudentModal() {
+  document.getElementById('form-student-id').value = '';
+  document.getElementById('form-student-name').value = '';
+  document.getElementById('student-modal').classList.add('open');
+}
+
+function closeStudentModal() {
+  document.getElementById('student-modal').classList.remove('open');
+}
+
+async function loadStudents() {
+  const res = await fetch('/admin/api/students/', { credentials: 'same-origin' });
+  const data = await res.json();
+  if (data.success) {
+    const tbody = document.getElementById('students-table-body');
+    tbody.innerHTML = '';
+    data.data.forEach(s => {
+      const date = new Date(s.created_at).toLocaleDateString('th-TH');
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${s.student_id}</td>
+        <td>${s.name}</td>
+        <td><span class="status-pill status-active">อนุญาต</span></td>
+        <td>${date}</td>
+        <td style="text-align:center;">
+          <button class="action-btn action-del" onclick="deleteStudent(${s.id}, '${s.name}')" title="ลบข้อมูล">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+}
+
+async function saveStudent() {
+  const id = document.getElementById('form-student-id').value.trim();
+  const name = document.getElementById('form-student-name').value.trim();
+  if (!id || !name) {
+    showToast('กรุณากรอกข้อมูลให้ครบถ้วน', 'error');
+    return;
+  }
+  const res = await fetch('/admin/api/students/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'same-origin',
+    body: JSON.stringify({ student_id: id, name: name })
+  });
+  const data = await res.json();
+  if (data.success) {
+    showToast('เพิ่มนักศึกษาสำเร็จ', 'success');
+    closeStudentModal();
+    loadStudents();
+  } else {
+    showToast(data.message || 'เกิดข้อผิดพลาด', 'error');
+  }
+}
+
+async function deleteStudent(id, name) {
+  if (!confirm(`ยืนยันลบสิทธิ์นักศึกษา ${name}?`)) return;
+  const res = await fetch('/admin/api/students/', {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'same-origin',
+    body: JSON.stringify({ id })
+  });
+  const data = await res.json();
+  if (data.success) {
+    showToast('ลบข้อมูลสำเร็จ', 'success');
+    loadStudents();
+  } else {
+    showToast(data.message || 'เกิดข้อผิดพลาด', 'error');
+  }
+}
+
+// Admin Theme Toggle System
+function initAdminTheme() {
+  const savedTheme = localStorage.getItem('sskru_theme') || 'light';
+  applyAdminTheme(savedTheme);
+}
+
+function applyAdminTheme(theme) {
+  const isDark = theme === 'dark';
+  document.body.classList.toggle('dark-theme', isDark);
+  localStorage.setItem('sskru_theme', theme);
+  const btn = document.getElementById('btn-admin-theme-toggle');
+  if (btn) btn.innerHTML = `<i class="fa-solid fa-${isDark ? 'sun' : 'moon'}"></i>`;
+}
+
+function toggleAdminTheme() {
+  const currentTheme = localStorage.getItem('sskru_theme') || 'light';
+  const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  applyAdminTheme(newTheme);
+  showToast(newTheme === 'dark' ? 'สลับเข้าสู่โหมดมืด (Dark Mode)' : 'สลับเข้าสู่โหมดสว่าง (Light Mode)', 'success');
+}
+
+// Load theme and students on page load
+document.addEventListener('DOMContentLoaded', () => {
+  initAdminTheme();
+  loadStudents();
 });
 </script>
 </body>

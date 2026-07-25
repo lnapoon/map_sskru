@@ -2,11 +2,15 @@ from django.urls import path, re_path, include
 from django.conf import settings
 from django.views.static import serve
 from api.views import index_view
+from api import views as api_views
+from admin_panel import views as admin_views
 
-from admin_panel.views import track_event
+from admin_panel.views import track_event, student_login_page
 
 urlpatterns = [
     path('', index_view, name='index'),
+    path('login/', admin_views.student_login_page, name='student_login'),
+    path('logout/', api_views.logout_view, name='logout'),
     path('admin/', include('admin_panel.urls')),
     path('api/track', track_event, name='track_event'),
     path('api/track/', track_event, name='track_event_slash'),

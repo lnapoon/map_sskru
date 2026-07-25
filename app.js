@@ -566,6 +566,7 @@ let selectedBuilding = null;
 let userPixelCoords = null;
 let userMarker = null;
 let activeFilters = 'all';
+let isAdminMode = false;
 
 // Active Navigation & Event Tracking States
 let activeTravelMode = 'walk'; // 'walk', 'bike', 'motorcycle', 'car'
@@ -575,6 +576,10 @@ let navAnimId = null;
 let isNavActive = false;
 let navProgress = 0;
 let targetBuildingName = "";
+let grabAnimId = null;
+let isGrabAnimating = false;
+let grabProgress = 0;
+let grabRiderMarker = null;
 
 const TRAVEL_MODES = {
   walk:       { mps: 1.2, icon: 'fa-person-walking', label: 'เดินเท้า' },
@@ -612,10 +617,11 @@ function trackEvent(eventType, eventData = '') {
 
 let adminBuildings = [];
 
-/* ==========================================================================
-   Initialization Modules
-   ========================================================================== */
-document.addEventListener("DOMContentLoaded", () => {
+// Global Auth State
+// window.isAdminMode and window.isStudentMode are not needed if we use the local vars
+document.addEventListener("DOMContentLoaded", async () => {
+  initTheme();
+  await fetchAuthStatus();
   initMap();
   setupEventListeners();
   updateRealTimeStatus();
@@ -624,6 +630,130 @@ document.addEventListener("DOMContentLoaded", () => {
 
   setInterval(updateRealTimeStatus, 30000);
 });
+
+// Theme Toggle System (Dark / Light Mode)
+function initTheme() {
+  const savedTheme = localStorage.getItem('sskru_theme') || 'light';
+  applyTheme(savedTheme);
+}
+
+function applyTheme(theme) {
+  const isDark = theme === 'dark';
+  document.body.classList.toggle('dark-theme', isDark);
+  localStorage.setItem('sskru_theme', theme);
+
+  const iconClass = isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+  const btnDesktop = document.getElementById('btn-theme-toggle');
+  const btnMobile = document.getElementById('btn-theme-toggle-mobile');
+
+  if (btnDesktop) btnDesktop.innerHTML = `<i class="${iconClass}"></i>`;
+  if (btnMobile) btnMobile.innerHTML = `<i class="${iconClass}"></i>`;
+}
+
+function toggleTheme() {
+  const currentTheme = localStorage.getItem('sskru_theme') || 'light';
+  const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  applyTheme(newTheme);
+  showToast(newTheme === 'dark' ? 'สลับเข้าสู่โทนสีมืด (Dark Mode)' : 'สลับเข้าสู่โทนสีสว่าง (Light Mode)');
+}
+
+// Global User Info
+let currentUserInfo = { isAdmin: false, isStudent: false, studentId: '', studentName: '' };
+
+async function fetchAuthStatus() {
+  try {
+    const res = await fetch('/admin/api/auth/status/', { credentials: 'same-origin' });
+    const data = await res.json();
+    if (data.success) {
+      isAdminMode = data.isAdmin;
+      currentUserInfo = {
+        isAdmin: data.isAdmin,
+        isStudent: data.isStudent,
+        studentId: data.studentId || '',
+        studentName: data.studentName || '',
+      };
+      
+      if (isAdminMode) {
+        document.querySelector(".app-container").classList.add("admin-active");
+        showToast("Welcome Admin: You can drag markers to reposition buildings.");
+      }
+
+      // Update Drawer header with user info
+      updateDrawerUserInfo();
+      // Populate profile panel
+      populateProfilePanel();
+    }
+  } catch (e) {
+    console.error("Auth status error", e);
+  }
+}
+
+function updateDrawerUserInfo() {
+  const usernameEl = document.getElementById('drawer-username');
+  const subtitleEl = document.getElementById('drawer-subtitle');
+  const avatarEl = document.getElementById('drawer-avatar-icon');
+  
+  if (currentUserInfo.isAdmin) {
+    usernameEl.textContent = 'ผู้ดูแลระบบ (Admin)';
+    subtitleEl.textContent = 'สิทธิ์: จัดการอาคาร, ลากหมุด, จัดการนักศึกษา';
+    avatarEl.innerHTML = '<i class="fa-solid fa-user-shield"></i>';
+  } else if (currentUserInfo.isStudent && currentUserInfo.studentName) {
+    usernameEl.textContent = currentUserInfo.studentName;
+    subtitleEl.textContent = `รหัส: ${currentUserInfo.studentId}`;
+    avatarEl.innerHTML = '<i class="fa-solid fa-user-graduate"></i>';
+  }
+}
+
+function populateProfilePanel() {
+  const nameEl = document.getElementById('profile-name');
+  const roleEl = document.getElementById('profile-role-badge');
+  const idEl = document.getElementById('profile-student-id');
+  const accessEl = document.getElementById('profile-access-level');
+  const lastAccessEl = document.getElementById('profile-last-access');
+  const avatarEl = document.getElementById('profile-avatar-large');
+
+  if (currentUserInfo.isAdmin) {
+    nameEl.textContent = 'ผู้ดูแลระบบ (Admin)';
+    roleEl.textContent = 'ผู้ดูแลระบบ';
+    roleEl.classList.add('admin');
+    idEl.textContent = 'ADMIN';
+    accessEl.textContent = 'จัดการอาคาร, ลากหมุด, แก้ไขข้อมูล';
+    avatarEl.classList.add('admin');
+    avatarEl.innerHTML = '<i class="fa-solid fa-user-shield"></i>';
+  } else if (currentUserInfo.isStudent) {
+    nameEl.textContent = currentUserInfo.studentName || 'นักศึกษา';
+    roleEl.textContent = 'นักศึกษา';
+    roleEl.classList.remove('admin');
+    idEl.textContent = currentUserInfo.studentId || '—';
+    accessEl.textContent = 'ดูแผนที่และค้นหาอาคาร';
+    avatarEl.classList.remove('admin');
+    avatarEl.innerHTML = '<i class="fa-solid fa-user-graduate"></i>';
+  }
+
+  lastAccessEl.textContent = new Date().toLocaleString('th-TH', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  });
+}
+
+// ── Profile Panel Open/Close ──
+function openProfilePanel() {
+  document.getElementById('profile-panel').classList.add('open');
+  document.getElementById('profile-panel-backdrop').classList.add('open');
+  // Close side drawer if open
+  closeSideDrawer();
+}
+
+function closeProfilePanel() {
+  document.getElementById('profile-panel').classList.remove('open');
+  document.getElementById('profile-panel-backdrop').classList.remove('open');
+}
+
+function handleLogout() {
+  if (confirm('ต้องการออกจากระบบใช่หรือไม่?')) {
+    window.location.href = '/logout/';
+  }
+}
 
 // Load dataset (attempts to fetch from backend REST API first, then falls back to LocalStorage)
 async function loadBuildingsData() {
@@ -679,18 +809,19 @@ function updateServerStatusPill(online) {
 }
 
 function initMap() {
+  const campusBounds = [[50, 100], [1000, 1536]];
   map = L.map("map", {
     crs: L.CRS.Simple,
-    minZoom: -2,
+    minZoom: -1.5,
     maxZoom: 3,
     zoomControl: false,
     attributionControl: false,
-    maxBounds: [[-250, -250], [1274, 1786]],
-    maxBoundsViscosity: 0.8
+    maxBounds: IMAGE_BOUNDS,
+    maxBoundsViscosity: 1.0
   });
 
   L.imageOverlay("images/Map.png", IMAGE_BOUNDS).addTo(map);
-  map.fitBounds(IMAGE_BOUNDS, { padding: [15, 15] });
+  map.fitBounds(campusBounds, { padding: [10, 10] });
   renderMarkers();
 }
 
@@ -879,8 +1010,8 @@ function renderMarkers() {
         const y = Math.round(newPos.lat);
         const x = Math.round(newPos.lng);
         b.coords = [y, x];
-        saveBuildingsToStorage();
-        showToast(`ย้ายตึก ${displayNum} ไปยังพิกัด [Y: ${y}, X: ${x}] สำเร็จ`);
+        saveBuildingsToStorage('PUT', b);
+        showToast(`ย้ายตึก ${displayNum} ไปยังพิกัด [Y: ${y}, X: ${x}] สำเร็จ และบันทึกลงระบบ`);
 
         // Feed coordinate form input if open
         if (document.getElementById("edit-building-id").value == b.id) {
@@ -976,6 +1107,7 @@ function translateCategory(cat) {
 function populateDropdownSelectors() {
   const sourceSel = document.getElementById("select-nav-source");
   const destSel = document.getElementById("select-nav-dest");
+  if (!sourceSel || !destSel) return;
 
   sourceSel.innerHTML = `
     <option value="">-- เลือกสถานที่เริ่มต้น --</option>
@@ -1318,52 +1450,87 @@ function handleSearchInput(e) {
    GPS Tracking & Geofencing (Calibrated)
    ========================================================================== */
 
+let watchPositionId = null;
+let currentUserRealCoords = null;
+
+// Haversine formula to compute real-world distance in meters between two GPS coordinates
+function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371e3; // Earth radius in meters
+  const φ1 = lat1 * Math.PI / 180;
+  const φ2 = lat2 * Math.PI / 180;
+  const Δφ = (lat2 - lat1) * Math.PI / 180;
+  const Δλ = (lon2 - lon1) * Math.PI / 180;
+
+  const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+            Math.cos(φ1) * Math.cos(φ2) *
+            Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return Math.round(R * c); // in meters
+}
+
+function updateLocationPosition(pos) {
+  const lat = pos.coords.latitude;
+  const lng = pos.coords.longitude;
+  currentUserRealCoords = [lat, lng];
+
+  if (lat >= GEOFENCE.latMin && lat <= GEOFENCE.latMax &&
+      lng >= GEOFENCE.lngMin && lng <= GEOFENCE.lngMax) {
+
+    userPixelCoords = gpsToMap(lat, lng);
+
+    if (userMarker) {
+      userMarker.setLatLng(userPixelCoords);
+    } else {
+      const userIcon = L.divIcon({
+        html: '<div class="user-location-marker"></div>',
+        className: 'custom-leaflet-marker',
+        iconSize: [18, 18],
+        iconAnchor: [9, 9]
+      });
+      userMarker = L.marker(userPixelCoords, { icon: userIcon }).addTo(map);
+      userMarker.bindTooltip("📍 ตำแหน่งปัจจุบันของคุณ (กำลังจับสัญญาณ GPS สด)");
+    }
+
+    map.setView(userPixelCoords, 1, { animate: true });
+    showToast("📍 จับสัญญาณ GPS สดภายใน มรภ.ศรีสะเกษ เรียบร้อยแล้ว");
+  } else {
+    // User is outside campus
+    userPixelCoords = null;
+    if (userMarker) {
+      map.removeLayer(userMarker);
+      userMarker = null;
+    }
+    showToast(`📍 ตำแหน่งของคุณอยู่ที่ (${lat.toFixed(4)}, ${lng.toFixed(4)}) พร้อมนำทางตรงสู่วิทยาเขตผ่าน Google Maps`);
+  }
+}
+
 function trackUserLocation() {
   if (!navigator.geolocation) {
     showModal("ไม่รองรับ GPS", "อุปกรณ์ของคุณไม่รองรับบริการตรวจหาพิกัดตำแหน่งภูมิศาสตร์", "info");
     return;
   }
 
+  // Clear previous watcher if active
+  if (watchPositionId !== null) {
+    navigator.geolocation.clearWatch(watchPositionId);
+  }
+
+  // Get initial position immediately
   navigator.geolocation.getCurrentPosition(
     (pos) => {
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
+      updateLocationPosition(pos);
 
-      if (lat >= GEOFENCE.latMin && lat <= GEOFENCE.latMax &&
-        lng >= GEOFENCE.lngMin && lng <= GEOFENCE.lngMax) {
-
-        userPixelCoords = gpsToMap(lat, lng);
-
-        if (userMarker) {
-          userMarker.setLatLng(userPixelCoords);
-        } else {
-          const userIcon = L.divIcon({
-            html: '<div class="user-location-marker"></div>',
-            className: 'custom-leaflet-marker',
-            iconSize: [16, 16],
-            iconAnchor: [8, 8]
-          });
-          userMarker = L.marker(userPixelCoords, { icon: userIcon }).addTo(map);
-          userMarker.bindTooltip("ตำแหน่งปัจจุบันของฉัน");
-        }
-
-        map.setView(userPixelCoords, 1, { animate: true });
-        showToast("ระบุพิกัด GPS บนแผนผังเรียบร้อย");
-      } else {
-        userPixelCoords = null;
-        if (userMarker) {
-          map.removeLayer(userMarker);
-          userMarker = null;
-        }
-        showModal(
-          "อยู่นอกพื้นที่การใช้งาน",
-          `ระบบระบุตำแหน่งตรวจพบพิกัด (${lat.toFixed(6)}, ${lng.toFixed(6)}) ซึ่งอยู่นอกพื้นที่ มรภ.ศรีสะเกษ ระบบไม่สามารถแสดงตัวตนบนแผนผัง 3D ได้ แต่ท่านยังคงดูและค้นหาตึกได้ตามปกติ`,
-          "warning"
-        );
-      }
+      // Start continuous watch position for live navigation tracking
+      watchPositionId = navigator.geolocation.watchPosition(
+        (pos) => updateLocationPosition(pos),
+        (err) => console.log("Watch GPS error:", err),
+        { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 }
+      );
     },
     (err) => {
       userPixelCoords = null;
+      currentUserRealCoords = null;
       let errMsg = "ไม่สามารถเข้าถึงสิทธิ์ตำแหน่ง GPS ได้ กรุณาเปิดบริการตำแหน่งที่ตั้งบนเบราว์เซอร์";
       if (err.code === err.PERMISSION_DENIED) {
         errMsg = "สิทธิ์การเข้าถึงตำแหน่ง GPS ถูกปฏิเสธ กรุณาอนุญาตเข้าสิทธิ์พิกัดบนเบราว์เซอร์";
@@ -1586,7 +1753,7 @@ function startGrabRiderMotion() {
 function pauseGrabRiderMotion() {
   isGrabAnimating = false;
   if (grabAnimId) cancelAnimationFrame(grabAnimId);
-  updateGrabMotionUI();
+  if (typeof updateGrabMotionUI === 'function') updateGrabMotionUI();
 }
 
 function resetGrabRiderMotion() {
@@ -1618,8 +1785,11 @@ function showArrivalBanner(bName) {
 }
 
 function calculateWalkingRoute() {
-  const srcVal = document.getElementById("select-nav-source").value;
-  const destVal = document.getElementById("select-nav-dest").value;
+  const sourceElem = document.getElementById("select-nav-source");
+  const destElem = document.getElementById("select-nav-dest");
+  if (!sourceElem || !destElem) return;
+  const srcVal = sourceElem.value;
+  const destVal = destElem.value;
   const resultPanel = document.getElementById("nav-results-wrapper");
   const stepsContainer = document.getElementById("nav-route-steps-container");
 
@@ -1803,7 +1973,11 @@ function startActiveTurnByTurnNav() {
   let gmapsUrl = '';
 
   if (srcVal === "my_location") {
-    gmapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${destBuilding.realCoords[0]},${destBuilding.realCoords[1]}&travelmode=${gmode}`;
+    if (currentUserRealCoords) {
+      gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${currentUserRealCoords[0]},${currentUserRealCoords[1]}&destination=${destBuilding.realCoords[0]},${destBuilding.realCoords[1]}&travelmode=${gmode}`;
+    } else {
+      gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=My+Location&destination=${destBuilding.realCoords[0]},${destBuilding.realCoords[1]}&travelmode=${gmode}`;
+    }
   } else {
     const srcBuilding = adminBuildings.find(b => b.id === Number(srcVal));
     if (srcBuilding && srcBuilding.realCoords) {
@@ -1826,28 +2000,20 @@ function stopActiveTurnByTurnNav() {
 }
 
 function startDirectNavigationToBuilding(bId) {
-  closeInfoPanel();
-  document.getElementById("nav-routes-panel").classList.add("active");
-  const sourceSel = document.getElementById("select-nav-source");
-  const destSel = document.getElementById("select-nav-dest");
-
-  if (!sourceSel.value) {
-    sourceSel.value = userPixelCoords ? "my_location" : (adminBuildings[0]?.id || "1");
+  // Instead of in-app routing, open Google Maps with the building's real coordinates
+  const b = adminBuildings.find(x => x.id == bId);
+  if (b && b.realCoords) {
+    const [lat, lng] = b.realCoords;
+    window.open(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`, '_blank');
   }
-  destSel.value = bId;
-  calculateWalkingRoute();
 }
 
 function closeNavigationPanel() {
-  stopActiveTurnByTurnNav();
+  // Navigation panel removed — clean up any leftover route polylines
   if (routePolyline) {
     map.removeLayer(routePolyline);
     routePolyline = null;
   }
-  document.getElementById("nav-routes-panel").classList.remove("active");
-  document.getElementById("select-nav-source").value = "";
-  document.getElementById("select-nav-dest").value = "";
-  document.getElementById("nav-results-wrapper").classList.remove("active");
 }
 
 /* ==========================================================================
@@ -1867,14 +2033,14 @@ async function saveBuildingsToStorage(actionType = null, buildingItem = null) {
   // Sync to Backend REST API if server is online
   if (isServerConnected && actionType && buildingItem) {
     try {
-      let url = '/api/buildings';
+      let url = '/admin/api/buildings/';
       let method = 'POST';
 
       if (actionType === 'PUT') {
-        url = `/api/buildings/${buildingItem.id}`;
+        url = `/admin/api/buildings/${buildingItem.id}/`;
         method = 'PUT';
       } else if (actionType === 'DELETE') {
-        url = `/api/buildings/${buildingItem.id}`;
+        url = `/admin/api/buildings/${buildingItem.id}/`;
         method = 'DELETE';
       }
 
@@ -2153,12 +2319,6 @@ function setupEventListeners() {
   };
 
   document.getElementById("btn-panel-close").onclick = closeInfoPanel;
-  document.getElementById("btn-nav-panel-close").onclick = closeNavigationPanel;
-
-  document.getElementById("btn-nav-trigger").onclick = () => {
-    document.getElementById("nav-routes-panel").classList.add("active");
-    closeInfoPanel();
-  };
 
   document.getElementById("btn-univ-info-trigger").onclick = () => {
     showModal(
@@ -2177,17 +2337,6 @@ function setupEventListeners() {
   document.getElementById("btn-hamburger").onclick = () => openSideDrawer();
   document.getElementById("btn-drawer-close").onclick = () => closeSideDrawer();
   document.getElementById("drawer-backdrop").onclick = () => closeSideDrawer();
-
-  document.getElementById("btn-drawer-nav").onclick = () => {
-    closeSideDrawer();
-    document.getElementById("nav-routes-panel").classList.add("active");
-    closeInfoPanel();
-  };
-
-  document.getElementById("btn-drawer-my-location").onclick = () => {
-    closeSideDrawer();
-    trackUserLocation();
-  };
 
   document.getElementById("btn-drawer-info").onclick = () => {
     closeSideDrawer();
@@ -2217,6 +2366,33 @@ function setupEventListeners() {
     }
   };
 
+  // ============ THEME TOGGLE ============
+  const btnThemeToggle = document.getElementById("btn-theme-toggle");
+  if (btnThemeToggle) btnThemeToggle.onclick = () => toggleTheme();
+
+  const btnThemeToggleMobile = document.getElementById("btn-theme-toggle-mobile");
+  if (btnThemeToggleMobile) btnThemeToggleMobile.onclick = () => toggleTheme();
+
+  // ============ PROFILE PANEL ============
+  const btnProfileTrigger = document.getElementById("btn-profile-trigger");
+  if (btnProfileTrigger) btnProfileTrigger.onclick = () => openProfilePanel();
+
+  const btnProfileTriggerMobile = document.getElementById("btn-profile-trigger-mobile");
+  if (btnProfileTriggerMobile) btnProfileTriggerMobile.onclick = () => openProfilePanel();
+
+  const btnDrawerProfile = document.getElementById("btn-drawer-profile");
+  if (btnDrawerProfile) btnDrawerProfile.onclick = () => { closeSideDrawer(); openProfilePanel(); };
+
+  document.getElementById("btn-profile-close").onclick = () => closeProfilePanel();
+  document.getElementById("profile-panel-backdrop").onclick = () => closeProfilePanel();
+
+  // ============ LOGOUT ============
+  const btnProfileLogout = document.getElementById("btn-profile-logout");
+  if (btnProfileLogout) btnProfileLogout.onclick = () => handleLogout();
+
+  const btnDrawerLogout = document.getElementById("btn-drawer-logout");
+  if (btnDrawerLogout) btnDrawerLogout.onclick = () => { closeSideDrawer(); handleLogout(); };
+
   // ============ MOBILE SEARCH PANEL ============
   const mobileSearchPanel = document.getElementById("mobile-search-panel");
   const mobileInput = document.getElementById("search-input-mobile");
@@ -2232,10 +2408,7 @@ function setupEventListeners() {
     mobileSearchPanel.classList.remove("active");
   };
 
-  document.getElementById("btn-nav-trigger-mobile")?.addEventListener("click", () => {
-    document.getElementById("nav-routes-panel").classList.add("active");
-    closeInfoPanel();
-  });
+
 
   if (mobileInput) {
     mobileInput.addEventListener("input", (e) => handleMobileSearchInput(e, mobileDropdown));
@@ -2265,17 +2438,12 @@ function setupEventListeners() {
 
   // ============ SWIPE GESTURE — Bottom Sheets ============
   setupSwipeGesture(infoPanelEl, () => closeInfoPanel());
-  const navPanelEl = document.getElementById("nav-routes-panel");
-  setupSwipeGesture(navPanelEl, () => closeNavigationPanel());
 
   document.getElementById("btn-logo-reset").onclick = () => {
     closeInfoPanel();
     closeNavigationPanel();
     map.setView(IMAGE_CENTER, -1, { animate: true });
   };
-
-  document.getElementById("select-nav-source").onchange = calculateWalkingRoute;
-  document.getElementById("select-nav-dest").onchange = calculateWalkingRoute;
 
   document.getElementById("btn-modal-ok").onclick = () => {
     document.getElementById("custom-modal-overlay").classList.remove("active");
@@ -2311,7 +2479,9 @@ function setupEventListeners() {
       btnView3D.classList.remove("active");
       document.getElementById("map").classList.add("aerial-mode");
       showToast("สลับเข้าสู่มุมมองนำทางมุมสูง (Google Maps Style)");
-      if (document.getElementById("select-nav-source").value && document.getElementById("select-nav-dest").value) {
+      const navSrc = document.getElementById("select-nav-source");
+      const navDst = document.getElementById("select-nav-dest");
+      if (navSrc && navDst && navSrc.value && navDst.value) {
         calculateWalkingRoute();
       } else {
         map.fitBounds(IMAGE_BOUNDS, { padding: [25, 25] });
@@ -2328,7 +2498,9 @@ function setupEventListeners() {
         document.querySelectorAll(".travel-mode-btn").forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
         activeTravelMode = btn.getAttribute("data-mode") || 'walk';
-        if (document.getElementById("select-nav-source").value && document.getElementById("select-nav-dest").value) {
+        const navSrc = document.getElementById("select-nav-source");
+        const navDst = document.getElementById("select-nav-dest");
+        if (navSrc && navDst && navSrc.value && navDst.value) {
           calculateWalkingRoute();
         }
       }
@@ -2388,8 +2560,8 @@ function closeSideDrawer() {
  * or external maps app for mobile (Android → Google Maps, iOS → Apple Maps)
  */
 function openSmartNavigation(b) {
-  const lat = b.realCoords[0];
-  const lng = b.realCoords[1];
+  const destLat = b.realCoords[0];
+  const destLng = b.realCoords[1];
 
   const travelModeMap = {
     walk: 'walking',
@@ -2398,7 +2570,13 @@ function openSmartNavigation(b) {
     car: 'driving'
   };
   const gmode = travelModeMap[activeTravelMode] || 'walking';
-  const gmapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=${gmode}`;
+
+  let gmapsUrl = '';
+  if (currentUserRealCoords) {
+    gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${currentUserRealCoords[0]},${currentUserRealCoords[1]}&destination=${destLat},${destLng}&travelmode=${gmode}`;
+  } else {
+    gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=My+Location&destination=${destLat},${destLng}&travelmode=${gmode}`;
+  }
 
   trackEvent('navigate', b.name);
   window.open(gmapsUrl, '_blank');

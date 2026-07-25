@@ -227,6 +227,7 @@ def admin_dashboard(request):
     return render(request, 'admin_panel/dashboard.html', context)
 
 
+@csrf_exempt
 def admin_buildings_api(request):
     """CRUD API สำหรับ buildings (Admin only)"""
     if not validate_admin_token(request):
@@ -242,15 +243,24 @@ def admin_buildings_api(request):
             data = json.loads(request.body)
             if not data.get('name') or not data.get('coords'):
                 return JsonResponse({'success': False, 'message': 'ข้อมูลไม่ครบ'}, status=400)
+            
+            # Push to ClickUp first if possible
+            from .clickup_service import create_building_in_clickup
+            success, msg, task_id = create_building_in_clickup(data)
+            if success and task_id:
+                data['clickup_task_id'] = task_id
+                
             buildings.append(data)
             write_buildings(buildings)
-            return JsonResponse({'success': True, 'message': 'เพิ่มอาคารสำเร็จ'})
+            
+            resp_msg = f"เพิ่มอาคารสำเร็จ ({msg})" if task_id else "เพิ่มอาคารลงระบบ Local (ไม่มี ClickUp Token)"
+            return JsonResponse({'success': True, 'message': resp_msg})
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=400)
 
     return JsonResponse({'success': False, 'message': 'Method not allowed'}, status=405)
 
-
+@csrf_exempt
 def admin_building_detail_api(request, building_id):
     """Update/Delete building (Admin only)"""
     if not validate_admin_token(request):
@@ -266,12 +276,24 @@ def admin_building_detail_api(request, building_id):
     if request.method == 'PUT':
         try:
             data = json.loads(request.body)
+            # preserve task_id if not sent by frontend
+            if 'clickup_task_id' not in data and 'clickup_task_id' in buildings[idx]:
+                data['clickup_task_id'] = buildings[idx]['clickup_task_id']
+                
             buildings[idx].update(data)
             buildings[idx]['id'] = building_id
             write_buildings(buildings)
-            return JsonResponse({'success': True, 'message': 'อัปเดตสำเร็จ', 'data': buildings[idx]})
+            
+            # Push to ClickUp
+            from .clickup_service import push_building_update_to_clickup
+            push_success, push_msg = push_building_update_to_clickup(buildings[idx])
+            resp_msg = f"อัปเดตสำเร็จ ({push_msg})" if push_success else f"อัปเดต Local สำเร็จ ({push_msg})"
+            
+            return JsonResponse({'success': True, 'message': resp_msg, 'data': buildings[idx]})
         except Exception as e:
-            return JsonResponse({'success': False, 'message': str(e)}, status=400)
+            import traceback
+            traceback.print_exc()
+            return JsonResponse({'success': False, 'message': f"Error: {str(e)}"}, status=400)
 
     elif request.method == 'DELETE':
         removed = buildings.pop(idx)
@@ -323,6 +345,89 @@ def track_event(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
 
+@csrf_exempt
+def auth_status_api(request):
+    """API เช็กว่า User คนปัจจุบันเป็น Admin หรือ Student"""
+    is_admin = validate_admin_token(request)
+    
+    # check student session
+    student_id = request.session.get('student_id')
+    is_student = student_id is not None
+    
+    return JsonResponse({
+        'success': True,
+        'isAdmin': is_admin,
+        'isStudent': is_student,
+        'studentId': student_id,
+        'studentName': request.session.get('student_name', ''),
+    })
+
+
+def student_login_page(request):
+    """หน้าต่างล็อกอินสำหรับนักศึกษา"""
+    return render(request, 'admin_panel/student_login.html')
+
+@csrf_exempt
+def student_login_api(request):
+    """API สำหรับตรวจสอบรหัสนักศึกษา"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Method not allowed'}, status=405)
+        
+    try:
+        data = json.loads(request.body)
+        student_id = data.get('student_id', '').strip()
+        
+        if not student_id:
+            return JsonResponse({'success': False, 'message': 'กรุณาระบุรหัสนักศึกษา'}, status=400)
+            
+        from .models import Student
+        student = Student.objects.filter(student_id=student_id, is_active=True).first()
+        
+        if student:
+            request.session['student_id'] = student.student_id
+            request.session['student_name'] = student.name
+            return JsonResponse({'success': True, 'message': 'เข้าสู่ระบบสำเร็จ'})
+        else:
+            return JsonResponse({'success': False, 'message': 'รหัสนักศึกษาไม่ถูกต้อง หรือไม่ได้รับสิทธิ์'}, status=401)
+            
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
+
+@csrf_exempt
+def admin_students_api(request):
+    """API จัดการข้อมูลนักศึกษา (Admin only)"""
+    if not validate_admin_token(request):
+        return JsonResponse({'success': False, 'message': 'Unauthorized'}, status=401)
+        
+    from .models import Student
+    
+    if request.method == 'GET':
+        students = list(Student.objects.values('id', 'student_id', 'name', 'is_active', 'created_at'))
+        return JsonResponse({'success': True, 'data': students})
+        
+    elif request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            student = Student.objects.create(
+                student_id=data.get('student_id', '').strip(),
+                name=data.get('name', '').strip(),
+                is_active=data.get('is_active', True)
+            )
+            return JsonResponse({'success': True, 'message': 'เพิ่มนักศึกษาสำเร็จ'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
+            
+    elif request.method == 'DELETE':
+        try:
+            data = json.loads(request.body)
+            sid = data.get('id')
+            Student.objects.filter(id=sid).delete()
+            return JsonResponse({'success': True, 'message': 'ลบข้อมูลสำเร็จ'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
+            
+    return JsonResponse({'success': False, 'message': 'Method not allowed'}, status=405)
 
 def admin_analytics_api(request):
     """ส่งข้อมูล analytics (Admin only)"""
@@ -336,3 +441,64 @@ def admin_analytics_api(request):
         'total_visitors': VisitorLog.objects.count(),
         'total_events': UserEvent.objects.count(),
     })
+
+
+# ─── ClickUp Backend Integration Views ──────────────────────────────────────
+
+@csrf_exempt
+def clickup_sync_api(request):
+    """ซิงก์ข้อมูลอาคารจาก ClickUp List ลง local db"""
+    if not validate_admin_token(request):
+        return JsonResponse({'success': False, 'message': 'Unauthorized'}, status=401)
+
+    from .clickup_service import sync_clickup_to_local_db
+    success, msg = sync_clickup_to_local_db()
+
+    return JsonResponse({'success': success, 'message': msg})
+
+
+@csrf_exempt
+def clickup_config_api(request):
+    """ตั้งค่า ClickUp API Token และ List ID"""
+    if not validate_admin_token(request):
+        return JsonResponse({'success': False, 'message': 'Unauthorized'}, status=401)
+
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            token = data.get('api_token', '').strip()
+            list_id = data.get('list_id', '').strip() or '2kzn45b5-398'
+
+            from .clickup_service import save_clickup_config, test_clickup_connection
+            save_clickup_config(token, list_id)
+
+            success, user_info = test_clickup_connection(token)
+            if success:
+                return JsonResponse({'success': True, 'message': f"เชื่อมต่อ ClickUp สำเร็จ! ผู้ใช้: {user_info.get('username')}"})
+            else:
+                return JsonResponse({'success': False, 'message': f"บันทึกแล้ว แต่ทดสอบเชื่อมต่อล้มเหลว: {user_info}"})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
+    from .clickup_service import get_clickup_config
+    token, list_id = get_clickup_config()
+    return JsonResponse({
+        'success': True,
+        'has_token': bool(token),
+        'list_id': list_id
+    })
+
+
+@csrf_exempt
+def clickup_status_api(request):
+    """ตรวจสอบสถานะการเชื่อมต่อกับ ClickUp"""
+    from .clickup_service import get_clickup_config, test_clickup_connection
+    token, list_id = get_clickup_config()
+    if not token:
+        return JsonResponse({'connected': False, 'message': 'ยังไม่ได้ระบุ ClickUp API Token', 'list_id': list_id})
+
+    success, res = test_clickup_connection(token)
+    if success:
+        return JsonResponse({'connected': True, 'user': res, 'list_id': list_id})
+    return JsonResponse({'connected': False, 'message': str(res), 'list_id': list_id})
+

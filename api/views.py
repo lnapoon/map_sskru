@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_FILE = BASE_DIR / 'data' / 'buildings.json'
@@ -29,11 +29,24 @@ def write_buildings(data):
         return False
 
 def index_view(request):
+    # Check if admin or student
+    from admin_panel.views import validate_admin_token
+    is_admin = validate_admin_token(request)
+    is_student = request.session.get('student_id') is not None
+    
+    if not (is_admin or is_student):
+        return redirect('/login/')
+        
     index_file = BASE_DIR / 'index.html'
     if index_file.exists():
         with open(index_file, 'r', encoding='utf-8') as f:
             return HttpResponse(f.read(), content_type='text/html')
     return HttpResponse("SSKRU Campus Map Django Server", content_type='text/plain')
+
+def logout_view(request):
+    """Clear all session data and redirect to student login"""
+    request.session.flush()
+    return redirect('/login/')
 
 @csrf_exempt
 def health_check(request):
