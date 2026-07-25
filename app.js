@@ -810,7 +810,7 @@ function updateServerStatusPill(online) {
 }
 
 function initMap() {
-  const campusBounds = [[50, 100], [1000, 1536]];
+  const campusBounds = [[0, 0], [1024, 1536]];
   map = L.map("map", {
     crs: L.CRS.Simple,
     minZoom: -1.5,
@@ -821,7 +821,7 @@ function initMap() {
     maxBoundsViscosity: 1.0
   });
 
-  L.imageOverlay("images/Map.png?v=3.1", IMAGE_BOUNDS).addTo(map);
+  L.imageOverlay("images/Map.png?v=3.2", IMAGE_BOUNDS).addTo(map);
   map.fitBounds(campusBounds, { padding: [10, 10] });
   renderMarkers();
 }
