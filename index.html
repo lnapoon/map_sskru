@@ -282,11 +282,9 @@
     </div>
 
     <!-- ==========================================
-         MAP VIEWPORT & 3D CANVAS OVERLAY
+         MAP VIEWPORT
          ========================================== -->
     <main class="map-viewport" id="map-viewport" aria-label="แผนผังแบบโต้ตอบ">
-      <div class="lighting-overlay" id="lighting-overlay"></div>
-      <canvas id="ambient-particles" class="ambient-particles"></canvas>
       <div id="map"></div>
     </main>
 
@@ -296,13 +294,6 @@
     <div class="map-control-overlay">
       <button class="map-control-btn" id="btn-map-zoom-in" aria-label="ซูมเข้า" title="ซูมเข้า"><i class="fa-solid fa-plus"></i></button>
       <button class="map-control-btn" id="btn-map-zoom-out" aria-label="ซูมออก" title="ซูมออก"><i class="fa-solid fa-minus"></i></button>
-      <div class="map-control-divider"></div>
-      <button class="map-control-btn active-3d-btn" id="btn-3d-tilt" aria-label="เปิด/ปิดเอฟเฟกต์มุมมอง 3D" title="สลับโหมดมุมมอง 3D Isometric">
-        <i class="fa-solid fa-cube"></i>
-      </button>
-      <button class="map-control-btn" id="btn-3d-lighting" aria-label="โหมดบรรยากาศ 3D" title="สลับบรรยากาศแสง (กลางวัน / พลบค่ำ / กลางคืน)">
-        <i class="fa-solid fa-sun" id="icon-3d-lighting"></i>
-      </button>
       <div class="map-control-divider"></div>
       <button class="map-control-btn gps-btn" id="btn-map-my-location" aria-label="ตำแหน่งปัจจุบัน" title="ระบุตำแหน่งของฉัน">
         <i class="fa-solid fa-location-crosshairs"></i>

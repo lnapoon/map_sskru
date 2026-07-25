@@ -2684,96 +2684,18 @@ function setupSwipeGesture(panelEl, closeCallback) {
 }
 
 /* ==========================================================================
-   19. INTERACTIVE 3D MAP ENGINE & LIGHTING CONTROLS
+   19. INTERACTIVE 3D TOUR ENGINE
    ========================================================================== */
-let is3dTiltEnabled = true;
-let currentLightingMode = 0; // 0: Day, 1: Sunset, 2: Cyber Night
 let isTourActive = false;
 let tourInterval = null;
-let particleAnimationId = null;
 
 function init3dEngine() {
-  const mapViewport = document.getElementById("map-viewport");
-  const mapEl = document.getElementById("map");
-  
-  if (mapViewport && mapEl) {
-    mapViewport.classList.add("tilt-enabled");
-    
-    // Dynamic Mouse Parallax Tilt
-    mapViewport.addEventListener("mousemove", (e) => {
-      if (!is3dTiltEnabled || isTourActive) return;
-      const rect = mapViewport.getBoundingClientRect();
-      const x = e.clientX - rect.left - rect.width / 2;
-      const y = e.clientY - rect.top - rect.height / 2;
-      const rotateX = -(y / rect.height) * 14;
-      const rotateY = (x / rect.width) * 14;
-      mapEl.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
-    });
-
-    mapViewport.addEventListener("mouseleave", () => {
-      if (!is3dTiltEnabled || isTourActive) return;
-      mapEl.style.transform = `perspective(1000px) rotateX(10deg) rotateY(-3deg) scale(1.02)`;
-    });
-  }
-
-  // 3D Tilt toggle button
-  const btnTilt = document.getElementById("btn-3d-tilt");
-  if (btnTilt) {
-    btnTilt.addEventListener("click", () => {
-      is3dTiltEnabled = !is3dTiltEnabled;
-      btnTilt.classList.toggle("active-3d-btn", is3dTiltEnabled);
-      if (mapViewport && mapEl) {
-        if (is3dTiltEnabled) {
-          mapViewport.classList.add("tilt-enabled");
-          mapEl.style.transform = `perspective(1000px) rotateX(10deg) rotateY(-3deg) scale(1.02)`;
-          showToast("เปิดใช้งานโหมดมุมมอง 3D Isometric Tilt 🧊");
-        } else {
-          mapViewport.classList.remove("tilt-enabled");
-          mapEl.style.transform = "none";
-          showToast("ปิดโหมด 3D Tilt (กลับสู่มุมมอง 2D ปกติ)");
-        }
-      }
-    });
-  }
-
-  // 3D Lighting mode button
-  const btnLighting = document.getElementById("btn-3d-lighting");
-  const iconLighting = document.getElementById("icon-3d-lighting");
-  const overlay = document.getElementById("lighting-overlay");
-  
-  if (btnLighting) {
-    btnLighting.addEventListener("click", () => {
-      currentLightingMode = (currentLightingMode + 1) % 3;
-      if (overlay) overlay.className = "lighting-overlay";
-
-      if (currentLightingMode === 0) {
-        if (iconLighting) iconLighting.className = "fa-solid fa-sun";
-        stopParticles();
-        showToast("โหมดแสงบรรยากาศ: กลางวัน ☀️");
-      } else if (currentLightingMode === 1) {
-        if (overlay) overlay.classList.add("sunset");
-        if (iconLighting) iconLighting.className = "fa-solid fa-sun-plant-wilt";
-        stopParticles();
-        showToast("โหมดแสงบรรยากาศ: ยามเย็น / พลบค่ำ 🌅");
-      } else if (currentLightingMode === 2) {
-        if (overlay) overlay.classList.add("night");
-        if (iconLighting) iconLighting.className = "fa-solid fa-moon";
-        startParticles();
-        showToast("โหมดแสงบรรยากาศ: คืนกลางคืน 🌙✨");
-      }
-    });
-  }
-
-  // 3D Tour button
   const btnTour = document.getElementById("btn-tour-3d");
   if (btnTour) {
     btnTour.addEventListener("click", toggle3dTour);
   }
-
-  initParticleCanvas();
 }
 
-// 3D Tour Function
 function toggle3dTour() {
   const btnTour = document.getElementById("btn-tour-3d");
   if (isTourActive) {
@@ -2787,7 +2709,7 @@ function toggle3dTour() {
     showToast("เริ่มทัวร์นำทางชมสถานที่ในวิทยาเขตแบบ 3D อัตโนมัติ 🚀");
 
     let idx = 0;
-    const tourList = adminBuildings.length ? adminBuildings : (typeof buildingsData !== 'undefined' ? buildingsData : []);
+    const tourList = adminBuildings.length ? adminBuildings : [];
     
     function tourStep() {
       if (!isTourActive || !tourList.length) return;
@@ -2813,64 +2735,5 @@ function stop3dTour() {
     btnTour.innerHTML = `<i class="fa-solid fa-video"></i> ทัวร์ 3D`;
   }
   showToast("สิ้นสุดการนำทางทัวร์ 3D");
-}
-
-// Ambient Floating Fireflies / Particle Canvas
-function initParticleCanvas() {
-  const canvas = document.getElementById("ambient-particles");
-  if (!canvas) return;
-  const ctx = canvas.getContext("2d");
-
-  function resizeCanvas() {
-    canvas.width = canvas.parentElement ? canvas.parentElement.clientWidth : window.innerWidth;
-    canvas.height = canvas.parentElement ? canvas.parentElement.clientHeight : window.innerHeight;
-  }
-  resizeCanvas();
-  window.addEventListener("resize", resizeCanvas);
-
-  const particles = Array.from({ length: 35 }, () => ({
-    x: Math.random() * canvas.width,
-    y: Math.random() * canvas.height,
-    r: Math.random() * 2 + 1,
-    alpha: Math.random() * 0.7 + 0.3,
-    dx: (Math.random() - 0.5) * 0.4,
-    dy: -(Math.random() * 0.5 + 0.2)
-  }));
-
-  function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    particles.forEach(p => {
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(250, 204, 21, ${p.alpha})`;
-      ctx.shadowBlur = 8;
-      ctx.shadowColor = "#fde047";
-      ctx.fill();
-
-      p.x += p.dx;
-      p.y += p.dy;
-      if (p.y < 0) p.y = canvas.height;
-      if (p.x < 0) p.x = canvas.width;
-      if (p.x > canvas.width) p.x = 0;
-    });
-
-    if (currentLightingMode === 2) {
-      particleAnimationId = requestAnimationFrame(draw);
-    }
-  }
-
-  window._drawParticles = draw;
-}
-
-function startParticles() {
-  const canvas = document.getElementById("ambient-particles");
-  if (canvas) canvas.classList.add("active");
-  if (window._drawParticles) window._drawParticles();
-}
-
-function stopParticles() {
-  const canvas = document.getElementById("ambient-particles");
-  if (canvas) canvas.classList.remove("active");
-  if (particleAnimationId) cancelAnimationFrame(particleAnimationId);
 }
 
