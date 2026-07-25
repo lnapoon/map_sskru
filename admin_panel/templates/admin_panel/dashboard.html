@@ -358,7 +358,7 @@
     body.dark-theme .table th { background: #0f172a; color: #ffffff; border-color: #334155; }
     body.dark-theme .table td { color: #ffffff; border-color: #334155; }
     body.dark-theme .table tbody tr:hover { background: rgba(255,255,255,0.05); }
-    body.dark-theme .form-input, body.dark-theme .form-select, body.dark-theme .form-textarea {
+    body.dark-theme .form-control, body.dark-theme .form-input, body.dark-theme .form-select, body.dark-theme .form-textarea {
       background: #0f172a; color: #ffffff; border-color: #475569;
     }
     body.dark-theme .search-input { background: #0f172a; color: #ffffff; border-color: #475569; }
@@ -772,22 +772,22 @@
 <div class="modal-overlay" id="student-modal">
   <div class="modal">
     <div class="modal-header">
-      <h3 id="student-modal-title"><i class="fa-solid fa-user-plus"></i> เพิ่มนักศึกษา</h3>
-      <button class="close-modal" onclick="closeStudentModal()">&times;</button>
+      <div class="modal-title" id="student-modal-title"><i class="fa-solid fa-user-plus"></i> เพิ่มนักศึกษา</div>
+      <button class="modal-close" onclick="closeStudentModal()"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div class="modal-body">
       <div class="form-group">
         <label class="form-label">รหัสนักศึกษา</label>
-        <input type="text" class="form-input" id="form-student-id" placeholder="กรุณาป้อนรหัสนักศึกษา">
+        <input type="text" class="form-control" id="form-student-id" placeholder="กรุณาป้อนรหัสนักศึกษา">
       </div>
       <div class="form-group">
         <label class="form-label">ชื่อ-นามสกุล</label>
-        <input type="text" class="form-input" id="form-student-name" placeholder="เช่น นายภูพิรัฐ แซ่โค้ว">
+        <input type="text" class="form-control" id="form-student-name" placeholder="เช่น นายภูพิรัฐ แซ่โค้ว">
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeStudentModal()">ยกเลิก</button>
-      <button class="btn btn-primary" onclick="saveStudent()">บันทึกข้อมูล</button>
+      <button class="btn btn-ghost" onclick="closeStudentModal()">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveStudent()"><i class="fa-solid fa-floppy-disk"></i> บันทึกข้อมูล</button>
     </div>
   </div>
 </div>
