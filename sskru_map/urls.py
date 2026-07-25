@@ -15,5 +15,5 @@ urlpatterns = [
     path('api/track', track_event, name='track_event'),
     path('api/track/', track_event, name='track_event_slash'),
     path('api/', include('api.urls')),
-    re_path(r'^(?P<path>(app\.js|styles\.css|Map\.png|images/.*))$', serve, {'document_root': settings.BASE_DIR}),
+    re_path(r'^(?P<path>(app\.js|styles\.css|sw\.js|manifest\.json|Map\.png|favicon\.ico|images/.*))$', serve, {'document_root': settings.BASE_DIR}),
 ]

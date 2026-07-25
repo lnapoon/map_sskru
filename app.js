@@ -629,6 +629,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   loadBuildingsData();
   trackEvent('page_view', 'SSKRU Campus Map Loaded');
 
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  }
+
   setInterval(updateRealTimeStatus, 30000);
 });
 
