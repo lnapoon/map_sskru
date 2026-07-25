@@ -470,6 +470,83 @@
     }
     body.dark-theme .modal-section-divider { color: #60a5fa; }
     body.dark-theme .modal-section-divider::after { background: #334155; }
+
+    /* ─── OVERVIEW ENHANCEMENTS ─── */
+    .welcome-banner {
+      background: linear-gradient(135deg, #1e40af 0%, #2563eb 50%, #3b82f6 100%);
+      border-radius: 16px;
+      padding: 24px 28px;
+      color: white;
+      margin-bottom: 24px;
+      box-shadow: 0 10px 25px rgba(37,99,235,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .welcome-text-group h3 {
+      font-size: 20px; font-weight: 800; margin-bottom: 6px; display: flex; align-items: center; gap: 10px;
+    }
+    .welcome-text-group p {
+      font-size: 13.5px; opacity: 0.9; font-weight: 300; max-width: 600px; line-height: 1.5;
+    }
+    .welcome-quick-actions {
+      display: flex; gap: 10px; flex-wrap: wrap;
+    }
+    .quick-act-btn {
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: white; padding: 9px 16px; border-radius: 10px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 8px;
+      backdrop-filter: blur(8px); transition: all 0.2s;
+      text-decoration: none;
+    }
+    .quick-act-btn:hover {
+      background: white; color: #1e40af; transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+    }
+    body.dark-theme .welcome-banner {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #1e40af 100%);
+      border: 1px solid #334155;
+    }
+
+    .donut-row { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+    .donut-item-wrapper {
+      background: var(--surface2);
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+    .donut-item-header {
+      display: flex; align-items: center; justify-content: space-between; font-size: 12.5px; font-weight: 600; margin-bottom: 6px;
+      color: var(--text);
+    }
+    .donut-progress {
+      height: 6px; background: var(--border); border-radius: 4px; overflow: hidden;
+    }
+    .donut-progress-fill {
+      height: 100%; border-radius: 4px; transition: width 0.6s ease;
+    }
+    body.dark-theme .donut-item-wrapper { background: #0f172a; border-color: #334155; }
+
+    .empty-state-card {
+      text-align: center; padding: 32px 20px; color: var(--text-secondary);
+    }
+    .empty-state-icon {
+      width: 52px; height: 52px; border-radius: 50%;
+      background: rgba(37,99,235,0.08); color: var(--primary-light);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; margin: 0 auto 12px;
+    }
+    .empty-state-card p {
+      font-size: 13.5px; font-weight: 600; color: var(--text); margin-bottom: 4px;
+    }
+    .empty-state-card span {
+      font-size: 12px; color: var(--text-muted);
+    }
+    body.dark-theme .empty-state-card p { color: #ffffff; }
   </style>
 </head>
 <body>
@@ -562,43 +639,67 @@
 
     <!-- ══ SECTION: OVERVIEW ══ -->
     <section class="section active" id="section-overview">
-      <!-- Stats -->
+      <!-- System Welcome & Quick Action Banner -->
+      <div class="welcome-banner">
+        <div class="welcome-text-group">
+          <h3><i class="fa-solid fa-gauge-high"></i> แผงควบคุมภาพรวมระบบ SSKRU Campus Map</h3>
+          <p>ระบบบริหารจัดการและติดตามสถิติการใช้งานแผนที่มหาวิทยาลัยราชภัฏศรีสะเกษ แบบ Realtime</p>
+        </div>
+        <div class="welcome-quick-actions">
+          <button class="quick-act-btn" onclick="showSection('buildings')">
+            <i class="fa-solid fa-building-circle-check"></i> จัดการอาคาร ({{ total_buildings }})
+          </button>
+          <button class="quick-act-btn" onclick="showSection('students')">
+            <i class="fa-solid fa-user-graduate"></i> จัดการนักศึกษา
+          </button>
+          <a href="/" target="_blank" class="quick-act-btn" style="background:white; color:#1e40af;">
+            <i class="fa-solid fa-map-location-dot"></i> ดูแผนที่สด
+          </a>
+        </div>
+      </div>
+
+      <!-- Stats Grid -->
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-icon blue"><i class="fa-solid fa-users"></i></div>
           <div>
             <div class="stat-value" id="stat-total">{{ total_visitors }}</div>
             <div class="stat-label">ผู้เข้าชมทั้งหมด</div>
+            <div class="stat-trend"><i class="fa-solid fa-chart-line"></i> ข้อมูลรวมในระบบ</div>
           </div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon green"><i class="fa-solid fa-calendar-day"></i></div>
+          <div class="stat-icon green"><i class="fa-solid fa-calendar-check"></i></div>
           <div>
             <div class="stat-value" id="stat-today">{{ today_visitors }}</div>
             <div class="stat-label">ผู้เข้าชมวันนี้</div>
+            <div class="stat-trend" style="color:var(--success);"><i class="fa-solid fa-circle" style="font-size:8px;"></i> วันนี้</div>
           </div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon amber"><i class="fa-solid fa-building"></i></div>
+          <div class="stat-icon amber"><i class="fa-solid fa-building-flag"></i></div>
           <div>
             <div class="stat-value">{{ total_buildings }}</div>
             <div class="stat-label">อาคารในระบบ</div>
+            <div class="stat-trend" style="color:var(--warning);"><i class="fa-solid fa-location-dot"></i> พร้อมใช้งาน</div>
           </div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon purple"><i class="fa-solid fa-route"></i></div>
+          <div class="stat-icon purple"><i class="fa-solid fa-compass"></i></div>
           <div>
             <div class="stat-value">{{ nav_count }}</div>
-            <div class="stat-label">ครั้งที่นำทาง</div>
+            <div class="stat-label">จำนวนการนำทาง</div>
+            <div class="stat-trend" style="color:#8b5cf6;"><i class="fa-solid fa-location-arrow"></i> สถิติขอเส้นทาง</div>
           </div>
         </div>
       </div>
 
-      <!-- Charts -->
+      <!-- Charts Row -->
       <div class="chart-row">
         <div class="card">
           <div class="card-header">
             <div class="card-title"><i class="fa-solid fa-chart-area"></i> ผู้เข้าชม 7 วันที่ผ่านมา</div>
+            <span class="cat-badge cat-academic" style="font-size:11px;"><i class="fa-solid fa-clock-rotate-left"></i> สถิติล่าสุด</span>
           </div>
           <div class="card-body">
             <div class="chart-container"><canvas id="visitorChart"></canvas></div>
@@ -606,20 +707,20 @@
         </div>
         <div class="card">
           <div class="card-header">
-            <div class="card-title"><i class="fa-solid fa-mobile-screen"></i> ประเภทอุปกรณ์</div>
+            <div class="card-title"><i class="fa-solid fa-laptop-medical"></i> ประเภทอุปกรณ์</div>
           </div>
           <div class="card-body">
-            <div class="chart-container" style="height:160px;"><canvas id="deviceChart"></canvas></div>
+            <div class="chart-container" style="height:170px;"><canvas id="deviceChart"></canvas></div>
             <div class="donut-row" id="device-legend"></div>
           </div>
         </div>
       </div>
 
-      <!-- Top Lists -->
+      <!-- Top Lists Row -->
       <div class="chart-row">
         <div class="card">
           <div class="card-header">
-            <div class="card-title"><i class="fa-solid fa-magnifying-glass"></i> อาคารที่ค้นหาบ่อยสุด</div>
+            <div class="card-title"><i class="fa-solid fa-magnifying-glass-location"></i> อาคารที่ค้นหาบ่อยสุด</div>
           </div>
           <div class="card-body">
             {% if top_searches %}
@@ -633,13 +734,17 @@
               {% endfor %}
             </div>
             {% else %}
-            <div class="empty-state"><i class="fa-solid fa-magnifying-glass"></i><p>ยังไม่มีข้อมูลการค้นหา</p></div>
+            <div class="empty-state-card">
+              <div class="empty-state-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+              <p>ยังไม่มีประวัติการค้นหา</p>
+              <span>ข้อมูลจะอัปเดตอัตโนมัติเมื่อมีการค้นหาชื่ออาคารในแอปพลิเคชัน</span>
+            </div>
             {% endif %}
           </div>
         </div>
         <div class="card">
           <div class="card-header">
-            <div class="card-title"><i class="fa-solid fa-star"></i> อาคารที่เปิดดูบ่อยสุด</div>
+            <div class="card-title"><i class="fa-solid fa-fire"></i> อาคารที่เปิดดูบ่อยสุด</div>
           </div>
           <div class="card-body">
             {% if top_buildings %}
@@ -653,7 +758,11 @@
               {% endfor %}
             </div>
             {% else %}
-            <div class="empty-state"><i class="fa-solid fa-building"></i><p>ยังไม่มีข้อมูลการเข้าชมอาคาร</p></div>
+            <div class="empty-state-card">
+              <div class="empty-state-icon"><i class="fa-solid fa-building-circle-check"></i></div>
+              <p>ยังไม่มีข้อมูลการเข้าชมอาคาร</p>
+              <span>ข้อมูลจะอัปเดตเมื่อผู้ใช้งานคลิกเลือกชมรายละเอียดอาคารบนแผนที่</span>
+            </div>
             {% endif %}
           </div>
         </div>
@@ -1113,16 +1222,34 @@ new Chart(document.getElementById('deviceChart'), {
 
 // Device legend
 const legendEl = document.getElementById('device-legend');
-const deviceIcons = { mobile: '📱', desktop: '💻', tablet: '📲', unknown: '❓' };
-deviceLabels.forEach((label, i) => {
-  const pct = Math.round((deviceData[i] / totalDevices) * 100);
-  legendEl.innerHTML += `
-    <div class="donut-item">
-      <div class="donut-dot" style="background:${colors[i]};"></div>
-      <span class="donut-label">${deviceIcons[label] || '📱'} ${label}</span>
-      <span class="donut-pct">${pct}%</span>
-    </div>`;
-});
+const deviceMeta = {
+  mobile:  { label: 'มือถือ (Mobile)', icon: '<i class="fa-solid fa-mobile-screen"></i>', color: '#2563eb' },
+  desktop: { label: 'คอมพิวเตอร์ (Desktop)', icon: '<i class="fa-solid fa-desktop"></i>', color: '#10b981' },
+  tablet:  { label: 'แท็บเล็ต (Tablet)', icon: '<i class="fa-solid fa-tablet-screen-button"></i>', color: '#f59e0b' },
+  unknown: { label: 'อื่นๆ (Unknown)', icon: '<i class="fa-solid fa-circle-question"></i>', color: '#8b5cf6' }
+};
+
+if (legendEl) {
+  legendEl.innerHTML = '';
+  if (deviceLabels.length) {
+    deviceLabels.forEach((lbl, i) => {
+      const pct = Math.round((deviceData[i] / totalDevices) * 100);
+      const meta = deviceMeta[lbl] || { label: lbl, icon: '<i class="fa-solid fa-laptop"></i>', color: colors[i % colors.length] };
+      legendEl.innerHTML += `
+        <div class="donut-item-wrapper">
+          <div class="donut-item-header">
+            <span>${meta.icon} ${meta.label}</span>
+            <span style="color:${meta.color}; font-weight:700;">${pct}% (${deviceData[i]} คน)</span>
+          </div>
+          <div class="donut-progress">
+            <div class="donut-progress-fill" style="width:${pct}%; background:${meta.color};"></div>
+          </div>
+        </div>`;
+    });
+  } else {
+    legendEl.innerHTML = '<div style="text-align:center; padding:12px; color:var(--text-muted); font-size:13px;">ยังไม่มีข้อมูลอุปกรณ์</div>';
+  }
+}
 
 // ─── Buildings Table ────────────────────────────────────────────────────────
 function filterBuildings() {
