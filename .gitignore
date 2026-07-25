@@ -9,6 +9,7 @@ env/
 # Django
 db.sqlite3
 *.log
+.env
 
 # Node (Legacy)
 node_modules/
