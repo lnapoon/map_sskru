@@ -453,9 +453,7 @@
     <button class="header-btn" onclick="refreshData()">
       <i class="fa-solid fa-rotate"></i> รีเฟรช
     </button>
-    <button class="header-btn primary" id="header-action-btn" onclick="openAddBuilding()" style="display:none;">
-      <i class="fa-solid fa-plus"></i> เพิ่มอาคาร
-    </button>
+
   </header>
 
   <!-- Content -->
@@ -899,9 +897,6 @@ function showSection(name) {
   };
   const t = titles[name] || ['', ''];
   document.getElementById('page-title').innerHTML = `<span>${t[0]}</span>${t[1]}`;
-
-  const addBtn = document.getElementById('header-action-btn');
-  addBtn.style.display = name === 'buildings' ? 'flex' : 'none';
 }
 
 // ─── Charts ────────────────────────────────────────────────────────────────
