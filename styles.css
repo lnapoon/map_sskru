@@ -930,7 +930,42 @@ body.dark-theme .hours-day-row.closed .hours-day-time {
   flex-direction: column;
   gap: 10px;
   z-index: 1000;
-  transition: transform var(--transition-normal);
+  transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform var(--transition-normal);
+}
+
+.carousel-container.collapsed {
+  height: 48px !important;
+  padding: 10px 18px !important;
+  overflow: hidden;
+}
+
+.carousel-container.collapsed .category-tabs,
+.carousel-container.collapsed .building-carousel {
+  display: none !important;
+}
+
+.carousel-container.collapsed .carousel-toggle-btn i {
+  transform: rotate(180deg);
+}
+
+.carousel-toggle-btn {
+  background: rgba(26, 79, 160, 0.08);
+  color: var(--primary-color);
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s ease;
+}
+
+.carousel-toggle-btn:hover {
+  background: var(--primary-color);
+  color: white;
 }
 
 .carousel-header {

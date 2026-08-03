@@ -665,6 +665,10 @@ function toggleTheme() {
 // Global User Info
 let currentUserInfo = { isAdmin: false, isStudent: false, studentId: '', studentName: '' };
 
+function isUserAdmin() {
+  return Boolean(isAdminMode || currentUserInfo.isAdmin || document.querySelector(".app-container")?.classList.contains("admin-active"));
+}
+
 async function fetchAuthStatus() {
   try {
     const res = await fetch('/admin/api/auth/status/', { credentials: 'same-origin' });
@@ -832,14 +836,15 @@ function updateServerStatusPill(online) {
 
 function initMap() {
   const campusBounds = [[0, 0], [1024, 1536]];
+  const MAP_MAX_BOUNDS = [[-400, -300], [1424, 1836]];
   map = L.map("map", {
     crs: L.CRS.Simple,
     minZoom: -1.5,
     maxZoom: 3,
     zoomControl: false,
     attributionControl: false,
-    maxBounds: IMAGE_BOUNDS,
-    maxBoundsViscosity: 1.0
+    maxBounds: MAP_MAX_BOUNDS,
+    maxBoundsViscosity: 0.2
   });
 
   L.imageOverlay("images/Map.png?v=3.5", IMAGE_BOUNDS).addTo(map);
@@ -999,6 +1004,8 @@ function renderMarkers() {
     ? adminBuildings
     : adminBuildings.filter(b => b.category === activeFilters);
 
+  const adminActive = isUserAdmin();
+
   filteredList.forEach(b => {
     const displayNum = b.id === 21 ? "C" : b.id;
     const isSelected = selectedBuilding && selectedBuilding.id === b.id;
@@ -1024,7 +1031,7 @@ function renderMarkers() {
     // Make draggable ONLY in Admin Mode
     const marker = L.marker(b.coords, {
       icon: customIcon,
-      draggable: isAdminMode
+      draggable: adminActive
     }).addTo(map);
 
     marker.bindTooltip(`<b>${displayNum}. ${b.name}</b>`, {
@@ -1033,7 +1040,7 @@ function renderMarkers() {
       opacity: 0.9
     });
 
-    if (isAdminMode) {
+    if (adminActive) {
       marker.on("dragend", (e) => {
         const newPos = marker.getLatLng();
         const y = Math.round(newPos.lat);
@@ -1050,7 +1057,7 @@ function renderMarkers() {
     }
 
     marker.on("click", () => {
-      if (isAdminMode) {
+      if (isUserAdmin()) {
         openEditBuildingForm(b);
       } else {
         selectBuilding(b);
@@ -2565,6 +2572,23 @@ function setupAdminEventListeners() {
   });
   document.getElementById("btn-admin-export")?.addEventListener("click", openExportModal);
   document.getElementById("dash-search-input")?.addEventListener("input", renderAdminDashboardTable);
+
+  // Building Form (Modal) Actions
+  document.getElementById("btn-building-form-cancel")?.addEventListener("click", () => {
+    document.getElementById("building-form-overlay")?.classList.remove("active");
+  });
+  document.getElementById("building-editor-form")?.addEventListener("submit", handleBuildingFormSubmit);
+  document.getElementById("btn-building-delete")?.addEventListener("click", handleBuildingDelete);
+
+  // Collapsible Bottom Carousel Toggle
+  const btnToggleCarousel = document.getElementById("btn-toggle-carousel");
+  const carouselPanel = document.getElementById("carousel-panel");
+  if (btnToggleCarousel && carouselPanel) {
+    btnToggleCarousel.addEventListener("click", (e) => {
+      e.stopPropagation();
+      carouselPanel.classList.toggle("collapsed");
+    });
+  }
 }
 
 
