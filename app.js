@@ -690,6 +690,7 @@ async function fetchAuthStatus() {
         const btnHeaderDash = document.getElementById("btn-header-admin-dashboard");
         if (btnHeaderDash) btnHeaderDash.style.display = "inline-flex";
 
+        renderMarkers();
         showToast("ยินดีต้อนรับผู้ดูแลระบบ: สามารถสลับเข้าสู่หน้า Dashboard หรือปรับแก้ไขตำแหน่งอาคารได้");
       }
 
@@ -2142,7 +2143,23 @@ function openEditBuildingForm(b) {
   document.getElementById("edit-building-coords").value = `[${b.coords[0]}, ${b.coords[1]}]`;
   document.getElementById("edit-building-real-coords").value = b.realCoords ? `${b.realCoords[0]}, ${b.realCoords[1]}` : "";
 
-  document.getElementById("btn-building-delete").style.display = "block";
+  const cancelBtn = document.getElementById("btn-building-form-cancel");
+  if (cancelBtn) {
+    cancelBtn.onclick = (e) => {
+      e.preventDefault();
+      document.getElementById("building-form-overlay").classList.remove("active");
+    };
+  }
+
+  const deleteBtn = document.getElementById("btn-building-delete");
+  if (deleteBtn) {
+    deleteBtn.style.display = "block";
+    deleteBtn.onclick = (e) => {
+      e.preventDefault();
+      handleBuildingDelete();
+    };
+  }
+
   document.getElementById("building-form-overlay").classList.add("active");
 }
 
@@ -2166,7 +2183,19 @@ function openAddBuildingForm(y, x) {
   const lng = LNG1 + (x - X1) / KX;
   document.getElementById("edit-building-real-coords").value = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
 
-  document.getElementById("btn-building-delete").style.display = "none";
+  const cancelBtn = document.getElementById("btn-building-form-cancel");
+  if (cancelBtn) {
+    cancelBtn.onclick = (e) => {
+      e.preventDefault();
+      document.getElementById("building-form-overlay").classList.remove("active");
+    };
+  }
+
+  const deleteBtn = document.getElementById("btn-building-delete");
+  if (deleteBtn) {
+    deleteBtn.style.display = "none";
+  }
+
   document.getElementById("building-form-overlay").classList.add("active");
 }
 
@@ -2542,6 +2571,9 @@ function setupEventListeners() {
       }
     });
   }
+
+  // Call Admin Event Listeners Setup
+  setupAdminEventListeners();
 }
 
 // Bind admin action events
