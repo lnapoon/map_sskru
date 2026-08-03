@@ -594,10 +594,10 @@
     </button>
 
     <div class="nav-section-label">ระบบ</div>
-    <button class="nav-item" onclick="window.open('/', '_blank')">
+    <a class="nav-item" href="/" style="text-decoration: none;">
       <div class="nav-icon"><i class="fa-solid fa-map"></i></div>
-      เปิดแผนที่
-    </button>
+      ดูหน้าแผนที่ (Map View)
+    </a>
   </nav>
 
   <div class="sidebar-footer">
@@ -634,6 +634,10 @@
       <i class="fa-solid fa-moon"></i>
     </button>
 
+    <a href="/" class="header-btn primary" style="text-decoration: none;">
+      <i class="fa-solid fa-map-location-dot"></i> ดูหน้าแผนที่
+    </a>
+
     <button class="header-btn" onclick="refreshData()">
       <i class="fa-solid fa-rotate"></i> รีเฟรช
     </button>
@@ -658,8 +662,8 @@
           <button class="quick-act-btn" onclick="showSection('students')">
             <i class="fa-solid fa-user-graduate"></i> จัดการนักศึกษา
           </button>
-          <a href="/" target="_blank" class="quick-act-btn" style="background:white; color:#1e40af;">
-            <i class="fa-solid fa-map-location-dot"></i> ดูแผนที่สด
+          <a href="/" class="quick-act-btn" style="background:white; color:#1e40af; text-decoration: none;">
+            <i class="fa-solid fa-map-location-dot"></i> ดูหน้าแผนที่
           </a>
         </div>
       </div>

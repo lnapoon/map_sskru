@@ -680,7 +680,13 @@ async function fetchAuthStatus() {
       
       if (isAdminMode) {
         document.querySelector(".app-container").classList.add("admin-active");
-        showToast("Welcome Admin: You can drag markers to reposition buildings.");
+        const adminPanel = document.getElementById("admin-panel");
+        if (adminPanel) adminPanel.style.display = "flex";
+
+        const btnHeaderDash = document.getElementById("btn-header-admin-dashboard");
+        if (btnHeaderDash) btnHeaderDash.style.display = "inline-flex";
+
+        showToast("ยินดีต้อนรับผู้ดูแลระบบ: สามารถสลับเข้าสู่หน้า Dashboard หรือปรับแก้ไขตำแหน่งอาคารได้");
       }
 
       // Update Drawer header with user info
@@ -697,15 +703,26 @@ function updateDrawerUserInfo() {
   const usernameEl = document.getElementById('drawer-username');
   const subtitleEl = document.getElementById('drawer-subtitle');
   const avatarEl = document.getElementById('drawer-avatar-icon');
+  const btnDrawerDash = document.getElementById('btn-drawer-admin-dashboard');
+  const adminDivider = document.getElementById('drawer-admin-divider');
+
+  const isAdmin = currentUserInfo.isAdmin || isAdminMode || document.querySelector(".app-container")?.classList.contains("admin-active");
   
-  if (currentUserInfo.isAdmin) {
+  if (isAdmin) {
     usernameEl.textContent = 'ผู้ดูแลระบบ (Admin)';
     subtitleEl.textContent = 'สิทธิ์: จัดการอาคาร, ลากหมุด, จัดการนักศึกษา';
     avatarEl.innerHTML = '<i class="fa-solid fa-user-shield"></i>';
+    if (btnDrawerDash) btnDrawerDash.style.display = 'flex';
+    if (adminDivider) adminDivider.style.display = 'block';
   } else if (currentUserInfo.isStudent && currentUserInfo.studentName) {
     usernameEl.textContent = currentUserInfo.studentName;
     subtitleEl.textContent = `รหัส: ${currentUserInfo.studentId}`;
     avatarEl.innerHTML = '<i class="fa-solid fa-user-graduate"></i>';
+    if (btnDrawerDash) btnDrawerDash.style.display = 'none';
+    if (adminDivider) adminDivider.style.display = 'none';
+  } else {
+    if (btnDrawerDash) btnDrawerDash.style.display = 'none';
+    if (adminDivider) adminDivider.style.display = 'none';
   }
 }
 
@@ -2555,7 +2572,20 @@ function setupAdminEventListeners() {
    v2.0 — Side Drawer, Smart Navigation, Mobile Search, Swipe Gesture
    ========================================================================== */
 
-function openSideDrawer() {
+async function openSideDrawer() {
+  const containerIsAdmin = document.querySelector(".app-container")?.classList.contains("admin-active");
+  if (!currentUserInfo.isAdmin && !containerIsAdmin) {
+    try {
+      const res = await fetch('/admin/api/auth/status/', { credentials: 'same-origin' });
+      const data = await res.json();
+      if (data.success && data.isAdmin) {
+        isAdminMode = true;
+        currentUserInfo.isAdmin = true;
+        document.querySelector(".app-container")?.classList.add("admin-active");
+      }
+    } catch (e) {}
+  }
+  updateDrawerUserInfo();
   document.getElementById("side-drawer").classList.add("open");
   document.getElementById("drawer-backdrop").classList.add("active");
   document.body.style.overflow = 'hidden';

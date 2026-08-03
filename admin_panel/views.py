@@ -382,6 +382,7 @@ def admin_students_api(request):
         return JsonResponse({'success': False, 'message': 'Unauthorized'}, status=401)
         
     from .models import Student
+    from django.db import IntegrityError
     
     if request.method == 'GET':
         students = list(Student.objects.values('id', 'student_id', 'name', 'is_active', 'created_at'))
@@ -390,14 +391,25 @@ def admin_students_api(request):
     elif request.method == 'POST':
         try:
             data = json.loads(request.body)
+            student_id = data.get('student_id', '').strip()
+            name = data.get('name', '').strip()
+
+            if not student_id or not name:
+                return JsonResponse({'success': False, 'message': 'กรุณากรอกข้อมูลให้ครบถ้วน'}, status=400)
+
+            if Student.objects.filter(student_id=student_id).exists():
+                return JsonResponse({'success': False, 'message': 'รหัสนักศึกษานี้มีอยู่ในระบบแล้ว'}, status=400)
+
             student = Student.objects.create(
-                student_id=data.get('student_id', '').strip(),
-                name=data.get('name', '').strip(),
+                student_id=student_id,
+                name=name,
                 is_active=data.get('is_active', True)
             )
             return JsonResponse({'success': True, 'message': 'เพิ่มนักศึกษาสำเร็จ'})
+        except IntegrityError:
+            return JsonResponse({'success': False, 'message': 'รหัสนักศึกษานี้มีอยู่ในระบบแล้ว'}, status=400)
         except Exception as e:
-            return JsonResponse({'success': False, 'message': str(e)}, status=400)
+            return JsonResponse({'success': False, 'message': 'เกิดข้อผิดพลาดในการบันทึกข้อมูล'}, status=400)
             
     elif request.method == 'DELETE':
         try:
