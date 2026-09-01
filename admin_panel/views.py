@@ -685,10 +685,13 @@ def student_request_reset_api(request):
         clean_sid = student_id.replace('-', '').strip()
         expected_prefix = f'stu{clean_sid}'
         
-        if expected_prefix not in email or 'sskru.ac.th' not in email:
+        is_uni_email = (expected_prefix in email and 'sskru.ac.th' in email)
+        is_valid_email = ('@' in email and '.' in email)
+        
+        if not is_uni_email and not is_valid_email:
             return JsonResponse({
                 'success': False,
-                'message': f'อีเมลยืนยันตัวตนไม่ถูกต้อง ต้องใช้อีเมลมหาวิทยาลัยรูปแบบ {expected_prefix}@sskru.ac.th เท่านั้น'
+                'message': f'อีเมลยืนยันตัวตนไม่ถูกต้อง ต้องใช้อีเมลรูปแบบ {expected_prefix}@sskru.ac.th หรืออีเมลของคุณ'
             }, status=400)
             
         student_db = Student.objects.filter(student_id=student_id).first()
