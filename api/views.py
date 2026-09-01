@@ -1,5 +1,6 @@
 import os
 import json
+import threading
 from pathlib import Path
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -8,8 +9,8 @@ from django.shortcuts import render, redirect
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_FILE = BASE_DIR / 'data' / 'buildings.json'
 
-def read_buildings():
-    # 1. Try MongoDB Atlas Cloud & Local MongoDB
+def sync_remote_stores_background(data):
+    """Sync to MongoDB Atlas Cloud & Local MongoDB in background"""
     mongo_uris = [
         "mongodb+srv://lnwpoon:poon300450@sensordata.80rr4am.mongodb.net/?appName=Sensordata",
         "mongodb://localhost:27017/"
@@ -17,76 +18,17 @@ def read_buildings():
     for uri in mongo_uris:
         try:
             import pymongo
+            from pymongo import ReplaceOne
             client = pymongo.MongoClient(uri, serverSelectionTimeoutMS=1500, tlsAllowInvalidCertificates=True)
-            client.admin.command('ping')
             db = client["sskru_map"]
             collection = db["buildings"]
-            docs = list(collection.find({}, {'_id': False}))
-            if docs and len(docs) > 0:
-                return docs
+            reqs = [ReplaceOne({'id': b['id']}, dict(b), upsert=True) for b in data]
+            if reqs:
+                collection.bulk_write(reqs, ordered=False)
         except Exception:
             pass
 
-    # 2. Try MySQL / phpMyAdmin
-    try:
-        import pymysql
-        conn = pymysql.connect(
-            host='localhost', port=3306, user='root', password='',
-            database='sskru_map', charset='utf8mb4', connect_timeout=1
-        )
-        with conn.cursor() as cursor:
-            cursor.execute("SELECT json_data FROM buildings ORDER BY id ASC;")
-            rows = cursor.fetchall()
-            if rows:
-                result = [json.loads(row[0]) for row in rows if row[0]]
-                conn.close()
-                if result:
-                    return result
-        conn.close()
-    except Exception:
-        pass
-
-    # 3. Fallback to data/buildings.json
-    try:
-        if not DATA_FILE.exists():
-            return []
-        with open(DATA_FILE, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    except Exception as e:
-        print("Error reading buildings file database:", e)
-        return []
-
-def write_buildings(data):
-    success = False
-
-    # 1. Write to JSON File
-    try:
-        DATA_FILE.parent.mkdir(parents=True, exist_ok=True)
-        with open(DATA_FILE, 'w', encoding='utf-8') as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-        success = True
-    except Exception as e:
-        print("Error writing buildings file database:", e)
-
-    # 2. Sync to MongoDB Atlas Cloud & Local MongoDB
-    mongo_uris = [
-        "mongodb+srv://lnwpoon:poon300450@sensordata.80rr4am.mongodb.net/?appName=Sensordata",
-        "mongodb://localhost:27017/"
-    ]
-    for uri in mongo_uris:
-        try:
-            import pymongo
-            client = pymongo.MongoClient(uri, serverSelectionTimeoutMS=1500, tlsAllowInvalidCertificates=True)
-            client.admin.command('ping')
-            db = client["sskru_map"]
-            collection = db["buildings"]
-            for b in data:
-                collection.replace_one({'id': b['id']}, dict(b), upsert=True)
-            success = True
-        except Exception:
-            pass
-
-    # 3. Sync to MySQL / phpMyAdmin if connected
+    # Sync to MySQL / phpMyAdmin if connected
     try:
         import pymysql
         conn = pymysql.connect(
@@ -116,11 +58,73 @@ def write_buildings(data):
                 cursor.execute(sql, (b_id, b_code, b_name, b_name_en, b_cat, cy, cx, lat, lng, desc, phone, json_str))
         conn.commit()
         conn.close()
-        success = True
     except Exception:
         pass
 
-    return success
+
+def read_buildings():
+    # 1. Primary Source of Truth: data/buildings.json
+    try:
+        if DATA_FILE.exists():
+            with open(DATA_FILE, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                if data and isinstance(data, list) and len(data) > 0:
+                    return data
+    except Exception as e:
+        print("Error reading buildings file database:", e)
+
+    # 2. Fallback to MongoDB Atlas Cloud & Local MongoDB
+    mongo_uris = [
+        "mongodb+srv://lnwpoon:poon300450@sensordata.80rr4am.mongodb.net/?appName=Sensordata",
+        "mongodb://localhost:27017/"
+    ]
+    for uri in mongo_uris:
+        try:
+            import pymongo
+            client = pymongo.MongoClient(uri, serverSelectionTimeoutMS=1200, tlsAllowInvalidCertificates=True)
+            client.admin.command('ping')
+            db = client["sskru_map"]
+            collection = db["buildings"]
+            docs = list(collection.find({}, {'_id': False}))
+            if docs and len(docs) > 0:
+                return docs
+        except Exception:
+            pass
+
+    # 3. Fallback to MySQL / phpMyAdmin
+    try:
+        import pymysql
+        conn = pymysql.connect(
+            host='localhost', port=3306, user='root', password='',
+            database='sskru_map', charset='utf8mb4', connect_timeout=1
+        )
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT json_data FROM buildings ORDER BY id ASC;")
+            rows = cursor.fetchall()
+            if rows:
+                result = [json.loads(row[0]) for row in rows if row[0]]
+                conn.close()
+                if result:
+                    return result
+        conn.close()
+    except Exception:
+        pass
+
+    return []
+
+def write_buildings(data):
+    # 1. Write to JSON File immediately (Guarantees fast persistence)
+    try:
+        DATA_FILE.parent.mkdir(parents=True, exist_ok=True)
+        with open(DATA_FILE, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print("Error writing buildings file database:", e)
+        return False
+
+    # 2. Trigger asynchronous background sync to remote databases
+    threading.Thread(target=sync_remote_stores_background, args=(data,), daemon=True).start()
+    return True
 
 def index_view(request):
     # Check if admin, student, or staff

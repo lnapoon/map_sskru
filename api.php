@@ -614,18 +614,18 @@ if ($action) {
 // ==========================================
 // BUILDINGS API
 // ==========================================
-if ($method === 'GET') {
-    if ($id) {
-        $stmt = $pdo->prepare("SELECT json_data FROM buildings WHERE id = ?");
-        $stmt->execute([$id]);
-        $row = $stmt->fetch();
-        if ($row) {
-            echo json_encode(['success' => true, 'data' => json_decode($row['json_data'], true)]);
-        } else {
-            http_response_code(404);
-            echo json_encode(['success' => false, 'message' => 'ไม่พบอาคารที่ระบุ']);
+$json_file = __DIR__ . '/data/buildings.json';
+
+function read_buildings_php() {
+    global $json_file, $pdo;
+    if (file_exists($json_file)) {
+        $content = file_get_contents($json_file);
+        $data = json_decode($content, true);
+        if (is_array($data) && count($data) > 0) {
+            return $data;
         }
-    } else {
+    }
+    if ($pdo) {
         $stmt = $pdo->query("SELECT json_data FROM buildings ORDER BY id ASC");
         $rows = $stmt->fetchAll();
         $buildings = [];
@@ -634,6 +634,60 @@ if ($method === 'GET') {
                 $buildings[] = json_decode($row['json_data'], true);
             }
         }
+        return $buildings;
+    }
+    return [];
+}
+
+function write_buildings_php($buildings, $pdo) {
+    global $json_file;
+    if (!file_exists(dirname($json_file))) {
+        @mkdir(dirname($json_file), 0777, true);
+    }
+    file_put_contents($json_file, json_encode($buildings, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+
+    if ($pdo) {
+        try {
+            $pdo->exec("DELETE FROM buildings");
+            $sql = "INSERT INTO buildings (id, code, name, nameEn, category, coords_y, coords_x, real_lat, real_lng, description, phone, json_data)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $stmt = $pdo->prepare($sql);
+            foreach ($buildings as $b) {
+                $b_id = intval($b['id'] ?? time());
+                $b_code = strval($b['code'] ?? $b_id);
+                $b_name = $b['name'] ?? '';
+                $b_name_en = $b['nameEn'] ?? '';
+                $b_cat = $b['category'] ?? 'facility';
+                $cy = $b['coords'][0] ?? 0;
+                $cx = $b['coords'][1] ?? 0;
+                $lat = $b['realCoords'][0] ?? 0.0;
+                $lng = $b['realCoords'][1] ?? 0.0;
+                $desc = $b['description'] ?? '';
+                $phone = $b['phone'] ?? '';
+                $json_str = json_encode($b, JSON_UNESCAPED_UNICODE);
+                $stmt->execute([$b_id, $b_code, $b_name, $b_name_en, $b_cat, $cy, $cx, $lat, $lng, $desc, $phone, $json_str]);
+            }
+        } catch (Exception $e) {}
+    }
+}
+
+if ($method === 'GET') {
+    $buildings = read_buildings_php();
+    if ($id) {
+        $found = null;
+        foreach ($buildings as $b) {
+            if (strval($b['id']) === strval($id)) {
+                $found = $b;
+                break;
+            }
+        }
+        if ($found) {
+            echo json_encode(['success' => true, 'data' => $found]);
+        } else {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'message' => 'ไม่พบอาคารที่ระบุ']);
+        }
+    } else {
         echo json_encode(['success' => true, 'count' => count($buildings), 'data' => $buildings]);
     }
     exit();
@@ -646,31 +700,25 @@ if ($method === 'POST') {
         exit();
     }
     
-    $b_id = isset($input_data['id']) ? intval($input_data['id']) : time();
-    $b_code = strval($input_data['code'] ?? $b_id);
-    $b_name = $input_data['name'];
-    $b_name_en = $input_data['nameEn'] ?? '';
-    $b_cat = $input_data['category'] ?? 'facility';
-    $cy = $input_data['coords'][0] ?? 0;
-    $cx = $input_data['coords'][1] ?? 0;
-    $lat = $input_data['realCoords'][0] ?? 0.0;
-    $lng = $input_data['realCoords'][1] ?? 0.0;
-    $desc = $input_data['description'] ?? '';
-    $phone = $input_data['phone'] ?? '';
-    $json_str = json_encode($input_data, JSON_UNESCAPED_UNICODE);
+    $buildings = read_buildings_php();
+    $b_id = isset($input_data['id']) ? intval($input_data['id']) : (count($buildings) > 0 ? max(array_column($buildings, 'id')) + 1 : 1);
+    $input_data['id'] = $b_id;
 
-    $sql = "INSERT INTO buildings (id, code, name, nameEn, category, coords_y, coords_x, real_lat, real_lng, description, phone, json_data)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON DUPLICATE KEY UPDATE
-                code=VALUES(code), name=VALUES(name), nameEn=VALUES(nameEn), category=VALUES(category),
-                coords_y=VALUES(coords_y), coords_x=VALUES(coords_x), real_lat=VALUES(real_lat), real_lng=VALUES(real_lng),
-                description=VALUES(description), phone=VALUES(phone), json_data=VALUES(json_data)";
-    
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([$b_id, $b_code, $b_name, $b_name_en, $b_cat, $cy, $cx, $lat, $lng, $desc, $phone, $json_str]);
-    
-    sync_to_json_file($pdo);
+    $idx = -1;
+    foreach ($buildings as $i => $b) {
+        if ($b['id'] == $b_id) {
+            $idx = $i;
+            break;
+        }
+    }
 
+    if ($idx >= 0) {
+        $buildings[$idx] = array_merge($buildings[$idx], $input_data);
+    } else {
+        $buildings[] = $input_data;
+    }
+
+    write_buildings_php($buildings, $pdo);
     echo json_encode(['success' => true, 'message' => 'บันทึกข้อมูลอาคารเรียบร้อยแล้ว', 'data' => $input_data]);
     exit();
 }
@@ -683,32 +731,25 @@ if ($method === 'PUT') {
         exit();
     }
     
-    $input_data['id'] = intval($target_id);
-    $b_id = $input_data['id'];
-    $b_code = strval($input_data['code'] ?? $b_id);
-    $b_name = $input_data['name'] ?? '';
-    $b_name_en = $input_data['nameEn'] ?? '';
-    $b_cat = $input_data['category'] ?? 'facility';
-    $cy = $input_data['coords'][0] ?? 0;
-    $cx = $input_data['coords'][1] ?? 0;
-    $lat = $input_data['realCoords'][0] ?? 0.0;
-    $lng = $input_data['realCoords'][1] ?? 0.0;
-    $desc = $input_data['description'] ?? '';
-    $phone = $input_data['phone'] ?? '';
-    $json_str = json_encode($input_data, JSON_UNESCAPED_UNICODE);
+    $buildings = read_buildings_php();
+    $target_id = intval($target_id);
+    $input_data['id'] = $target_id;
 
-    $sql = "INSERT INTO buildings (id, code, name, nameEn, category, coords_y, coords_x, real_lat, real_lng, description, phone, json_data)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON DUPLICATE KEY UPDATE
-                code=VALUES(code), name=VALUES(name), nameEn=VALUES(nameEn), category=VALUES(category),
-                coords_y=VALUES(coords_y), coords_x=VALUES(coords_x), real_lat=VALUES(real_lat), real_lng=VALUES(real_lng),
-                description=VALUES(description), phone=VALUES(phone), json_data=VALUES(json_data)";
-    
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([$b_id, $b_code, $b_name, $b_name_en, $b_cat, $cy, $cx, $lat, $lng, $desc, $phone, $json_str]);
-    
-    sync_to_json_file($pdo);
+    $idx = -1;
+    foreach ($buildings as $i => $b) {
+        if ($b['id'] == $target_id) {
+            $idx = $i;
+            break;
+        }
+    }
 
+    if ($idx >= 0) {
+        $buildings[$idx] = array_merge($buildings[$idx], $input_data);
+    } else {
+        $buildings[] = $input_data;
+    }
+
+    write_buildings_php($buildings, $pdo);
     echo json_encode(['success' => true, 'message' => 'อัปเดตข้อมูลอาคารสำเร็จ', 'data' => $input_data]);
     exit();
 }
@@ -720,28 +761,16 @@ if ($method === 'DELETE') {
         exit();
     }
     
-    $stmt = $pdo->prepare("DELETE FROM buildings WHERE id = ?");
-    $stmt->execute([$id]);
+    $buildings = read_buildings_php();
+    $target_id = intval($id);
+    $new_buildings = [];
+    foreach ($buildings as $b) {
+        if ($b['id'] != $target_id) {
+            $new_buildings[] = $b;
+        }
+    }
     
-    sync_to_json_file($pdo);
-
+    write_buildings_php($new_buildings, $pdo);
     echo json_encode(['success' => true, 'message' => 'ลบอาคารเรียบร้อยแล้ว']);
     exit();
-}
-
-function sync_to_json_file($pdo) {
-    try {
-        $stmt = $pdo->query("SELECT json_data FROM buildings ORDER BY id ASC");
-        $rows = $stmt->fetchAll();
-        $buildings = [];
-        foreach ($rows as $row) {
-            if (!empty($row['json_data'])) {
-                $buildings[] = json_decode($row['json_data'], true);
-            }
-        }
-        $json_file = __DIR__ . '/data/buildings.json';
-        if (file_exists(dirname($json_file))) {
-            file_put_contents($json_file, json_encode($buildings, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-        }
-    } catch (Exception $e) {}
 }

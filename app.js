@@ -869,8 +869,8 @@ const BUILDINGS = [
     "nameEn": "Staff Parking Garage",
     "category": "facility",
     "coords": [
-      681,
-      879
+      807,
+      884
     ],
     "realCoords": [
       15.118922,
@@ -891,8 +891,8 @@ const BUILDINGS = [
     "nameEn": "University Shrine",
     "category": "facility",
     "coords": [
-      805,
-      653
+      551,
+      1042
     ],
     "realCoords": [
       15.116576,
@@ -914,8 +914,8 @@ const BUILDINGS = [
     "nameEn": "Wat Pa Sattha Tham",
     "category": "facility",
     "coords": [
-      822,
-      559
+      426,
+      1010
     ],
     "realCoords": [
       15.116257,
@@ -937,8 +937,8 @@ const BUILDINGS = [
     "nameEn": "Mini Big C Convenience Store",
     "category": "facility",
     "coords": [
-      701,
-      621
+      639,
+      814
     ],
     "realCoords": [
       15.118543,
@@ -1530,7 +1530,7 @@ async function handleLogout() {
 
 // Load dataset (Instant initial render + ultra-fast async background sync)
 async function loadBuildingsData() {
-  const CURRENT_DATA_VER = "v11.0";
+  const CURRENT_DATA_VER = "v15.0";
   if (localStorage.getItem("sskru_data_version") !== CURRENT_DATA_VER) {
     localStorage.removeItem("sskru_buildings");
     localStorage.setItem("sskru_data_version", CURRENT_DATA_VER);
@@ -1558,7 +1558,7 @@ async function loadBuildingsData() {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 1200);
 
-  const endpoints = ['/api/buildings', 'api.php', 'data/buildings.json'];
+  const endpoints = ['/api/buildings', '/admin/api/buildings/', 'api.php', 'data/buildings.json'];
   for (const ep of endpoints) {
     try {
       const response = await fetch(ep, { signal: controller.signal });
@@ -1567,6 +1567,7 @@ async function loadBuildingsData() {
         const dataArr = json.data || (Array.isArray(json) ? json : null);
         if (Array.isArray(dataArr) && dataArr.length > 0) {
           adminBuildings = dataArr;
+          localStorage.setItem("sskru_buildings", JSON.stringify(adminBuildings));
           isServerConnected = true;
           updateServerStatusPill(true);
           clearTimeout(timeoutId);
@@ -2853,8 +2854,8 @@ async function saveBuildingsToStorage(actionType = null, buildingItem = null) {
     renderAdminDashboardTable();
   }
 
-  // Sync to Backend REST API if server is online
-  if (isServerConnected && actionType && buildingItem) {
+  // Sync to Backend REST API (Try multiple endpoints to guarantee persistence)
+  if (actionType && buildingItem) {
     try {
       let url = `/api/buildings/${buildingItem.id}/`;
       let method = 'PUT';
@@ -2869,7 +2870,8 @@ async function saveBuildingsToStorage(actionType = null, buildingItem = null) {
 
       const opts = {
         method: method,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin'
       };
 
       if (actionType !== 'DELETE') {
@@ -2878,12 +2880,12 @@ async function saveBuildingsToStorage(actionType = null, buildingItem = null) {
 
       let res = await fetch(url, opts);
       if (!res.ok) {
-        let phpUrl = `api.php${buildingItem.id ? '?id=' + buildingItem.id : ''}`;
-        res = await fetch(phpUrl, opts);
-      }
-      if (!res.ok) {
         let adminUrl = actionType === 'POST' ? '/admin/api/buildings/' : `/admin/api/buildings/${buildingItem.id}/`;
         res = await fetch(adminUrl, opts);
+      }
+      if (!res.ok) {
+        let phpUrl = `api.php${buildingItem.id ? '?id=' + buildingItem.id : ''}`;
+        res = await fetch(phpUrl, opts);
       }
       const resData = await res.json();
       if (resData.success) {
