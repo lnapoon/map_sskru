@@ -7,7 +7,7 @@ require_once __DIR__ . '/config.php';
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>เข้าสู่ระบบ — SSKRU 3D Campus Map System</title>
+  <title>เข้าสู่ระบบ — SSKRU Campus Map</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -15,169 +15,226 @@ require_once __DIR__ . '/config.php';
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --primary: #0284c7;
-      --primary-dark: #0f172a;
-      --primary-accent: #2563eb;
+      --primary: #1a4fa0;
+      --primary-dark: #0d2c5e;
+      --primary-light: #2563eb;
       --accent: #f59e0b;
       --danger: #ef4444;
       --success: #10b981;
-      --surface: #0f172a;
-      --card-bg: rgba(30, 41, 59, 0.85);
-      --border: rgba(56, 189, 248, 0.25);
-      --text: #f8fafc;
-      --text-muted: #94a3b8;
+      --surface: #ffffff;
+      --text: #1e293b;
+      --text-secondary: #64748b;
     }
 
     body {
       font-family: 'Sarabun', 'Outfit', sans-serif;
-      background: radial-gradient(circle at top left, #0f172a, #0b1329);
+      background: linear-gradient(135deg, #0d2c5e 0%, #1a4fa0 40%, #2563eb 70%, #1e40af 100%);
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 20px;
-      color: var(--text);
+      padding: 24px;
       position: relative;
-      overflow-x: hidden;
-    }
-
-    /* Ambient background blur blobs */
-    .bg-blob {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(80px);
-      z-index: 0;
-      opacity: 0.45;
-      pointer-events: none;
-    }
-    .blob-1 { top: -100px; left: -100px; width: 350px; height: 350px; background: #0284c7; }
-    .blob-2 { bottom: -100px; right: -100px; width: 400px; height: 400px; background: #2563eb; }
-
-    .portal-container {
-      position: relative;
-      z-index: 10;
-      width: 100%;
-      max-width: 900px;
-      background: rgba(15, 23, 42, 0.9);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1.5px solid var(--border);
-      border-radius: 28px;
-      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 30px rgba(14, 165, 233, 0.2);
       overflow: hidden;
     }
 
-    /* Portal Header */
-    .portal-header {
-      text-align: center;
-      padding: 30px 24px 20px 24px;
-      background: rgba(30, 41, 59, 0.5);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    /* Animated background blobs */
+    body::before, body::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.25;
+      animation: float 8s ease-in-out infinite alternate;
     }
-    .portal-logo {
-      width: 60px;
-      height: 60px;
-      background: linear-gradient(135deg, #0284c7, #2563eb);
-      border-radius: 18px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 28px;
-      color: #fff;
-      box-shadow: 0 8px 24px rgba(2, 132, 199, 0.4);
-      margin-bottom: 12px;
+    body::before {
+      width: 500px; height: 500px;
+      background: #f59e0b;
+      top: -150px; right: -100px;
     }
-    .portal-title {
-      font-size: 22px;
-      font-weight: 700;
-      color: #fff;
-      letter-spacing: -0.3px;
+    body::after {
+      width: 400px; height: 400px;
+      background: #10b981;
+      bottom: -100px; left: -80px;
+      animation-delay: 4s;
     }
-    .portal-subtitle {
-      font-size: 13px;
-      color: #38bdf8;
-      margin-top: 4px;
-      font-weight: 500;
+    @keyframes float {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(40px, -30px) scale(1.1); }
     }
 
-    /* Main Dual Role Tabs */
+    /* Floating particles */
+    .particles {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+    }
+    .particle {
+      position: absolute;
+      width: 6px; height: 6px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 50%;
+      animation: rise 12s linear infinite;
+    }
+    .particle:nth-child(2) { left: 15%; width: 4px; height: 4px; animation-delay: 2s; animation-duration: 14s; }
+    .particle:nth-child(3) { left: 35%; width: 8px; height: 8px; animation-delay: 4s; animation-duration: 10s; }
+    .particle:nth-child(4) { left: 55%; width: 3px; height: 3px; animation-delay: 1s; animation-duration: 16s; }
+    .particle:nth-child(5) { left: 75%; width: 5px; height: 5px; animation-delay: 6s; animation-duration: 11s; }
+
+    @keyframes rise {
+      0% { bottom: -10%; opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 0.5; }
+      100% { bottom: 110%; opacity: 0; }
+    }
+
+    .login-card {
+      position: relative;
+      z-index: 1;
+      background: rgba(255,255,255,0.96);
+      backdrop-filter: blur(20px);
+      border-radius: 24px;
+      box-shadow: 0 25px 80px rgba(0,0,0,0.3);
+      width: 100%;
+      max-width: 520px;
+      overflow: hidden;
+      animation: cardIn 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+    @keyframes cardIn {
+      0% { opacity: 0; transform: translateY(30px) scale(0.95); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .card-header {
+      background: linear-gradient(135deg, var(--primary-dark), var(--primary-light));
+      padding: 32px 28px 24px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .card-header::after {
+      content: '';
+      position: absolute;
+      bottom: -20px; left: -10%; right: -10%;
+      height: 40px;
+      background: rgba(255,255,255,0.96);
+      border-radius: 50% 50% 0 0;
+    }
+
+    .university-badge {
+      width: 68px; height: 68px;
+      background: rgba(255,255,255,0.15);
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 12px;
+      font-size: 30px;
+      color: white;
+      animation: pulse 3s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0.3); }
+      50% { box-shadow: 0 0 0 12px rgba(255,255,255,0); }
+    }
+
+    .card-header h1 {
+      color: white;
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+    .card-header p {
+      color: rgba(255,255,255,0.85);
+      font-size: 12.5px;
+      font-weight: 400;
+    }
+
+    /* Main Role Tabs */
     .role-switcher {
       display: flex;
-      background: rgba(15, 23, 42, 0.8);
-      padding: 6px;
-      border-bottom: 1px solid var(--border);
+      background: #f1f5f9;
+      margin: 20px 24px 0 24px;
+      padding: 4px;
+      border-radius: 14px;
+      border: 1px solid #e2e8f0;
     }
     .role-btn {
       flex: 1;
-      padding: 14px 18px;
+      padding: 10px 12px;
       border: none;
       background: transparent;
-      color: var(--text-muted);
+      color: var(--text-secondary);
       font-family: inherit;
-      font-size: 14.5px;
+      font-size: 13.5px;
       font-weight: 600;
       cursor: pointer;
-      border-radius: 16px;
+      border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
-      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      gap: 6px;
+      transition: all 0.25s ease;
     }
     .role-btn.active {
-      background: linear-gradient(135deg, #0284c7, #2563eb);
-      color: #ffffff;
-      box-shadow: 0 4px 16px rgba(2, 132, 199, 0.35);
+      background: var(--primary);
+      color: white;
+      box-shadow: 0 4px 12px rgba(26, 79, 160, 0.3);
     }
 
-    /* Panels Content */
+    .card-body {
+      padding: 24px 28px 28px;
+    }
+
     .panel-content {
-      padding: 32px 36px;
       display: none;
     }
     .panel-content.active {
       display: block;
-      animation: fadeIn 0.35s ease-out;
+      animation: fadeIn 0.3s ease-out;
     }
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(8px); }
+      from { opacity: 0; transform: translateY(6px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Sub Tabs inside panel */
+    /* Sub Tabs */
     .sub-tabs {
       display: flex;
-      gap: 10px;
-      margin-bottom: 24px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      padding-bottom: 12px;
+      gap: 8px;
+      margin-bottom: 20px;
+      border-bottom: 1.5px solid #f1f5f9;
+      padding-bottom: 10px;
     }
     .sub-tab-btn {
       background: transparent;
       border: none;
-      color: var(--text-muted);
-      font-size: 13.5px;
+      color: var(--text-secondary);
+      font-size: 13px;
       font-weight: 600;
       cursor: pointer;
-      padding: 8px 16px;
-      border-radius: 10px;
+      padding: 6px 12px;
+      border-radius: 8px;
       transition: all 0.2s;
     }
     .sub-tab-btn.active {
-      background: rgba(56, 189, 248, 0.15);
-      color: #38bdf8;
+      background: rgba(26, 79, 160, 0.1);
+      color: var(--primary);
     }
 
     /* Form Fields */
     .form-group {
-      margin-bottom: 20px;
+      margin-bottom: 18px;
     }
     .form-label {
       display: block;
       font-size: 13px;
       font-weight: 600;
-      color: #cbd5e1;
-      margin-bottom: 8px;
+      color: var(--text);
+      margin-bottom: 6px;
     }
     .input-wrapper {
       position: relative;
@@ -186,64 +243,64 @@ require_once __DIR__ . '/config.php';
     }
     .input-icon {
       position: absolute;
-      left: 16px;
-      color: #38bdf8;
-      font-size: 16px;
-      pointer-events: none;
+      left: 14px;
+      color: var(--text-secondary);
+      font-size: 15px;
+      transition: color 0.2s;
     }
     .form-input {
       width: 100%;
-      padding: 13px 16px 13px 46px;
-      background: rgba(30, 41, 59, 0.7);
-      border: 1px solid rgba(56, 189, 248, 0.3);
-      border-radius: 14px;
-      color: #ffffff;
-      font-size: 14px;
+      padding: 12px 14px 12px 42px;
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
+      color: var(--text);
+      font-size: 13.5px;
       font-family: inherit;
       outline: none;
-      transition: all 0.25s ease;
+      transition: all 0.2s ease;
     }
     .form-input:focus {
-      border-color: #38bdf8;
-      background: rgba(30, 41, 59, 1);
-      box-shadow: 0 0 16px rgba(56, 189, 248, 0.3);
+      border-color: var(--primary-light);
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
     }
-    .form-input::placeholder {
-      color: #64748b;
+    .form-input:focus + .input-icon, .form-input:focus ~ .input-icon {
+      color: var(--primary-light);
     }
 
-    /* Primary Submit Button */
-    .btn-submit {
+    /* Buttons */
+    .btn-primary {
       width: 100%;
-      padding: 14px;
-      background: linear-gradient(135deg, #10b981, #059669);
-      color: #ffffff;
+      padding: 13px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: white;
       border: none;
-      border-radius: 14px;
-      font-size: 15px;
-      font-weight: 700;
+      border-radius: 12px;
+      font-size: 14.5px;
+      font-weight: 600;
       font-family: inherit;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
-      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
+      gap: 8px;
+      box-shadow: 0 4px 16px rgba(26, 79, 160, 0.3);
       transition: all 0.25s ease;
-      margin-top: 10px;
+      margin-top: 8px;
     }
-    .btn-submit:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(16, 185, 129, 0.5);
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(26, 79, 160, 0.4);
     }
 
     /* Verification Result Card */
     .verify-result-card {
-      margin-top: 20px;
-      padding: 18px;
-      border-radius: 16px;
-      background: rgba(30, 41, 59, 0.9);
-      border: 1.5px solid rgba(56, 189, 248, 0.4);
+      margin-top: 18px;
+      padding: 16px;
+      border-radius: 14px;
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
       display: none;
     }
     .verify-result-card.active {
@@ -251,248 +308,202 @@ require_once __DIR__ . '/config.php';
       animation: fadeIn 0.3s ease-out;
     }
     .verify-result-card.error {
-      border-color: rgba(239, 68, 68, 0.5);
-      background: rgba(239, 68, 68, 0.1);
+      border-color: #fca5a5;
+      background: #fef2f2;
     }
     .result-info {
       font-size: 13px;
       line-height: 1.6;
-      color: #cbd5e1;
-    }
-    .result-info strong {
-      color: #ffffff;
+      color: var(--text);
     }
 
-    /* Contact Support Link Button */
     .btn-contact-support {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      margin-top: 12px;
-      padding: 10px 18px;
+      gap: 6px;
+      margin-top: 10px;
+      padding: 8px 14px;
       background: #ef4444;
       color: white;
-      border-radius: 12px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-size: 12.5px;
+      font-weight: 600;
+    }
+
+    /* Card Footer */
+    .card-footer {
+      padding: 16px 28px;
+      background: #f8fafc;
+      border-top: 1px solid #e2e8f0;
+      text-align: center;
+    }
+    .guest-link {
+      color: var(--primary-light);
       text-decoration: none;
       font-size: 13px;
       font-weight: 600;
-      box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
-    }
-
-    /* Social Login Area */
-    .social-login-divider {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin: 24px 0 18px 0;
-      color: var(--text-muted);
-      font-size: 12px;
-    }
-    .social-login-divider::before, .social-login-divider::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: rgba(255, 255, 255, 0.1);
-    }
-    .social-buttons {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-    }
-    .btn-social {
-      width: 44px;
-      height: 44px;
-      border-radius: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      background: rgba(30, 41, 59, 0.6);
-      color: #cbd5e1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      cursor: not-allowed;
-      opacity: 0.6;
-      position: relative;
-    }
-
-    /* Guest Footer */
-    .guest-footer {
-      text-align: center;
-      padding: 18px 24px;
-      background: rgba(15, 23, 42, 0.95);
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
-    }
-    .btn-guest {
-      color: #38bdf8;
-      text-decoration: none;
-      font-size: 13.5px;
-      font-weight: 600;
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      transition: all 0.2s;
+      gap: 6px;
     }
-    .btn-guest:hover {
-      color: #ffffff;
+    .guest-link:hover {
       text-decoration: underline;
     }
   </style>
 </head>
 <body>
 
-  <div class="bg-blob blob-1"></div>
-  <div class="bg-blob blob-2"></div>
+  <div class="particles">
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+  </div>
 
-  <div class="portal-container">
-    <!-- Portal Header -->
-    <div class="portal-header">
-      <div class="portal-logo">
-        <i class="fa-solid fa-map-location-dot"></i>
+  <div class="login-card">
+    <!-- Header -->
+    <div class="card-header">
+      <div class="university-badge">
+        <i class="fa-solid fa-graduation-cap"></i>
       </div>
-      <h1 class="portal-title">มหาวิทยาลัยราชภัฏศรีสะเกษ</h1>
-      <p class="portal-subtitle">SSKRU 3D Campus Map & Authentication Portal</p>
+      <h1>มหาวิทยาลัยราชภัฏศรีสะเกษ</h1>
+      <p>SSKRU 3D Campus Map & Authentication Portal</p>
     </div>
 
-    <!-- Dual Role Switcher -->
+    <!-- Main Role Switcher Tabs -->
     <div class="role-switcher">
       <button class="role-btn active" id="tab-student" onclick="switchRole('student')">
-        <i class="fa-solid fa-graduation-cap"></i> สำหรับนักศึกษา (Student)
+        <i class="fa-solid fa-user-graduate"></i> สำหรับนักศึกษา
       </button>
       <button class="role-btn" id="tab-staff" onclick="switchRole('staff')">
-        <i class="fa-solid fa-user-shield"></i> สำหรับบุคลากร & Admin
+        <i class="fa-solid fa-user-tie"></i> สำหรับบุคลากร & Admin
       </button>
     </div>
 
-    <!-- 1. STUDENT PANEL -->
-    <div class="panel-content active" id="panel-student">
-      <div class="sub-tabs">
-        <button class="sub-tab-btn active" id="subtab-student-verify" onclick="switchStudentSubTab('verify')">
-          <i class="fa-solid fa-id-card"></i> ยืนยันตัวตน & ลงทะเบียน
-        </button>
-        <button class="sub-tab-btn" id="subtab-student-login" onclick="switchStudentSubTab('login')">
-          <i class="fa-solid fa-key"></i> เข้าสู่ระบบนักศึกษา
-        </button>
+    <div class="card-body">
+      <!-- 1. STUDENT PANEL -->
+      <div class="panel-content active" id="panel-student">
+        <div class="sub-tabs">
+          <button class="sub-tab-btn active" id="subtab-student-verify" onclick="switchStudentSubTab('verify')">
+            <i class="fa-solid fa-id-card"></i> ยืนยันตัวตน & ลงทะเบียน
+          </button>
+          <button class="sub-tab-btn" id="subtab-student-login" onclick="switchStudentSubTab('login')">
+            <i class="fa-solid fa-key"></i> เข้าสู่ระบบนักศึกษา
+          </button>
+        </div>
+
+        <!-- Verify Form -->
+        <form id="form-student-verify" onsubmit="handleStudentVerify(event)">
+          <div class="form-group">
+            <label class="form-label">รหัสนักศึกษา (Student ID)</label>
+            <div class="input-wrapper">
+              <i class="fa-solid fa-hashtag input-icon"></i>
+              <input type="text" id="verify-student-id" class="form-input" placeholder="เช่น 6512345678-9" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">เลขบัตรประจำตัวประชาชน (13 หลัก)</label>
+            <div class="input-wrapper">
+              <i class="fa-solid fa-address-card input-icon"></i>
+              <input type="text" id="verify-citizen-id" class="form-input" placeholder="เช่น 1330100XXXXXX" maxlength="13" required />
+            </div>
+          </div>
+          <button type="submit" class="btn-primary">
+            <i class="fa-solid fa-magnifying-glass"></i> ตรวจสอบข้อมูลสิทธิ์นักศึกษา
+          </button>
+        </form>
+
+        <div class="verify-result-card" id="student-verify-result"></div>
+
+        <!-- Existing Student Login -->
+        <form id="form-student-login" style="display: none;" onsubmit="handleStudentLogin(event)">
+          <div class="form-group">
+            <label class="form-label">รหัสนักศึกษา (Student ID)</label>
+            <div class="input-wrapper">
+              <i class="fa-solid fa-graduation-cap input-icon"></i>
+              <input type="text" id="login-student-id" class="form-input" placeholder="กรอกรหัสนักศึกษา" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">รหัสผ่าน (Password)</label>
+            <div class="input-wrapper">
+              <i class="fa-solid fa-lock input-icon"></i>
+              <input type="password" id="login-student-pass" class="form-input" placeholder="กรอกรหัสผ่าน" required />
+            </div>
+          </div>
+          <button type="submit" class="btn-primary">
+            <i class="fa-solid fa-right-to-bracket"></i> เข้าสู่ระบบนักศึกษา
+          </button>
+        </form>
       </div>
 
-      <!-- Student Verify & Register Form -->
-      <form id="form-student-verify" onsubmit="handleStudentVerify(event)">
-        <div class="form-group">
-          <label class="form-label"><i class="fa-solid fa-hashtag"></i> รหัสนักศึกษา (Student ID)</label>
-          <div class="input-wrapper">
-            <i class="fa-solid fa-user-graduate input-icon"></i>
-            <input type="text" id="verify-student-id" class="form-input" placeholder="เช่น 6512345678-9" required />
-          </div>
+      <!-- 2. STAFF & ADMIN PANEL -->
+      <div class="panel-content" id="panel-staff">
+        <div class="sub-tabs">
+          <button class="sub-tab-btn active" id="subtab-staff-login" onclick="switchStaffSubTab('login')">
+            <i class="fa-solid fa-user-lock"></i> เข้าสู่ระบบบุคลากร & Admin
+          </button>
+          <button class="sub-tab-btn" id="subtab-staff-reg" onclick="switchStaffSubTab('reg')">
+            <i class="fa-solid fa-user-plus"></i> สมัครสมาชิกบุคลากรใหม่
+          </button>
         </div>
-        <div class="form-group">
-          <label class="form-label"><i class="fa-solid fa-id-badge"></i> เลขบัตรประจำตัวประชาชน (13 หลัก)</label>
-          <div class="input-wrapper">
-            <i class="fa-solid fa-address-card input-icon"></i>
-            <input type="text" id="verify-citizen-id" class="form-input" placeholder="เช่น 1330100XXXXXX" maxlength="13" required />
-          </div>
-        </div>
-        <button type="submit" class="btn-submit">
-          <i class="fa-solid fa-magnifying-glass"></i> ตรวจสอบข้อมูลสิทธิ์นักศึกษา
-        </button>
-      </form>
 
-      <!-- Student Verification Result Box -->
-      <div class="verify-result-card" id="student-verify-result"></div>
-
-      <!-- Student Existing Login Form -->
-      <form id="form-student-login" style="display: none;" onsubmit="handleStudentLogin(event)">
-        <div class="form-group">
-          <label class="form-label">รหัสนักศึกษา (Student ID)</label>
-          <div class="input-wrapper">
-            <i class="fa-solid fa-graduation-cap input-icon"></i>
-            <input type="text" id="login-student-id" class="form-input" placeholder="กรอกรหัสนักศึกษา" required />
+        <!-- Staff/Admin Login -->
+        <form id="form-staff-login" onsubmit="handleStaffLogin(event)">
+          <div class="form-group">
+            <label class="form-label">Username หรือ Email</label>
+            <div class="input-wrapper">
+              <i class="fa-solid fa-at input-icon"></i>
+              <input type="text" id="staff-identifier" class="form-input" placeholder="กรอก Username หรือ Email บุคลากร" required />
+            </div>
           </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">รหัสผ่าน (Password)</label>
-          <div class="input-wrapper">
-            <i class="fa-solid fa-lock input-icon"></i>
-            <input type="password" id="login-student-pass" class="form-input" placeholder="กรอกรหัสผ่าน" required />
+          <div class="form-group">
+            <label class="form-label">รหัสผ่าน (Password)</label>
+            <div class="input-wrapper">
+              <i class="fa-solid fa-lock input-icon"></i>
+              <input type="password" id="staff-password" class="form-input" placeholder="กรอกรหัสผ่าน" required />
+            </div>
           </div>
-        </div>
-        <button type="submit" class="btn-submit">
-          <i class="fa-solid fa-right-to-bracket"></i> เข้าสู่ระบบนักศึกษา
-        </button>
-      </form>
-    </div>
+          <button type="submit" class="btn-primary">
+            <i class="fa-solid fa-right-to-bracket"></i> เข้าสู่ระบบบุคลากร & Admin
+          </button>
+        </form>
 
-    <!-- 2. STAFF & ADMIN PANEL -->
-    <div class="panel-content" id="panel-staff">
-      <div class="sub-tabs">
-        <button class="sub-tab-btn active" id="subtab-staff-login" onclick="switchStaffSubTab('login')">
-          <i class="fa-solid fa-user-lock"></i> เข้าสู่ระบบบุคลากร & Admin
-        </button>
-        <button class="sub-tab-btn" id="subtab-staff-reg" onclick="switchStaffSubTab('reg')">
-          <i class="fa-solid fa-user-plus"></i> สมัครสมาชิกบุคลากรใหม่
-        </button>
+        <!-- Staff Register -->
+        <form id="form-staff-reg" style="display: none;" onsubmit="handleStaffRegister(event)">
+          <div class="form-group">
+            <label class="form-label">อีเมลองค์กร / มหาวิทยาลัย (Email)</label>
+            <div class="input-wrapper">
+              <i class="fa-solid fa-envelope input-icon"></i>
+              <input type="email" id="reg-staff-email" class="form-input" placeholder="name@sskru.ac.th" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">ชื่อผู้ใช้งาน (Username)</label>
+            <div class="input-wrapper">
+              <i class="fa-solid fa-user input-icon"></i>
+              <input type="text" id="reg-staff-username" class="form-input" placeholder="กำหนด Username" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">รหัสผ่าน (Password)</label>
+            <div class="input-wrapper">
+              <i class="fa-solid fa-key input-icon"></i>
+              <input type="password" id="reg-staff-pass" class="form-input" placeholder="กำหนดรหัสผ่าน" required />
+            </div>
+          </div>
+          <button type="submit" class="btn-primary">
+            <i class="fa-solid fa-user-check"></i> สมัครสมาชิกบุคลากร
+          </button>
+        </form>
       </div>
-
-      <!-- Staff/Admin Login Form -->
-      <form id="form-staff-login" onsubmit="handleStaffLogin(event)">
-        <div class="form-group">
-          <label class="form-label">Username หรือ Email</label>
-          <div class="input-wrapper">
-            <i class="fa-solid fa-at input-icon"></i>
-            <input type="text" id="staff-identifier" class="form-input" placeholder="กรอก Username หรือ Email บุคลากร" required />
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">รหัสผ่าน (Password)</label>
-          <div class="input-wrapper">
-            <i class="fa-solid fa-lock input-icon"></i>
-            <input type="password" id="staff-password" class="form-input" placeholder="กรอกรหัสผ่าน" required />
-          </div>
-        </div>
-        <button type="submit" class="btn-submit">
-          <i class="fa-solid fa-right-to-bracket"></i> เข้าสู่ระบบบุคลากร & Admin
-        </button>
-
-        <!-- Future Social Login Options -->
-        <div class="social-login-divider">หรือเข้าสู่ระบบด้วยบริการภายนอก (เร็วๆ นี้)</div>
-        <div class="social-buttons">
-          <div class="btn-social" title="Google Login (เร็วๆ นี้)"><i class="fa-brands fa-google"></i></div>
-          <div class="btn-social" title="Facebook Login (เร็วๆ นี้)"><i class="fa-brands fa-facebook"></i></div>
-          <div class="btn-social" title="LINE Login (เร็วๆ นี้)"><i class="fa-brands fa-line"></i></div>
-          <div class="btn-social" title="GitHub Login (เร็วๆ นี้)"><i class="fa-brands fa-github"></i></div>
-        </div>
-      </form>
-
-      <!-- Staff Registration Form -->
-      <form id="form-staff-reg" style="display: none;" onsubmit="handleStaffRegister(event)">
-        <div class="form-group">
-          <label class="form-label">อีเมลองค์กร / มหาวิทยาลัย (Email)</label>
-          <div class="input-wrapper">
-            <i class="fa-solid fa-envelope input-icon"></i>
-            <input type="email" id="reg-staff-email" class="form-input" placeholder="name@sskru.ac.th" required />
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">ชื่อผู้ใช้งาน (Username)</label>
-          <div class="input-wrapper">
-            <i class="fa-solid fa-user input-icon"></i>
-            <input type="text" id="reg-staff-username" class="form-input" placeholder="กำหนด Username" required />
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">รหัสผ่าน (Password)</label>
-          <div class="input-wrapper">
-            <i class="fa-solid fa-key input-icon"></i>
-            <input type="password" id="reg-staff-pass" class="form-input" placeholder="กำหนดรหัสผ่าน" required />
-          </div>
-        </div>
-        <button type="submit" class="btn-submit" style="background: linear-gradient(135deg, #0284c7, #2563eb);">
-          <i class="fa-solid fa-user-check"></i> สมัครสมาชิกบุคลากร
-        </button>
-      </form>
     </div>
 
-    <!-- Guest Visitor Footer Access -->
-    <div class="guest-footer">
-      <a href="/" class="btn-guest">
+    <!-- Card Footer -->
+    <div class="card-footer">
+      <a href="/" class="guest-link">
         <i class="fa-solid fa-compass"></i> เข้าใช้งานแบบผู้เข้าชมทั่วไป (Guest Visitor Access)
       </a>
     </div>
@@ -544,14 +555,14 @@ require_once __DIR__ . '/config.php';
           resCard.className = 'verify-result-card active';
           resCard.innerHTML = `
             <div class="result-info">
-              <p style="color:#10b981; font-weight:700; font-size:14px; margin-bottom:8px;"><i class="fa-solid fa-circle-check"></i> ตรวจสอบข้อมูลสิทธิ์สำเร็จ!</p>
+              <p style="color:#10b981; font-weight:700; font-size:14px; margin-bottom:6px;"><i class="fa-solid fa-circle-check"></i> ตรวจสอบข้อมูลสิทธิ์สำเร็จ!</p>
               <p><strong>ชื่อ-นามสกุล:</strong> ${info.name}</p>
               <p><strong>รหัสนักศึกษา:</strong> ${info.student_id}</p>
               <p><strong>สังกัด:</strong> ${info.faculty} (${info.major})</p>
-              <div style="margin-top:14px; border-top:1px solid rgba(255,255,255,0.1); padding-top:12px;">
+              <div style="margin-top:12px; border-top:1px solid #e2e8f0; padding-top:10px;">
                 <label class="form-label">กำหนดรหัสผ่านใหม่สำหรับบัญชีนักศึกษา:</label>
                 <input type="password" id="reg-student-password" class="form-input" placeholder="สร้างรหัสผ่าน" required style="margin-bottom:10px;" />
-                <button type="button" onclick="completeStudentRegister('${info.student_id}', '${citizenId}')" class="btn-submit">
+                <button type="button" onclick="completeStudentRegister('${info.student_id}', '${citizenId}')" class="btn-primary">
                   <i class="fa-solid fa-user-plus"></i> สร้างบัญชีและเข้าสู่ระบบ
                 </button>
               </div>
@@ -560,8 +571,8 @@ require_once __DIR__ . '/config.php';
         } else {
           resCard.className = 'verify-result-card active error';
           resCard.innerHTML = `
-            <div class="result-info" style="color:#f87171;">
-              <p style="font-weight:700; font-size:14px; margin-bottom:6px;"><i class="fa-solid fa-triangle-exclamation"></i> ไม่พบข้อมูลในระบบ</p>
+            <div class="result-info" style="color:#dc2626;">
+              <p style="font-weight:700; font-size:14px; margin-bottom:4px;"><i class="fa-solid fa-triangle-exclamation"></i> ไม่พบข้อมูลในระบบ</p>
               <p>${data.message || 'ไม่พบรหัสนักศึกษาในระบบ'}</p>
               <a href="https://reg.sskru.ac.th" target="_blank" class="btn-contact-support">
                 <i class="fa-solid fa-headset"></i> ติดต่อเจ้าหน้าที่สำนักทะเบียนและประมวลผล SSKRU
@@ -571,7 +582,7 @@ require_once __DIR__ . '/config.php';
         }
       } catch (err) {
         resCard.className = 'verify-result-card active error';
-        resCard.innerHTML = '<div class="result-info" style="color:#f87171;"><i class="fa-solid fa-circle-xmark"></i> เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์</div>';
+        resCard.innerHTML = '<div class="result-info" style="color:#dc2626;"><i class="fa-solid fa-circle-xmark"></i> เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์</div>';
       }
     }
 
