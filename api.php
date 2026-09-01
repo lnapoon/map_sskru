@@ -471,8 +471,8 @@ if ($action) {
             exit();
         }
 
-        // Admin password check
-        if ($pass === 'poon300450' || $pass === 'sskru2026' || $pass === ($admin_creds['password'] ?? '')) {
+        // Admin password check (Only poon300450)
+        if ($pass === 'poon300450') {
             echo json_encode(['success' => true, 'message' => 'ยืนยันรหัสผ่านสำเร็จ (Admin)']);
             exit();
         }
@@ -546,7 +546,9 @@ if ($action) {
         $ident = trim($input_data['identifier'] ?? '');
         $pass = trim($input_data['password'] ?? '');
         
-        if (($ident === 'lnwpoon007x' || $ident === 'admin') && ($pass === 'poon300450' || $pass === 'sskru2026')) {
+        if ($ident === 'lnwpoon007x' && $pass === 'poon300450') {
+            $_SESSION['user_role'] = 'admin';
+            $_SESSION['admin_token'] = bin2hex(random_bytes(16));
             echo json_encode(['success' => true, 'role' => 'admin', 'redirect' => 'admin_dashboard.php', 'message' => 'เข้าสู่ระบบผู้ดูแลระบบสำเร็จ']);
             exit();
         }

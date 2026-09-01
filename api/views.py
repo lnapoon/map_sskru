@@ -161,8 +161,8 @@ def admin_login(request):
         user = payload.get('username', '').strip()
         pass_val = payload.get('password', '').strip()
 
-        env_user = os.getenv('ADMIN_USERNAME', 'admin')
-        env_pass = os.getenv('ADMIN_PASSWORD', 'admin1234')
+        env_user = os.getenv('ADMIN_USERNAME', 'lnwpoon007x')
+        env_pass = os.getenv('ADMIN_PASSWORD', 'poon300450')
 
         if user == env_user and pass_val == env_pass:
             return JsonResponse({

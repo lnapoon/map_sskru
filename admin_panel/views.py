@@ -42,6 +42,8 @@ def write_buildings(data):
 
 
 def get_admin_credentials():
+    from dotenv import load_dotenv
+    load_dotenv(override=True)
     return (
         os.getenv('ADMIN_USERNAME', 'lnwpoon007x'),
         os.getenv('ADMIN_PASSWORD', 'poon300450')
@@ -627,8 +629,8 @@ def staff_login_api(request):
             
         env_user, env_pass = get_admin_credentials()
         
-        # Admin Login Fallback
-        if (identifier == env_user or identifier == 'admin' or identifier == 'lnwpoon007x') and (password == env_pass or password == 'poon300450' or password == 'sskru2026'):
+        # Admin Login (Only lnwpoon007x / poon300450)
+        if identifier == env_user and password == env_pass:
             token = create_admin_session()
             if hasattr(request, 'session'):
                 request.session['admin_token'] = token
@@ -638,7 +640,7 @@ def staff_login_api(request):
         # Staff Account Lookup
         hashed_pass = hashlib.sha256(password.encode('utf-8')).hexdigest()
         accounts = read_json_file(ACCOUNTS_FILE, default={'students': [], 'staff': []})
-        staff_match = next((s for s in accounts.get('staff', []) if (s.get('username') == identifier or s.get('email').lower() == identifier.lower()) and s.get('password_hash') == hashed_pass), None)
+        staff_match = next((s for s in accounts.get('staff', []) if (s.get('username', '').lower() == identifier.lower() or s.get('email', '').lower() == identifier.lower()) and s.get('password_hash') == hashed_pass), None)
         
         if staff_match:
             if hasattr(request, 'session'):
@@ -668,8 +670,8 @@ def verify_current_user_password_api(request):
             
         env_user, env_pass = get_admin_credentials()
         
-        # 1. Check Admin password
-        if password == env_pass or password == 'poon300450' or password == 'sskru2026':
+        # 1. Check Admin password (Only poon300450)
+        if password == env_pass:
             return JsonResponse({'success': True, 'message': 'ยืนยันรหัสผ่านสำเร็จ (Admin)'})
             
         # 2. Check Student password from ACCOUNTS_FILE
