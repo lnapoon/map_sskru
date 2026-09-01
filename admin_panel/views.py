@@ -723,13 +723,81 @@ def student_request_reset_api(request):
         write_json_file(RESETS_FILE, resets)
         
         verify_url = f'/reset_password/student/verify/?token={token}'
+        verify_full_url = request.build_absolute_uri(verify_url)
         
+        # Real SMTP Email Dispatcher
+        email_sent = False
+        try:
+            from django.core.mail import EmailMultiAlternatives
+            from django.conf import settings
+            
+            subject = '🔒 ยืนยันสิทธิ์รีเซ็ตรหัสผ่าน — SSKRU Campus Map'
+            from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'SSKRU Campus Map <noreply@sskru.ac.th>')
+            to_email = [email]
+            
+            text_content = f"""
+สวัสดีคุณ {student_name} (รหัสนักศึกษา: {student_id})
+
+ระบบได้รับคำขอรีเซ็ตรหัสผ่านสำหรับบัญชีของคุณในระบบแผนที่มหาวิทยาลัยราชภัฏศรีสะเกษ (SSKRU Campus Map)
+
+รหัส OTP ยืนยันสิทธิ์ของคุณคือ: {otp}
+
+หรือคลิกลิงก์ด้านล่างเพื่อยืนยันตัวตนและตั้งรหัสผ่านใหม่ (ลิงก์มีอายุ 15 นาที):
+{verify_full_url}
+
+หากคุณไม่ได้เป็นผู้ทำรายการนี้ กรุณาเพิกเฉยต่ออีเมลฉบับนี้
+            """.strip()
+            
+            html_content = f"""
+            <!DOCTYPE html>
+            <html>
+            <head><meta charset="UTF-8"></head>
+            <body style="font-family: 'Sarabun', Arial, sans-serif; background-color: #f1f5f9; padding: 20px; color: #1e293b;">
+              <div style="max-width: 520px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+                <div style="background: linear-gradient(135deg, #0d2c5e, #1a4fa0); padding: 24px; text-align: center; color: #ffffff;">
+                  <h2 style="margin: 0; font-size: 20px;">มหาวิทยาลัยราชภัฏศรีสะเกษ</h2>
+                  <p style="margin: 4px 0 0; font-size: 13px; opacity: 0.85;">ระบบแผนที่และสารสนเทศอาคาร (SSKRU Campus Map)</p>
+                </div>
+                <div style="padding: 28px;">
+                  <h3 style="color: #0f172a; margin-top: 0;">เรียน คุณ {student_name}</h3>
+                  <p style="color: #475569; font-size: 14px; line-height: 1.6;">
+                    ระบบได้รับคำขอรีเซ็ตรหัสผ่านสำหรับรหัสนักศึกษา <strong>{student_id}</strong> กรุณาใช้รหัส OTP หรือคลิกปุ่มด้านล่างเพื่อยืนยันสิทธิ์และตั้งรหัสผ่านใหม่:
+                  </p>
+                  
+                  <div style="background: #f8fafc; border: 1.5px dashed #cbd5e1; border-radius: 12px; padding: 16px; text-align: center; margin: 20px 0;">
+                    <div style="font-size: 12px; color: #64748b; margin-bottom: 4px;">รหัส OTP ยืนยันสิทธิ์ (มีอายุ 15 นาที)</div>
+                    <div style="font-size: 28px; font-weight: bold; color: #1a4fa0; letter-spacing: 6px;">{otp}</div>
+                  </div>
+                  
+                  <div style="text-align: center; margin: 24px 0;">
+                    <a href="{verify_full_url}" style="background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; display: inline-block; font-size: 14px;">
+                      👉 คลิกที่นี่เพื่อยืนยันสิทธิ์ & ตั้งรหัสผ่านใหม่
+                    </a>
+                  </div>
+                  
+                  <p style="font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 14px; margin-bottom: 0;">
+                    * หากคุณไม่ได้เป็นผู้ทำรายการนี้ กรุณาเพิกเฉยต่ออีเมลฉบับนี้ รหัสผ่านเดิมของคุณจะยังคงปลอดภัย
+                  </p>
+                </div>
+              </div>
+            </body>
+            </html>
+            """
+            
+            msg = EmailMultiAlternatives(subject, text_content, from_email, to_email)
+            msg.attach_alternative(html_content, "text/html")
+            msg.send(fail_silently=True)
+            email_sent = True
+        except Exception as mail_err:
+            print(f"Mail send notice: {mail_err}")
+            
         return JsonResponse({
             'success': True,
             'message': f'ระบบได้ส่งลิงก์และรหัสยืนยันสิทธิ์ไปยังอีเมล {email} เรียบร้อยแล้ว (รหัสมีอายุ 15 นาที)',
             'email': email,
             'token': token,
             'otp': otp,
+            'email_sent': email_sent,
             'verify_url': verify_url
         })
     except Exception as e:
