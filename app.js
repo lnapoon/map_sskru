@@ -1284,13 +1284,6 @@ async function loadBuildingsData() {
   }
 }
 
-  // Refresh UI after data load
-  buildNetworkGraph();
-  renderBuildingCarousel(adminBuildings);
-  populateDropdownSelectors();
-  renderMarkers();
-}
-
 function updateServerStatusPill(online) {
   const pill = document.getElementById("admin-server-status-pill");
   const txt = document.getElementById("server-status-text");
