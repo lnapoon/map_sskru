@@ -1227,47 +1227,62 @@ function handleLogout() {
   }
 }
 
-// Load dataset (attempts to fetch from backend REST API first, then falls back to LocalStorage)
+// Load dataset (Instant initial render + ultra-fast async background sync)
 async function loadBuildingsData() {
-  const CURRENT_DATA_VER = "v9.5";
+  const CURRENT_DATA_VER = "v10.0";
   if (localStorage.getItem("sskru_data_version") !== CURRENT_DATA_VER) {
     localStorage.removeItem("sskru_buildings");
     localStorage.setItem("sskru_data_version", CURRENT_DATA_VER);
   }
 
-  try {
-    let response = await fetch('/api/buildings');
-    if (!response.ok) {
-      response = await fetch('api.php');
-    }
-    if (response.ok) {
-      const json = await response.json();
-      if (json.success && Array.isArray(json.data) && json.data.length > 0) {
-        adminBuildings = json.data;
-        isServerConnected = true;
-        updateServerStatusPill(true);
-        console.log("Loaded building data from Backend REST API.");
-      } else {
-        throw new Error("Invalid API format");
-      }
-    } else {
-      throw new Error("HTTP " + response.status);
-    }
-  } catch (err) {
-    console.warn("Backend REST API offline, falling back to LocalStorage / Default dataset.", err);
-    isServerConnected = false;
-    updateServerStatusPill(false);
-    const localData = localStorage.getItem("sskru_buildings");
-    if (localData) {
-      try {
-        adminBuildings = JSON.parse(localData);
-      } catch (e) {
-        adminBuildings = [...BUILDINGS];
-      }
-    } else {
+  // 1. Instant Render from local memory / cache (0ms delay!)
+  const localData = localStorage.getItem("sskru_buildings");
+  if (localData) {
+    try {
+      adminBuildings = JSON.parse(localData);
+    } catch (e) {
       adminBuildings = [...BUILDINGS];
     }
+  } else {
+    adminBuildings = [...BUILDINGS];
   }
+
+  // Immediately render UI for zero waiting time
+  buildNetworkGraph();
+  renderBuildingCarousel(adminBuildings);
+  populateDropdownSelectors();
+  renderMarkers();
+
+  // 2. Fast Async Sync from Backend API / Static JSON with 1.2s timeout
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 1200);
+
+  const endpoints = ['/api/buildings', 'api.php', 'data/buildings.json'];
+  for (const ep of endpoints) {
+    try {
+      const response = await fetch(ep, { signal: controller.signal });
+      if (response.ok) {
+        const json = await response.json();
+        const dataArr = json.data || (Array.isArray(json) ? json : null);
+        if (Array.isArray(dataArr) && dataArr.length > 0) {
+          adminBuildings = dataArr;
+          isServerConnected = true;
+          updateServerStatusPill(true);
+          clearTimeout(timeoutId);
+          // Refresh markers and carousel with fresh background data
+          buildNetworkGraph();
+          renderBuildingCarousel(adminBuildings);
+          populateDropdownSelectors();
+          renderMarkers();
+          console.log(`Synced data instantly from ${ep}`);
+          break;
+        }
+      }
+    } catch (e) {
+      // Continue to next endpoint or keep instant render data
+    }
+  }
+}
 
   // Refresh UI after data load
   buildNetworkGraph();

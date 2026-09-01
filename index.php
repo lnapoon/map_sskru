@@ -624,7 +624,7 @@ require_once __DIR__ . '/config.php';
        SCRIPTS
        ========================================== -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script src="app.js?v=9.0"></script>
+  <script src="app.js?v=10.0"></script>
 
 </body>
 </html>
