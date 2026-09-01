@@ -2041,10 +2041,23 @@ function trackUserLocation() {
     return;
   }
 
+  // Check PDPA and Location Permission status
+  const isGranted = localStorage.getItem("sskru_pdpa_consent") === "granted";
+  if (!isGranted) {
+    const overlay = document.getElementById("pdpa-modal-overlay");
+    if (overlay) {
+      overlay.classList.add("active");
+      showToast("กรุณากดยินยอมเปิดสิทธิ์การเข้าถึงตำแหน่งพิกัด GPS บนป๊อปอัปก่อนใช้งาน");
+      return;
+    }
+  }
+
   // Clear previous watcher if active
   if (watchPositionId !== null) {
     navigator.geolocation.clearWatch(watchPositionId);
   }
+
+  showToast("กำลังค้นหาพิกัดตำแหน่ง GPS ของคุณ...");
 
   // Get initial position immediately
   navigator.geolocation.getCurrentPosition(
@@ -2063,7 +2076,7 @@ function trackUserLocation() {
       currentUserRealCoords = null;
       let errMsg = "ไม่สามารถเข้าถึงสิทธิ์ตำแหน่ง GPS ได้ กรุณาเปิดบริการตำแหน่งที่ตั้งบนเบราว์เซอร์";
       if (err.code === err.PERMISSION_DENIED) {
-        errMsg = "สิทธิ์การเข้าถึงตำแหน่ง GPS ถูกปฏิเสธ กรุณาอนุญาตเข้าสิทธิ์พิกัดบนเบราว์เซอร์";
+        errMsg = "สิทธิ์การเข้าถึงตำแหน่ง GPS ถูกปฏิเสธ กรุณาอนุญาตเข้าสิทธิ์พิกัดบนเบราว์เซอร์ (กดปุ่มสัญลักษณ์แม่กุญแจตรงแถบ URL)";
       }
       showModal("ระบุตำแหน่งพิกัดผิดพลาด", errMsg, "warning");
     },
@@ -2936,6 +2949,15 @@ function setupEventListeners() {
       showToast("คัดลอกลิงก์แล้ว!");
     }
   };
+
+  const btnDrawerPDPA = document.getElementById("btn-drawer-pdpa");
+  if (btnDrawerPDPA) {
+    btnDrawerPDPA.onclick = () => {
+      closeSideDrawer();
+      const overlay = document.getElementById("pdpa-modal-overlay");
+      if (overlay) overlay.classList.add("active");
+    };
+  }
 
   // ============ THEME TOGGLE ============
   const btnThemeToggle = document.getElementById("btn-theme-toggle");
