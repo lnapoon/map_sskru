@@ -1514,9 +1514,17 @@ function closeProfilePanel() {
   document.getElementById('profile-panel-backdrop').classList.remove('open');
 }
 
-function handleLogout() {
+async function handleLogout() {
   if (confirm('ต้องการออกจากระบบใช่หรือไม่?')) {
-    window.location.href = '/logout/';
+    const isPhp = window.location.pathname.endsWith('.php');
+    if (isPhp) {
+      try {
+        await fetch('api.php?action=logout');
+      } catch (e) {}
+      window.location.href = 'login.php';
+    } else {
+      window.location.href = '/logout/';
+    }
   }
 }
 

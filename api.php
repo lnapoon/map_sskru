@@ -47,6 +47,14 @@ if ($action) {
         exit();
     }
 
+    if ($action === 'logout') {
+        if (session_status() === PHP_SESSION_NONE) { session_start(); }
+        $_SESSION = [];
+        session_destroy();
+        echo json_encode(['success' => true]);
+        exit();
+    }
+
     if ($action === 'student_verify') {
         $sid = trim($input_data['student_id'] ?? '');
         $cid = trim($input_data['citizen_id'] ?? '');

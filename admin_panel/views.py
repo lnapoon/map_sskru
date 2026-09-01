@@ -111,34 +111,19 @@ def get_device_info(user_agent):
 # ─── Views ──────────────────────────────────────────────────────────────────
 
 def admin_login_page(request):
-    """หน้า Login ของ Admin"""
+    """หน้า Login รวมสำหรับทุกสิทธิ์ (นักศึกษา / บุคลากร / ผู้ดูแลระบบ)"""
     if validate_admin_token(request):
         return redirect('/admin/dashboard/')
-
-    error = None
-    if request.method == 'POST':
-        username = request.POST.get('username', '').strip()
-        password = request.POST.get('password', '').strip()
-        env_user, env_pass = get_admin_credentials()
-
-        if (username == env_user or username == 'lnwpoon007x' or username == 'admin') and (password == env_pass or password == 'poon300450' or password == 'sskru2026'):
-            token = create_admin_session()
-            request.session['admin_token'] = token
-            request.session.set_expiry(28800)  # 8 hours
-            return redirect('/admin/dashboard/')
-        else:
-            error = 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง'
-
-    return render(request, 'admin_panel/login.html', {'error': error})
+    return render(request, 'admin_panel/student_login.html')
 
 
 def admin_logout(request):
-    """ออกจากระบบ Admin"""
+    """ออกจากระบบ Admin แล้วส่งกลับไปหน้า Login รวมใหม่"""
     token = request.session.get('admin_token')
     if token:
         AdminSession.objects.filter(token=token).update(is_active=False)
     request.session.flush()
-    return redirect('/admin/')
+    return redirect('/login/')
 
 
 def admin_dashboard(request):
