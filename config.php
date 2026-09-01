@@ -24,26 +24,6 @@ try {
     // Ensure database exists
     $pdo->exec("CREATE DATABASE IF NOT EXISTS `$db_name` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;");
     $pdo->exec("USE `$db_name`;");
-    
-    // Ensure table exists
-    $create_table_sql = "
-    CREATE TABLE IF NOT EXISTS buildings (
-        id INT PRIMARY KEY,
-        code VARCHAR(20),
-        name VARCHAR(255) NOT NULL,
-        nameEn VARCHAR(255),
-        category VARCHAR(50),
-        coords_y INT,
-        coords_x INT,
-        real_lat DOUBLE,
-        real_lng DOUBLE,
-        description TEXT,
-        phone VARCHAR(100),
-        json_data TEXT,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-    ";
-    $pdo->exec($create_table_sql);
 } catch (PDOException $e) {
     http_response_code(500);
     echo json_encode(['success' => false, 'message' => 'Database connection failed: ' . $e->getMessage()]);
