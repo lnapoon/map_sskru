@@ -1083,6 +1083,24 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 // PDPA Thai Digital Law Compliance System
+function openPDPAModal() {
+  const overlay = document.getElementById("pdpa-modal-overlay");
+  if (!overlay) return;
+  overlay.classList.add("active");
+  overlay.style.display = "flex";
+  overlay.style.opacity = "1";
+  overlay.style.visibility = "visible";
+}
+
+function closePDPAModal() {
+  const overlay = document.getElementById("pdpa-modal-overlay");
+  if (!overlay) return;
+  overlay.classList.remove("active");
+  overlay.style.display = "none";
+  overlay.style.opacity = "0";
+  overlay.style.visibility = "hidden";
+}
+
 function initPDPAConsent() {
   const overlay = document.getElementById("pdpa-modal-overlay");
   const acceptBtn = document.getElementById("btn-pdpa-accept");
@@ -1091,13 +1109,13 @@ function initPDPAConsent() {
 
   const isConsentGiven = localStorage.getItem("sskru_pdpa_consent") === "granted";
   if (!isConsentGiven) {
-    overlay.classList.add("active");
+    openPDPAModal();
   }
 
   if (acceptBtn) {
     acceptBtn.onclick = () => {
       localStorage.setItem("sskru_pdpa_consent", "granted");
-      overlay.classList.remove("active");
+      closePDPAModal();
       if (typeof showToast === 'function') {
         showToast("ยินยอมรับสิทธิ์ตำแหน่งและคุ้มครองข้อมูลส่วนบุคคล (PDPA) เรียบร้อยแล้ว");
       }
@@ -1107,7 +1125,7 @@ function initPDPAConsent() {
   if (declineBtn) {
     declineBtn.onclick = () => {
       localStorage.setItem("sskru_pdpa_consent", "declined");
-      overlay.classList.remove("active");
+      closePDPAModal();
       if (typeof showToast === 'function') {
         showToast("ปฏิเสธการเข้าถึงสิทธิ์พิกัดตำแหน่ง GPS เรียบร้อยแล้ว");
       }
@@ -2967,8 +2985,7 @@ function setupEventListeners() {
   if (btnDrawerPDPA) {
     btnDrawerPDPA.onclick = () => {
       closeSideDrawer();
-      const overlay = document.getElementById("pdpa-modal-overlay");
-      if (overlay) overlay.classList.add("active");
+      openPDPAModal();
     };
   }
 
