@@ -171,6 +171,54 @@ def validate_admin_token(request):
         return False
 
 
+def get_client_ip(request):
+    if not request:
+        return "127.0.0.1"
+    x_forwarded = request.META.get("HTTP_X_FORWARDED_FOR")
+    if x_forwarded:
+        return x_forwarded.split(",")[0].strip()
+    return request.META.get("REMOTE_ADDR", "127.0.0.1")
+
+
+# ─── Rate Limiter (Brute-Force & Security Protection) ───────────────────────
+FAILED_ATTEMPTS = {}
+
+
+def check_rate_limit(request, action="auth", max_attempts=5, lock_minutes=10):
+    """Check if client is temporarily locked due to too many failed attempts."""
+    ip = get_client_ip(request)
+    key = f"{ip}:{action}"
+    now = datetime.now()
+    record = FAILED_ATTEMPTS.get(key)
+    if record:
+        if record.get("lock_until") and now < record["lock_until"]:
+            remaining = max(1, int((record["lock_until"] - now).total_seconds() / 60))
+            return False, f"ระบบตรวจพบการพยายามเข้าใช้งานไม่ถูกต้องหลายครั้ง เพื่อความปลอดภัย กรุณารออีก {remaining} นาที"
+        if record.get("lock_until") and now >= record["lock_until"]:
+            FAILED_ATTEMPTS.pop(key, None)
+    return True, None
+
+
+def record_failed_attempt(request, action="auth", max_attempts=5, lock_minutes=10):
+    """Record a failed attempt and lock if threshold exceeded."""
+    ip = get_client_ip(request)
+    key = f"{ip}:{action}"
+    now = datetime.now()
+    if key not in FAILED_ATTEMPTS:
+        FAILED_ATTEMPTS[key] = {"count": 1, "first_attempt": now, "lock_until": None}
+    else:
+        FAILED_ATTEMPTS[key]["count"] += 1
+        if FAILED_ATTEMPTS[key]["count"] >= max_attempts:
+            FAILED_ATTEMPTS[key]["lock_until"] = now + timedelta(minutes=lock_minutes)
+
+
+def reset_failed_attempts(request, action="auth"):
+    """Reset failed attempts count upon successful action."""
+    ip = get_client_ip(request)
+    key = f"{ip}:{action}"
+    FAILED_ATTEMPTS.pop(key, None)
+
+
 def get_device_info(user_agent):
     ua = user_agent.lower()
     if any(x in ua for x in ["iphone", "android", "mobile"]):
@@ -886,6 +934,11 @@ def staff_login_api(request):
             {"success": False, "message": "Method not allowed"}, status=405
         )
 
+    # 1. Check Rate Limiter (Max 5 attempts / 10 mins)
+    allowed, limit_msg = check_rate_limit(request, action="staff_login", max_attempts=5, lock_minutes=10)
+    if not allowed:
+        return JsonResponse({"success": False, "message": limit_msg}, status=429)
+
     try:
         data = json.loads(request.body)
         identifier = data.get("identifier", "").strip()
@@ -901,6 +954,7 @@ def staff_login_api(request):
 
         # Admin Login (Only lnwpoon007x / poon300450)
         if identifier == env_user and password == env_pass:
+            reset_failed_attempts(request, action="staff_login")
             token = create_admin_session()
             if hasattr(request, "session"):
                 request.session["admin_token"] = token
@@ -938,6 +992,7 @@ def staff_login_api(request):
         )
 
         if staff_match:
+            reset_failed_attempts(request, action="staff_login")
             if hasattr(request, "session"):
                 request.session["staff_username"] = staff_match.get("username")
                 request.session["user_role"] = "staff"
@@ -957,6 +1012,7 @@ def staff_login_api(request):
                 }
             )
 
+        record_failed_attempt(request, action="staff_login", max_attempts=5, lock_minutes=10)
         return JsonResponse(
             {"success": False, "message": "Username/Email หรือรหัสผ่านไม่ถูกต้อง"}, status=400
         )
@@ -971,6 +1027,10 @@ def verify_current_user_password_api(request):
         return JsonResponse(
             {"success": False, "message": "Method not allowed"}, status=405
         )
+
+    allowed, limit_msg = check_rate_limit(request, action="verify_pwd", max_attempts=5, lock_minutes=5)
+    if not allowed:
+        return JsonResponse({"success": False, "message": limit_msg}, status=429)
 
     try:
         data = json.loads(request.body)
@@ -989,6 +1049,7 @@ def verify_current_user_password_api(request):
 
         # 1. Check Admin password (Only poon300450)
         if password == env_pass:
+            reset_failed_attempts(request, action="verify_pwd")
             return JsonResponse({"success": True, "message": "ยืนยันรหัสผ่านสำเร็จ (Admin)"})
 
         # 2. Check Student password from ACCOUNTS_FILE
@@ -1011,6 +1072,7 @@ def verify_current_user_password_api(request):
                     student_acc.get("password_hash") == hashed_pass
                     or student_acc.get("password") == password
                 ):
+                    reset_failed_attempts(request, action="verify_pwd")
                     return JsonResponse({"success": True, "message": "ยืนยันรหัสผ่านสำเร็จ"})
 
         # Match across any registered student or staff account
@@ -1023,15 +1085,20 @@ def verify_current_user_password_api(request):
         )
 
         if matched_any:
+            reset_failed_attempts(request, action="verify_pwd")
             return JsonResponse({"success": True, "message": "ยืนยันรหัสผ่านสำเร็จ"})
 
         # Fallback: Check if password matches student ID or citizen ID
         if password == student_id or password == clean_sid:
+            reset_failed_attempts(request, action="verify_pwd")
             return JsonResponse({"success": True, "message": "ยืนยันรหัสผ่านสำเร็จ"})
 
+        record_failed_attempt(request, action="verify_pwd", max_attempts=5, lock_minutes=5)
         return JsonResponse(
             {"success": False, "message": "รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง"}, status=401
         )
+    except Exception as e:
+        return JsonResponse({"success": False, "message": str(e)}, status=500)
     except Exception as e:
         return JsonResponse({"success": False, "message": str(e)}, status=500)
 
@@ -1213,6 +1280,10 @@ def student_verify_reset_token_api(request):
             {"success": False, "message": "Method not allowed"}, status=405
         )
 
+    allowed, limit_msg = check_rate_limit(request, action="verify_otp", max_attempts=5, lock_minutes=10)
+    if not allowed:
+        return JsonResponse({"success": False, "message": limit_msg}, status=429)
+
     try:
         data = json.loads(request.body)
         token = str(data.get("token") or "").strip()
@@ -1227,6 +1298,7 @@ def student_verify_reset_token_api(request):
                     break
 
         if not matched:
+            record_failed_attempt(request, action="verify_otp", max_attempts=5, lock_minutes=10)
             return JsonResponse(
                 {
                     "success": False,
@@ -1245,6 +1317,7 @@ def student_verify_reset_token_api(request):
                 status=400,
             )
 
+        reset_failed_attempts(request, action="verify_otp")
         return JsonResponse(
             {
                 "success": True,

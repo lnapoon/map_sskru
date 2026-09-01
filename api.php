@@ -544,6 +544,16 @@ if ($action) {
         $ident = trim($input_data['identifier'] ?? '');
         $pass = trim($input_data['password'] ?? '');
         
+        // PHP Session Rate Limiting
+        $failed_count = $_SESSION['staff_login_failed'] ?? 0;
+        $lock_until = $_SESSION['staff_login_lock'] ?? 0;
+        if (time() < $lock_until) {
+            $rem = ceil(($lock_until - time()) / 60);
+            http_response_code(429);
+            echo json_encode(['success' => false, 'message' => "ระบบตรวจพบการพยายามเข้าสู่ระบบไม่ถูกต้องเกินกำหนด กรุณารอ $rem นาที"]);
+            exit();
+        }
+
         function log_user_activity_php($uid, $name, $role, $email = '') {
             $log_file = __DIR__ . '/data/user_activity_logs.json';
             $logs = file_exists($log_file) ? json_decode(file_get_contents($log_file), true) ?: [] : [];
@@ -568,6 +578,8 @@ if ($action) {
         }
 
         if ($ident === 'lnwpoon007x' && $pass === 'poon300450') {
+            unset($_SESSION['staff_login_failed']);
+            unset($_SESSION['staff_login_lock']);
             $_SESSION['user_role'] = 'admin';
             $_SESSION['admin_token'] = bin2hex(random_bytes(16));
             log_user_activity_php('lnwpoon007x', 'ผู้ดูแลระบบ (Admin)', 'admin', 'mpoontv1234@gmail.com');
@@ -578,6 +590,8 @@ if ($action) {
         $hashed = hash('sha256', $pass);
         foreach ($accounts['staff'] as $st) {
             if (($st['username'] === $ident || $st['email'] === $ident) && $st['password_hash'] === $hashed) {
+                unset($_SESSION['staff_login_failed']);
+                unset($_SESSION['staff_login_lock']);
                 $_SESSION['user_role'] = 'staff';
                 $_SESSION['staff_username'] = $st['username'];
                 $_SESSION['staff_email'] = $st['email'] ?? '';
@@ -586,6 +600,12 @@ if ($action) {
                 exit();
             }
         }
+        
+        $_SESSION['staff_login_failed'] = ($failed_count + 1);
+        if ($_SESSION['staff_login_failed'] >= 5) {
+            $_SESSION['staff_login_lock'] = time() + 600; // Lock 10 mins
+        }
+        
         http_response_code(401);
         echo json_encode(['success' => false, 'message' => 'ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง']);
         exit();

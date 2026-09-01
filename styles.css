@@ -3690,22 +3690,22 @@ body.dark-theme .toast-container {
 }
 
 /* ==========================================================================
-   PDPA Thai Digital Law Compliance Consent Modal (High-Contrast Premium Redesign)
+   PDPA Consent Modal — Friendly, Clean, Polite Light Theme
    ========================================================================== */
 .pdpa-overlay {
   position: fixed;
   inset: 0;
   z-index: 99999;
-  background: rgba(8, 14, 30, 0.88);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.35s ease, visibility 0.35s ease;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
 .pdpa-overlay.active {
@@ -3714,19 +3714,19 @@ body.dark-theme .toast-container {
 }
 
 .pdpa-card {
-  background: #0f172a !important; /* Premium Dark Slate */
-  border: 1.5px solid rgba(56, 189, 248, 0.4) !important;
-  border-radius: 24px !important;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 22px !important;
   max-width: 520px;
   width: 100%;
-  padding: 30px !important;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(14, 165, 233, 0.25) !important;
-  color: #f8fafc !important;
-  animation: pdpaSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 28px !important;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.18), 0 4px 12px rgba(15, 23, 42, 0.08) !important;
+  color: #1e293b !important;
+  animation: pdpaSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes pdpaSlideUp {
-  from { transform: translateY(30px) scale(0.96); opacity: 0; }
+  from { transform: translateY(20px) scale(0.97); opacity: 0; }
   to { transform: translateY(0) scale(1); opacity: 1; }
 }
 
@@ -3734,120 +3734,133 @@ body.dark-theme .toast-container {
   display: flex;
   align-items: center;
   gap: 16px;
-  margin-bottom: 20px;
-  padding-bottom: 18px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+  margin-bottom: 18px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f1f5f9 !important;
 }
 
 .pdpa-icon-badge {
-  width: 52px;
-  height: 52px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, #0284c7, #2563eb) !important;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #1a4fa0, #2563eb) !important;
   color: #ffffff !important;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
+  font-size: 22px;
   flex-shrink: 0;
-  box-shadow: 0 6px 20px rgba(2, 132, 199, 0.45) !important;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3) !important;
 }
 
 .pdpa-title {
-  font-size: 18px !important;
+  font-size: 17px !important;
   font-weight: 700 !important;
-  color: #ffffff !important; /* Pure Crisp White */
-  margin: 0 0 4px 0 !important;
-  letter-spacing: -0.2px;
+  color: #0d2c5e !important;
+  margin: 0 0 3px 0 !important;
+  font-family: 'Sarabun', sans-serif;
 }
 
 .pdpa-subtitle {
   font-size: 12px !important;
-  color: #38bdf8 !important; /* Vibrant Sky Blue */
+  color: #64748b !important;
   margin: 0;
-  font-weight: 600 !important;
+  font-weight: 500 !important;
 }
 
 .pdpa-intro {
   font-size: 13.5px !important;
-  line-height: 1.65 !important;
-  color: #cbd5e1 !important; /* High-contrast Light Gray */
-  margin-bottom: 18px !important;
+  line-height: 1.6 !important;
+  color: #475569 !important;
+  margin-bottom: 16px !important;
 }
 
 .pdpa-purpose-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-bottom: 26px;
+  gap: 10px;
+  margin-bottom: 22px;
 }
 
 .pdpa-purpose-item {
   display: flex;
-  gap: 14px;
+  gap: 12px;
   align-items: flex-start;
-  padding: 14px 16px !important;
-  border-radius: 16px !important;
-  background: rgba(30, 41, 59, 0.85) !important; /* Elevated Card Surface */
-  border: 1px solid rgba(56, 189, 248, 0.25) !important;
+  padding: 12px 16px !important;
+  border-radius: 14px !important;
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
   transition: all 0.2s ease;
 }
 
 .pdpa-purpose-item:hover {
-  border-color: rgba(56, 189, 248, 0.5) !important;
-  background: rgba(30, 41, 59, 1) !important;
+  border-color: #cbd5e1 !important;
+  background: #f1f5f9 !important;
 }
 
 .pdpa-item-icon {
-  font-size: 20px !important;
-  color: #38bdf8 !important; /* Glowing Sky Blue Icon */
+  font-size: 18px !important;
+  color: #2563eb !important;
   margin-top: 2px;
   flex-shrink: 0;
 }
 
 .pdpa-purpose-item strong {
-  font-size: 14px !important;
-  color: #ffffff !important; /* Bright White Header */
+  font-size: 13.5px !important;
+  color: #1e293b !important;
   display: block;
-  margin-bottom: 4px !important;
+  margin-bottom: 2px !important;
   font-weight: 700 !important;
 }
 
 .pdpa-purpose-item p {
   font-size: 12px !important;
-  color: #94a3b8 !important; /* Clear Slate Text */
+  color: #64748b !important;
   margin: 0;
-  line-height: 1.5 !important;
+  line-height: 1.45 !important;
 }
 
 .pdpa-footer {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   justify-content: flex-end;
 }
 
 .pdpa-btn {
-  padding: 13px 24px !important;
-  border-radius: 14px !important;
-  font-size: 13.5px !important;
-  font-weight: 700 !important;
+  padding: 11px 20px !important;
+  border-radius: 12px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
   cursor: pointer;
   border: none;
   display: flex;
   align-items: center;
-  gap: 8px;
-  transition: all 0.25s ease;
+  gap: 6px;
+  transition: all 0.2s ease;
+  font-family: 'Sarabun', sans-serif;
 }
 
 .pdpa-btn-accept {
-  background: linear-gradient(135deg, #10b981, #059669) !important;
+  background: linear-gradient(135deg, #1a4fa0 0%, #2563eb 100%) !important;
   color: #ffffff !important;
-  width: 100%;
+  flex: 1;
   justify-content: center;
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4) !important;
+  box-shadow: 0 4px 14px rgba(26, 79, 160, 0.3) !important;
 }
 
 .pdpa-btn-accept:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.55) !important;
+  background: linear-gradient(135deg, #0d2c5e 0%, #1d4ed8 100%) !important;
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 18px rgba(26, 79, 160, 0.45) !important;
+}
+
+.pdpa-btn-decline {
+  background: #f1f5f9 !important;
+  color: #64748b !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+.pdpa-btn-decline:hover {
+  background: #e2e8f0 !important;
+  color: #334155 !important;
 }

@@ -667,42 +667,43 @@
   </div>
 
   <!-- PDPA Thai Digital Law Consent Modal -->
+  <!-- PDPA & Privacy Consent Modal (Friendly & Transparent) -->
   <div class="pdpa-overlay" id="pdpa-modal-overlay">
     <div class="pdpa-card">
       <div class="pdpa-header">
         <div class="pdpa-icon-badge">
-          <i class="fa-solid fa-shield-halved"></i>
+          <i class="fa-solid fa-handshake-angle"></i>
         </div>
         <div>
-          <h3 class="pdpa-title">ข้อตกลงคุ้มครองข้อมูลส่วนบุคคล (PDPA)</h3>
-          <p class="pdpa-subtitle">ปฏิบัติตาม พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 และกฎหมายดิจิทัลของไทย</p>
+          <h3 class="pdpa-title">ขออนุญาตการเข้าถึงข้อมูลการใช้งาน</h3>
+          <p class="pdpa-subtitle">เพื่อความสะดวกในการนำทางและประสบการณ์ใช้งานที่ดีที่สุดของคุณ</p>
         </div>
       </div>
       <div class="pdpa-body">
-        <p class="pdpa-intro">ระบบแผนที่ผังเมือง 3D มหาวิทยาลัยราชภัฏศรีสะเกษ ขออนุญาตประมวลผลข้อมูลการใช้งานเพื่อให้บริการนำทางและอำนวยความสะดวกในการเข้าถึงสถานที่ ดังนี้:</p>
+        <p class="pdpa-intro">ระบบแผนที่ มหาวิทยาลัยราชภัฏศรีสะเกษ ขออนุญาตเข้าถึงข้อมูลที่จำเป็นตาม พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล (PDPA) ดังนี้:</p>
         <div class="pdpa-purpose-list">
           <div class="pdpa-purpose-item">
-            <i class="fa-solid fa-location-crosshairs pdpa-item-icon"></i>
+            <i class="fa-solid fa-location-dot pdpa-item-icon"></i>
             <div>
-              <strong>พิกัดตำแหน่งปัจจุบัน (GPS Location)</strong>
-              <p>ใช้สำหรับคำนวณระยะทางและนำทางจากตำแหน่งของคุณไปยัง 40 อาคารในมหาวิทยาลัย</p>
+              <strong>พิกัดตำแหน่ง GPS (ขอสิทธิ์เฉพาะเมื่อกดนำทาง)</strong>
+              <p>ใช้คำนวณระยะทางและบอกทิศทางการเดินเท้าไปยัง 40 อาคารในมหาวิทยาลัย</p>
             </div>
           </div>
           <div class="pdpa-purpose-item">
-            <i class="fa-solid fa-cookie-bite pdpa-item-icon"></i>
+            <i class="fa-solid fa-sliders pdpa-item-icon"></i>
             <div>
-              <strong>ตัวเลือกและความจำระบบ (LocalStorage & Preferences)</strong>
-              <p>ใช้สำหรับบันทึกธีมการแสดงผล (Dark/Light Mode) และอาคารที่คุณค้นหาบ่อย</p>
+              <strong>การตั้งค่าและความจำบนอุปกรณ์ (LocalStorage)</strong>
+              <p>บันทึกธีมสีและประวัติการค้นหาไว้เฉพาะในเครื่องของคุณ เพื่อความสะดวกรวดเร็ว</p>
             </div>
           </div>
         </div>
       </div>
-      <div class="pdpa-footer" style="display: flex; gap: 10px; width: 100%;">
-        <button class="pdpa-btn pdpa-btn-accept" id="btn-pdpa-accept" style="flex: 1;">
-          <i class="fa-solid fa-circle-check"></i> ยินยอมและเข้าสู่ระบบแผนที่
+      <div class="pdpa-footer">
+        <button class="pdpa-btn pdpa-btn-decline" id="btn-pdpa-decline">
+          <i class="fa-solid fa-xmark"></i> ใช้งานแบบทั่วไป
         </button>
-        <button class="pdpa-btn" id="btn-pdpa-decline" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);">
-          <i class="fa-solid fa-circle-xmark"></i> ปฏิเสธ
+        <button class="pdpa-btn pdpa-btn-accept" id="btn-pdpa-accept">
+          <i class="fa-solid fa-check"></i> ยินยอมและเริ่มใช้งาน
         </button>
       </div>
     </div>

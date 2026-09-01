@@ -1,0 +1,19 @@
+# SSKRU Map Security Protection
+Options -Indexes
+
+# Protect .json, .log, and .sqlite3 files from direct download
+<FilesMatch "\.(json|log|sqlite3|env|sh|md)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# Protect data directory
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^data/ - [F,L]
+</IfModule>

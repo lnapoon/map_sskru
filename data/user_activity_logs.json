@@ -9,6 +9,20 @@
     "os": "Unknown",
     "browser": "Unknown",
     "ip": "127.0.0.1",
+    "timestamp": "2026-09-02T03:05:26.275691+07:00",
+    "time_formatted": "03:05 น.",
+    "date_formatted": "02/09/2026"
+  },
+  {
+    "user_id": "lnwpoon007x",
+    "name": "ผู้ดูแลระบบ (Admin)",
+    "email": "mpoontv1234@gmail.com",
+    "role": "admin",
+    "role_th": "ผู้ดูแลระบบ",
+    "device": "desktop",
+    "os": "Unknown",
+    "browser": "Unknown",
+    "ip": "127.0.0.1",
     "timestamp": "2026-09-02T02:50:48.364376+07:00",
     "time_formatted": "02:50 น.",
     "date_formatted": "02/09/2026"
