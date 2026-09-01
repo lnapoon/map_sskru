@@ -20,4 +20,8 @@ urlpatterns = [
     path('api/auth/student_register/',            views.student_register_api,        name='student_register_api'),
     path('api/auth/staff_register/',              views.staff_register_api,          name='staff_register_api'),
     path('api/auth/staff_login/',                 views.staff_login_api,             name='staff_login_api'),
+
+    # Dedicated Register Pages
+    path('register/student/',                     views.student_register_page,       name='student_register_page'),
+    path('register/staff/',                       views.staff_register_page,         name='staff_register_page'),
 ]

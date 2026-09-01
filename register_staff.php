@@ -1,0 +1,286 @@
+<?php
+// SSKRU Faculty & Staff Registration Page
+require_once __DIR__ . '/config.php';
+?>
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>สมัครสมาชิกบุคลากร — SSKRU Campus Map</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #1a4fa0;
+      --primary-dark: #0d2c5e;
+      --primary-light: #2563eb;
+      --accent: #f59e0b;
+      --danger: #ef4444;
+      --success: #10b981;
+      --surface: #ffffff;
+      --text: #1e293b;
+      --text-secondary: #64748b;
+    }
+
+    body {
+      font-family: 'Sarabun', 'Outfit', sans-serif;
+      background: linear-gradient(135deg, #0d2c5e 0%, #1a4fa0 40%, #2563eb 70%, #1e40af 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .particles {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+    }
+    .particle {
+      position: absolute;
+      width: 6px; height: 6px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 50%;
+      animation: rise 12s linear infinite;
+    }
+    .particle:nth-child(2) { left: 15%; width: 4px; height: 4px; animation-delay: 2s; animation-duration: 14s; }
+    .particle:nth-child(3) { left: 35%; width: 8px; height: 8px; animation-delay: 4s; animation-duration: 10s; }
+    @keyframes rise {
+      0% { bottom: -10%; opacity: 0; }
+      100% { bottom: 110%; opacity: 0; }
+    }
+
+    .login-card {
+      position: relative;
+      z-index: 1;
+      background: rgba(255,255,255,0.96);
+      backdrop-filter: blur(20px);
+      border-radius: 24px;
+      box-shadow: 0 25px 80px rgba(0,0,0,0.3);
+      width: 100%;
+      max-width: 480px;
+      overflow: hidden;
+      animation: cardIn 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+    @keyframes cardIn {
+      0% { opacity: 0; transform: translateY(30px) scale(0.95); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .card-header {
+      background: linear-gradient(135deg, var(--primary-dark), var(--primary-light));
+      padding: 32px 28px 24px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .card-header::after {
+      content: '';
+      position: absolute;
+      bottom: -20px; left: -10%; right: -10%;
+      height: 40px;
+      background: rgba(255,255,255,0.96);
+      border-radius: 50% 50% 0 0;
+    }
+
+    .university-badge {
+      width: 68px; height: 68px;
+      background: rgba(255,255,255,0.15);
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 12px;
+      font-size: 30px;
+      color: white;
+    }
+
+    .card-header h1 {
+      color: white;
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+    .card-header p {
+      color: rgba(255,255,255,0.85);
+      font-size: 12.5px;
+    }
+
+    .card-body {
+      padding: 28px;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .input-icon {
+      position: absolute;
+      left: 14px;
+      color: var(--text-secondary);
+      font-size: 15px;
+    }
+    .form-input {
+      width: 100%;
+      padding: 12px 14px 12px 42px;
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
+      color: var(--text);
+      font-size: 13.5px;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+    .form-input:focus {
+      border-color: var(--primary-light);
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 13px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 14.5px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 16px rgba(26, 79, 160, 0.3);
+      transition: all 0.25s ease;
+      margin-top: 10px;
+    }
+    .btn-primary:hover {
+      transform: translateY(-1px);
+    }
+
+    .card-footer {
+      padding: 16px 28px;
+      background: #f8fafc;
+      border-top: 1px solid #e2e8f0;
+      text-align: center;
+    }
+    .back-link {
+      color: var(--primary-light);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .back-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="particles">
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+  </div>
+
+  <div class="login-card">
+    <div class="card-header">
+      <div class="university-badge">
+        <i class="fa-solid fa-user-plus"></i>
+      </div>
+      <h1>สมัครสมาชิกบุคลากรใหม่</h1>
+      <p>มหาวิทยาลัยราชภัฏศรีสะเกษ (SSKRU Faculty & Staff Account)</p>
+    </div>
+
+    <div class="card-body">
+      <form id="form-staff-reg" onsubmit="handleStaffRegister(event)">
+        <div class="form-group">
+          <label class="form-label">อีเมลองค์กร / มหาวิทยาลัย (Email)</label>
+          <div class="input-wrapper">
+            <i class="fa-solid fa-envelope input-icon"></i>
+            <input type="email" id="reg-staff-email" class="form-input" placeholder="name@sskru.ac.th" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">ชื่อผู้ใช้งาน (Username)</label>
+          <div class="input-wrapper">
+            <i class="fa-solid fa-user input-icon"></i>
+            <input type="text" id="reg-staff-username" class="form-input" placeholder="กำหนด Username" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">รหัสผ่าน (Password)</label>
+          <div class="input-wrapper">
+            <i class="fa-solid fa-key input-icon"></i>
+            <input type="password" id="reg-staff-pass" class="form-input" placeholder="กำหนดรหัสผ่าน" required />
+          </div>
+        </div>
+        <button type="submit" class="btn-primary">
+          <i class="fa-solid fa-user-check"></i> สมัครสมาชิกบุคลากร
+        </button>
+      </form>
+    </div>
+
+    <div class="card-footer">
+      <a href="/login/" class="back-link" id="link-back-login">
+        <i class="fa-solid fa-arrow-left"></i> ย้อนกลับไปหน้าเข้าสู่ระบบ
+      </a>
+    </div>
+  </div>
+
+  <script>
+    if (window.location.pathname.endsWith('.php')) {
+      document.getElementById('link-back-login').href = 'login.php';
+    }
+
+    async function handleStaffRegister(e) {
+      e.preventDefault();
+      const email = document.getElementById('reg-staff-email').value.trim();
+      const username = document.getElementById('reg-staff-username').value.trim();
+      const pass = document.getElementById('reg-staff-pass').value.trim();
+      const apiEndpoint = window.location.pathname.endsWith('.php') ? 'api.php?action=staff_register' : '/admin/api/auth/staff_register/';
+
+      try {
+        const res = await fetch(apiEndpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email, username: username, password: pass })
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert('สมัครสมาชิกบุคลากรสำเร็จ! ยินดีต้อนรับ คุณ ' + data.username);
+          window.location.href = window.location.pathname.endsWith('.php') ? 'index.php' : '/';
+        } else {
+          alert(data.message || 'สมัครสมาชิกไม่สำเร็จ');
+        }
+      } catch (e) {
+        alert('เกิดข้อผิดพลาดในการสมัครสมาชิก');
+      }
+    }
+  </script>
+</body>
+</html>

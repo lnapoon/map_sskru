@@ -10,6 +10,8 @@ from admin_panel.views import track_event, student_login_page
 urlpatterns = [
     path('', index_view, name='index'),
     path('login/', admin_views.student_login_page, name='student_login'),
+    path('register/student/', admin_views.student_register_page, name='student_register_page'),
+    path('register/staff/', admin_views.staff_register_page, name='staff_register_page'),
     path('logout/', api_views.logout_view, name='logout'),
     path('admin/', include('admin_panel.urls')),
     path('api/track', track_event, name='track_event'),

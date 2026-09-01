@@ -643,3 +643,12 @@ def staff_login_api(request):
         return JsonResponse({'success': False, 'message': 'Username/Email หรือรหัสผ่านไม่ถูกต้อง'}, status=400)
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+
+def student_register_page(request):
+    """หน้าสำหรับยืนยันตัวตนและลงทะเบียนนักศึกษาโดยเฉพาะ"""
+    return render(request, 'admin_panel/register_student.html')
+
+def staff_register_page(request):
+    """หน้าสำหรับสมัครสมาชิกบุคลากรโดยเฉพาะ"""
+    return render(request, 'admin_panel/register_staff.html')
