@@ -311,8 +311,10 @@ require_once __DIR__ . '/config.php';
               <p><strong>รหัสนักศึกษา:</strong> ${info.student_id}</p>
               <p><strong>สังกัด:</strong> ${info.faculty} (${info.major})</p>
               <div style="margin-top:12px; border-top:1px solid #e2e8f0; padding-top:10px;">
-                <label class="form-label">กำหนดรหัสผ่านใหม่สำหรับบัญชีนักศึกษา:</label>
-                <input type="password" id="reg-student-password" class="form-input" placeholder="สร้างรหัสผ่าน" required style="margin-bottom:10px;" />
+                <label class="form-label">กำหนดรหัสผ่านสำหรับบัญชีนักศึกษา:</label>
+                <input type="password" id="reg-student-password" class="form-input" placeholder="สร้างรหัสผ่าน" required minlength="4" style="margin-bottom:8px;" />
+                <label class="form-label">ยืนยันรหัสผ่าน (Confirm Password):</label>
+                <input type="password" id="reg-student-confirm-password" class="form-input" placeholder="กรอกรหัสผ่านใหม่อีกครั้ง" required minlength="4" style="margin-bottom:12px;" />
                 <button type="button" onclick="completeStudentRegister('${info.student_id}', '${citizenId}')" class="btn-primary">
                   <i class="fa-solid fa-user-plus"></i> สร้างบัญชีและเข้าสู่ระบบ
                 </button>
@@ -339,8 +341,14 @@ require_once __DIR__ . '/config.php';
 
     async function completeStudentRegister(studentId, citizenId) {
       const password = document.getElementById('reg-student-password').value.trim();
+      const confirmPassword = document.getElementById('reg-student-confirm-password').value.trim();
+
       if (!password) {
         alert('กรุณากรอกรหัสผ่านที่ต้องการสร้าง');
+        return;
+      }
+      if (password !== confirmPassword) {
+        alert('รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน กรุณาตรวจสอบอีกครั้ง');
         return;
       }
       const apiEndpoint = window.location.pathname.endsWith('.php') ? 'api.php?action=student_register' : '/admin/api/auth/student_register/';

@@ -236,7 +236,14 @@ require_once __DIR__ . '/config.php';
           <label class="form-label">รหัสผ่าน (Password)</label>
           <div class="input-wrapper">
             <i class="fa-solid fa-key input-icon"></i>
-            <input type="password" id="reg-staff-pass" class="form-input" placeholder="กำหนดรหัสผ่าน" required />
+            <input type="password" id="reg-staff-pass" class="form-input" placeholder="กำหนดรหัสผ่าน" required minlength="4" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">ยืนยันรหัสผ่าน (Confirm Password)</label>
+          <div class="input-wrapper">
+            <i class="fa-solid fa-lock-check input-icon"></i>
+            <input type="password" id="reg-staff-confirm-pass" class="form-input" placeholder="กรอกรหัสผ่านใหม่อีกครั้ง" required minlength="4" />
           </div>
         </div>
         <button type="submit" class="btn-primary">
@@ -246,22 +253,24 @@ require_once __DIR__ . '/config.php';
     </div>
 
     <div class="card-footer">
-      <a href="/login/" class="back-link" id="link-back-login">
+      <a href="login.php" class="back-link" id="link-back-login">
         <i class="fa-solid fa-arrow-left"></i> ย้อนกลับไปหน้าเข้าสู่ระบบ
       </a>
     </div>
   </div>
 
   <script>
-    if (window.location.pathname.endsWith('.php')) {
-      document.getElementById('link-back-login').href = 'login.php';
-    }
-
     async function handleStaffRegister(e) {
       e.preventDefault();
       const email = document.getElementById('reg-staff-email').value.trim();
       const username = document.getElementById('reg-staff-username').value.trim();
       const pass = document.getElementById('reg-staff-pass').value.trim();
+      const confirmPass = document.getElementById('reg-staff-confirm-pass').value.trim();
+
+      if (pass !== confirmPass) {
+        alert('รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน กรุณาตรวจสอบอีกครั้ง');
+        return;
+      }
       const apiEndpoint = window.location.pathname.endsWith('.php') ? 'api.php?action=staff_register' : '/admin/api/auth/staff_register/';
 
       try {
