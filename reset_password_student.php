@@ -1,5 +1,5 @@
 <?php
-// SSKRU Student Password Reset Page
+// SSKRU Student Password Reset Request Page
 require_once __DIR__ . '/config.php';
 ?>
 <!DOCTYPE html>
@@ -7,7 +7,7 @@ require_once __DIR__ . '/config.php';
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>รีเซ็ตรหัสผ่านนักศึกษา — SSKRU Campus Map</title>
+  <title>ขอรีเซ็ตรหัสผ่านนักศึกษา — SSKRU Campus Map</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -193,6 +193,23 @@ require_once __DIR__ . '/config.php';
       transform: translateY(-1px);
     }
 
+    .email-sent-card {
+      display: none;
+      margin-top: 18px;
+      padding: 18px;
+      border-radius: 16px;
+      background: #f0fdf4;
+      border: 1.5px solid #bbf7d0;
+      animation: fadeIn 0.4s ease;
+    }
+    .email-sent-card.active {
+      display: block;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     .card-footer {
       padding: 16px 28px;
       background: #f8fafc;
@@ -221,14 +238,14 @@ require_once __DIR__ . '/config.php';
   <div class="login-card">
     <div class="card-header">
       <div class="university-badge">
-        <i class="fa-solid fa-key"></i>
+        <i class="fa-solid fa-paper-plane"></i>
       </div>
-      <h1>รีเซ็ตรหัสผ่านนักศึกษา</h1>
-      <p>มหาวิทยาลัยราชภัฏศรีสะเกษ (SSKRU Student Password Reset)</p>
+      <h1>ส่งลิงก์ยืนยันตัวตนรีเซ็ตรหัสผ่าน</h1>
+      <p>มหาวิทยาลัยราชภัฏศรีสะเกษ (SSKRU Student Email Verification)</p>
     </div>
 
     <div class="card-body">
-      <form id="form-reset-pass" onsubmit="handleResetPassword(event)">
+      <form id="form-request-reset" onsubmit="handleRequestReset(event)">
         <div class="form-group">
           <label class="form-label">รหัสนักศึกษา (Student ID)</label>
           <div class="input-wrapper">
@@ -238,7 +255,7 @@ require_once __DIR__ . '/config.php';
         </div>
 
         <div class="form-group">
-          <label class="form-label">อีเมลมหาวิทยาลัยสำหรับยืนยัน</label>
+          <label class="form-label">อีเมลมหาวิทยาลัยสำหรับรับลิงก์ยืนยัน</label>
           <div class="input-wrapper">
             <i class="fa-solid fa-envelope input-icon"></i>
             <input type="email" id="reset-student-email" class="form-input" placeholder="เช่น stu6812732120@sskru.ac.th" required />
@@ -248,18 +265,13 @@ require_once __DIR__ . '/config.php';
           </span>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">กำหนดรหัสผ่านใหม่ (New Password)</label>
-          <div class="input-wrapper">
-            <i class="fa-solid fa-lock input-icon"></i>
-            <input type="password" id="reset-new-password" class="form-input" placeholder="กรอกรหัสผ่านใหม่" required />
-          </div>
-        </div>
-
-        <button type="submit" class="btn-primary">
-          <i class="fa-solid fa-rotate"></i> ยืนยันและตั้งรหัสผ่านใหม่
+        <button type="submit" class="btn-primary" id="btn-send-email">
+          <i class="fa-solid fa-paper-plane"></i> ส่งลิงก์ยืนยันสิทธิ์ไปยังอีเมลมหาวิทยาลัย
         </button>
       </form>
+
+      <!-- Step 2 Verification Modal / Link Card -->
+      <div class="email-sent-card" id="sent-result-card"></div>
     </div>
 
     <div class="card-footer">
@@ -288,29 +300,61 @@ require_once __DIR__ . '/config.php';
       }
     }
 
-    async function handleResetPassword(e) {
+    async function handleRequestReset(e) {
       e.preventDefault();
       const sid = document.getElementById('reset-student-id').value.trim();
       const email = document.getElementById('reset-student-email').value.trim();
-      const newPass = document.getElementById('reset-new-password').value.trim();
+      const btn = document.getElementById('btn-send-email');
+      const resCard = document.getElementById('sent-result-card');
 
-      const apiEndpoint = window.location.pathname.endsWith('.php') ? 'api.php?action=student_reset_password' : '/admin/api/auth/student_reset_password/';
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังส่งอีเมลยืนยันสิทธิ์...';
+
+      const apiEndpoint = window.location.pathname.endsWith('.php') ? 'api.php?action=student_request_reset' : '/admin/api/auth/student_request_reset/';
 
       try {
         const res = await fetch(apiEndpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ student_id: sid, email: email, new_password: newPass })
+          body: JSON.stringify({ student_id: sid, email: email })
         });
         const data = await res.json();
+
         if (data.success) {
-          alert('ตั้งรหัสผ่านใหม่สำเร็จ! ท่านสามารถเข้าสู่ระบบด้วยรหัสผ่านใหม่ได้ทันที');
-          window.location.href = window.location.pathname.endsWith('.php') ? 'login.php' : '/login/';
+          const verifyPageUrl = window.location.pathname.endsWith('.php') 
+            ? `reset_password_verify.php?token=${data.token}`
+            : `/reset_password/student/verify/?token=${data.token}`;
+
+          resCard.className = 'email-sent-card active';
+          resCard.innerHTML = `
+            <div style="font-size:13px; color:#166534;">
+              <p style="font-weight:700; font-size:14.5px; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
+                <i class="fa-solid fa-circle-check" style="color:#10b981; font-size:17px;"></i> ส่งอีเมลยืนยันตัวตนสำเร็จแล้ว!
+              </p>
+              <p style="margin-bottom:8px; line-height:1.5;">ระบบได้ส่งลิงก์ยืนยันตัวตนไปยัง <strong>${data.email}</strong> เรียบร้อยแล้ว (ลิงก์มีอายุ 15 นาที)</p>
+              
+              <div style="background:#ffffff; border:1px solid #bbf7d0; border-radius:12px; padding:12px; margin:12px 0;">
+                <p style="font-size:12px; color:#64748b; margin-bottom:6px;">รหัส OTP ยืนยันสิทธิ์:</p>
+                <div style="font-size:22px; font-weight:800; letter-spacing:4px; color:#1a4fa0; text-align:center; font-family:'Outfit';">
+                  ${data.otp}
+                </div>
+              </div>
+
+              <a href="${verifyPageUrl}" class="btn-primary" style="text-decoration:none; margin-top:8px; background:linear-gradient(135deg, #10b981, #059669);">
+                <i class="fa-solid fa-shield-check"></i> คลิกเปิดลิงก์ยืนยันสิทธิ์ & ตั้งรหัสผ่านใหม่
+              </a>
+            </div>
+          `;
+          btn.style.display = 'none';
         } else {
-          alert(data.message || 'รีเซ็ตรหัสผ่านไม่สำเร็จ');
+          alert(data.message || 'เกิดข้อผิดพลาด');
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> ส่งลิงก์ยืนยันสิทธิ์ไปยังอีเมลมหาวิทยาลัย';
         }
       } catch (err) {
         alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> ส่งลิงก์ยืนยันสิทธิ์ไปยังอีเมลมหาวิทยาลัย';
       }
     }
   </script>

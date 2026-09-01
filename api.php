@@ -117,10 +117,15 @@ if ($action) {
         exit();
     }
     
-    if ($action === 'student_reset_password') {
+    $resets_file = __DIR__ . '/data/password_resets.json';
+    $resets = [];
+    if (file_exists($resets_file)) {
+        $resets = json_decode(file_get_contents($resets_file), true) ?: [];
+    }
+
+    if ($action === 'student_request_reset') {
         $sid = trim($input_data['student_id'] ?? '');
         $email = strtolower(trim($input_data['email'] ?? ''));
-        $new_pass = trim($input_data['new_password'] ?? '');
         
         $clean_sid = str_replace('-', '', $sid);
         $expected = 'stu' . $clean_sid;
@@ -131,7 +136,115 @@ if ($action) {
             exit();
         }
         
+        $st_name = 'นักศึกษา ' . $sid;
+        foreach ($roster as $s) {
+            if ($s['student_id'] === $sid) {
+                $st_name = $s['name'];
+                break;
+            }
+        }
+        
+        $token = bin2hex(random_bytes(24));
+        $otp = strval(rand(100000, 999999));
+        $exp = date('c', time() + 900);
+        
+        // Remove previous resets for this student
+        $new_resets = [];
+        foreach ($resets as $r) {
+            if ($r['student_id'] !== $sid) {
+                $new_resets[] = $r;
+            }
+        }
+        $new_resets[] = [
+            'student_id' => $sid,
+            'student_name' => $st_name,
+            'email' => $email,
+            'token' => $token,
+            'otp' => $otp,
+            'expires_at' => $exp,
+            'used' => false,
+            'created_at' => date('c')
+        ];
+        file_put_contents($resets_file, json_encode($new_resets, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        
+        echo json_encode([
+            'success' => true,
+            'email' => $email,
+            'token' => $token,
+            'otp' => $otp,
+            'message' => 'ระบบได้ส่งลิงก์ยืนยันตัวตนไปยัง ' . $email . ' เรียบร้อยแล้ว'
+        ]);
+        exit();
+    }
+
+    if ($action === 'student_verify_reset_token') {
+        $token = trim($input_data['token'] ?? '');
+        $otp = trim($input_data['otp'] ?? '');
+        
+        $matched = null;
+        foreach ($resets as $r) {
+            if (!$r['used'] && (($token && $r['token'] === $token) || ($otp && $r['otp'] === $otp))) {
+                $matched = $r;
+                break;
+            }
+        }
+        
+        if (!$matched) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'ลิงก์ยืนยันตัวตนไม่ถูกต้องหรือถูกใช้งานไปแล้ว']);
+            exit();
+        }
+        
+        if (time() > strtotime($matched['expires_at'])) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'ลิงก์ยืนยันตัวตนหมดอายุแล้ว']);
+            exit();
+        }
+        
+        echo json_encode([
+            'success' => true,
+            'token' => $matched['token'],
+            'student_id' => $matched['student_id'],
+            'student_name' => $matched['student_name'],
+            'email' => $matched['email']
+        ]);
+        exit();
+    }
+
+    if ($action === 'student_confirm_new_password') {
+        $token = trim($input_data['token'] ?? '');
+        $new_pass = trim($input_data['new_password'] ?? '');
+        
+        if (!$token || !$new_pass) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'ข้อมูลไม่ครบถ้วน']);
+            exit();
+        }
+        
+        $matched_idx = -1;
+        for ($i = 0; $i < count($resets); $i++) {
+            if (!$resets[$i]['used'] && $resets[$i]['token'] === $token) {
+                $matched_idx = $i;
+                break;
+            }
+        }
+        
+        if ($matched_idx === -1) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Token ยืนยันสิทธิ์ไม่ถูกต้องหรือหมดอายุ']);
+            exit();
+        }
+        
+        if (time() > strtotime($resets[$matched_idx]['expires_at'])) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Token หมดอายุแล้ว']);
+            exit();
+        }
+        
+        $sid = $resets[$matched_idx]['student_id'];
+        $st_name = $resets[$matched_idx]['student_name'];
         $hashed = hash('sha256', $new_pass);
+        
         $found = false;
         foreach ($accounts['students'] as &$acc) {
             if ($acc['student_id'] === $sid) {
@@ -143,7 +256,7 @@ if ($action) {
         if (!$found) {
             $accounts['students'][] = [
                 'student_id' => $sid,
-                'name' => 'นักศึกษา ' . $sid,
+                'name' => $st_name,
                 'faculty' => 'มหาวิทยาลัยราชภัฏศรีสะเกษ',
                 'password_hash' => $hashed,
                 'created_at' => date('c')
@@ -151,7 +264,10 @@ if ($action) {
         }
         file_put_contents($accounts_file, json_encode($accounts, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
         
-        echo json_encode(['success' => true, 'message' => 'รีเซ็ตรหัสผ่านสำเร็จ']);
+        $resets[$matched_idx]['used'] = true;
+        file_put_contents($resets_file, json_encode($resets, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        
+        echo json_encode(['success' => true, 'message' => 'ตั้งรหัสผ่านใหม่สำเร็จ']);
         exit();
     }
     

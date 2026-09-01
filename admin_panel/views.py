@@ -666,9 +666,11 @@ def staff_register_page(request):
     return render(request, 'admin_panel/register_staff.html')
 
 
+RESETS_FILE = BASE_DIR / 'data' / 'password_resets.json'
+
 @csrf_exempt
-def student_reset_password_api(request):
-    """รีเซ็ตรหัสผ่านนักศึกษาผ่านอีเมลมหาวิทยาลัย (stu<student_id>@sskru.ac.th)"""
+def student_request_reset_api(request):
+    """ขั้นตอนที่ 1: ส่งคำขอรีเซ็ตรหัสผ่านและสร้างรหัสยืนยัน (Token/OTP) ไปยังอีเมลนักศึกษา"""
     if request.method != 'POST':
         return JsonResponse({'success': False, 'message': 'Method not allowed'}, status=405)
         
@@ -676,12 +678,10 @@ def student_reset_password_api(request):
         data = json.loads(request.body)
         student_id = data.get('student_id', '').strip()
         email = data.get('email', '').strip().lower()
-        new_password = data.get('new_password', '').strip()
         
-        if not student_id or not email or not new_password:
-            return JsonResponse({'success': False, 'message': 'กรุณากรอกข้อมูลให้ครบถ้วน'}, status=400)
+        if not student_id or not email:
+            return JsonResponse({'success': False, 'message': 'กรุณากรอกรหัสนักศึกษาและอีเมลมหาวิทยาลัย'}, status=400)
             
-        # Expected email pattern: stu<student_id>@sskru.ac.th or stu<student_id>.sskru.ac.th
         clean_sid = student_id.replace('-', '').strip()
         expected_prefix = f'stu{clean_sid}'
         
@@ -691,31 +691,150 @@ def student_reset_password_api(request):
                 'message': f'อีเมลยืนยันตัวตนไม่ถูกต้อง ต้องใช้อีเมลมหาวิทยาลัยรูปแบบ {expected_prefix}@sskru.ac.th เท่านั้น'
             }, status=400)
             
-        accounts = read_json_file(ACCOUNTS_FILE, default={'students': [], 'staff': []})
-        student_acc = next((acc for acc in accounts.get('students', []) if acc.get('student_id') == student_id), None)
+        student_db = Student.objects.filter(student_id=student_id).first()
+        roster = read_json_file(ROSTER_FILE)
+        matched_roster = next((s for s in roster if s.get('student_id') == student_id), None)
         
-        hashed_pass = hashlib.sha256(new_password.encode('utf-8')).hexdigest()
-        
-        if student_acc:
-            student_acc['password_hash'] = hashed_pass
-        else:
-            # Create new account entry if not exists yet
-            student_db = Student.objects.filter(student_id=student_id).first()
-            name = student_db.name if student_db else f'นักศึกษา {student_id}'
-            new_acc = {
-                'student_id': student_id,
-                'name': name,
-                'faculty': 'มหาวิทยาลัยราชภัฏศรีสะเกษ',
-                'password_hash': hashed_pass,
-                'created_at': datetime.now().isoformat()
-            }
-            accounts['students'].append(new_acc)
+        if not student_db and not matched_roster:
+            return JsonResponse({'success': False, 'message': 'ไม่พบรหัสนักศึกษานี้ในระบบมหาวิทยาลัย'}, status=404)
             
-        write_json_file(ACCOUNTS_FILE, accounts)
-        return JsonResponse({'success': True, 'message': 'รีเซ็ตรหัสผ่านสำเร็จ! ท่านสามารถเข้าสู่ระบบด้วยรหัสผ่านใหม่ได้ทันที'})
+        student_name = student_db.name if student_db else matched_roster.get('name')
+        
+        # Generate Secure Token & OTP
+        token = secrets.token_hex(24)
+        otp = str(secrets.randbelow(900000) + 100000)
+        expires_at = (datetime.now() + timedelta(minutes=15)).isoformat()
+        
+        resets = read_json_file(RESETS_FILE, default=[])
+        # Clear previous active resets for this student
+        resets = [r for r in resets if r.get('student_id') != student_id]
+        
+        reset_entry = {
+            'student_id': student_id,
+            'student_name': student_name,
+            'email': email,
+            'token': token,
+            'otp': otp,
+            'expires_at': expires_at,
+            'used': False,
+            'created_at': datetime.now().isoformat()
+        }
+        resets.append(reset_entry)
+        write_json_file(RESETS_FILE, resets)
+        
+        verify_url = f'/reset_password/student/verify/?token={token}'
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'ระบบได้ส่งลิงก์และรหัสยืนยันสิทธิ์ไปยังอีเมล {email} เรียบร้อยแล้ว (รหัสมีอายุ 15 นาที)',
+            'email': email,
+            'token': token,
+            'otp': otp,
+            'verify_url': verify_url
+        })
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
 
+
+@csrf_exempt
+def student_verify_reset_token_api(request):
+    """ขั้นตอนที่ 2: ตรวจสอบความถูกต้องของ Token หรือ OTP ยืนยันสิทธิ์"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Method not allowed'}, status=405)
+        
+    try:
+        data = json.loads(request.body)
+        token = data.get('token', '').strip()
+        otp = data.get('otp', '').strip()
+        
+        resets = read_json_file(RESETS_FILE, default=[])
+        matched = None
+        for r in resets:
+            if not r.get('used'):
+                if (token and r.get('token') == token) or (otp and r.get('otp') == otp):
+                    matched = r
+                    break
+                    
+        if not matched:
+            return JsonResponse({'success': False, 'message': 'ลิงก์ยืนยันตัวตนหรือรหัส OTP ไม่ถูกต้อง หรือถูกใช้งานไปแล้ว'}, status=400)
+            
+        exp = datetime.fromisoformat(matched.get('expires_at'))
+        if datetime.now() > exp:
+            return JsonResponse({'success': False, 'message': 'ลิงก์ยืนยันตัวตนหมดอายุแล้ว กรุณาทำรายการใหม่อีกครั้ง'}, status=400)
+            
+        return JsonResponse({
+            'success': True,
+            'token': matched.get('token'),
+            'student_id': matched.get('student_id'),
+            'student_name': matched.get('student_name'),
+            'email': matched.get('email')
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+
+@csrf_exempt
+def student_confirm_new_password_api(request):
+    """ขั้นตอนที่ 3: บันทึกรหัสผ่านใหม่หลังจากยืนยันสิทธิ์อีเมลมหาวิทยาลัยสำเร็จ"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Method not allowed'}, status=405)
+        
+    try:
+        data = json.loads(request.body)
+        token = data.get('token', '').strip()
+        new_password = data.get('new_password', '').strip()
+        
+        if not token or not new_password:
+            return JsonResponse({'success': False, 'message': 'ข้อมูลไม่ครบถ้วน'}, status=400)
+            
+        resets = read_json_file(RESETS_FILE, default=[])
+        matched = next((r for r in resets if r.get('token') == token and not r.get('used')), None)
+        
+        if not matched:
+            return JsonResponse({'success': False, 'message': 'Token ยืนยันสิทธิ์ไม่ถูกต้องหรือหมดอายุ'}, status=400)
+            
+        exp = datetime.fromisoformat(matched.get('expires_at'))
+        if datetime.now() > exp:
+            return JsonResponse({'success': False, 'message': 'Token หมดอายุแล้ว กรุณาทำรายการใหม่อีกครั้ง'}, status=400)
+            
+        student_id = matched.get('student_id')
+        student_name = matched.get('student_name')
+        
+        # Update Accounts DB
+        accounts = read_json_file(ACCOUNTS_FILE, default={'students': [], 'staff': []})
+        hashed_pass = hashlib.sha256(new_password.encode('utf-8')).hexdigest()
+        
+        student_acc = next((acc for acc in accounts.get('students', []) if acc.get('student_id') == student_id), None)
+        if student_acc:
+            student_acc['password_hash'] = hashed_pass
+        else:
+            accounts['students'].append({
+                'student_id': student_id,
+                'name': student_name,
+                'faculty': 'มหาวิทยาลัยราชภัฏศรีสะเกษ',
+                'password_hash': hashed_pass,
+                'created_at': datetime.now().isoformat()
+            })
+        write_json_file(ACCOUNTS_FILE, accounts)
+        
+        # Mark token used
+        matched['used'] = True
+        write_json_file(RESETS_FILE, resets)
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'สร้างและตั้งรหัสผ่านใหม่สำเร็จ! ท่านสามารถเข้าสู่ระบบด้วยรหัสผ่านใหม่ได้ทันที'
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+
 def student_reset_password_page(request):
-    """หน้าสำหรับรีเซ็ตรหัสผ่านนักศึกษาผ่านอีเมลองค์กร"""
+    """หน้าสำหรับขอส่งลิงก์ยืนยันตัวตนไปยังอีเมลมหาวิทยาลัย"""
     return render(request, 'admin_panel/reset_password_student.html')
+
+def student_reset_password_verify_page(request):
+    """หน้าสร้างรหัสผ่านใหม่หลังจากยืนยันสิทธิ์อีเมลมหาวิทยาลัยสำเร็จ"""
+    token = request.GET.get('token', '')
+    return render(request, 'admin_panel/reset_password_verify.html', {'token': token})
+
