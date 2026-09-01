@@ -405,7 +405,7 @@
       const sid = document.getElementById('login-student-id').value.trim();
       const pass = document.getElementById('login-student-pass').value.trim();
       const isPhp = window.location.pathname.endsWith('.php');
-      const apiEndpoint = isPhp ? 'api.php?action=student_login' : '/admin/api/auth/student_login/';
+      const apiEndpoint = isPhp ? 'auth/api.php?action=student_login' : '/admin/api/auth/student_login/';
       try {
         const res = await fetch(apiEndpoint, {
           method: 'POST',
@@ -428,7 +428,7 @@
       const identifier = document.getElementById('staff-identifier').value.trim();
       const pass = document.getElementById('staff-password').value.trim();
       const isPhp = window.location.pathname.endsWith('.php');
-      const apiEndpoint = isPhp ? 'api.php?action=staff_login' : '/admin/api/auth/staff_login/';
+      const apiEndpoint = isPhp ? 'auth/api.php?action=staff_login' : '/admin/api/auth/staff_login/';
       try {
         const res = await fetch(apiEndpoint, {
           method: 'POST',

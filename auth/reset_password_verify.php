@@ -1,6 +1,6 @@
 <?php
 // SSKRU Student Password Reset Verification Page
-require_once dirname(__DIR__) . '/config.php';
+require_once __DIR__ . '/config.php';
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -322,7 +322,7 @@ require_once dirname(__DIR__) . '/config.php';
       }
 
       const apiEndpoint = window.location.pathname.endsWith('.php') 
-        ? '../api.php?action=student_verify_reset_token' 
+        ? 'api.php?action=student_verify_reset_token' 
         : '/admin/api/auth/student_verify_reset_token/';
 
       try {
@@ -374,7 +374,7 @@ require_once dirname(__DIR__) . '/config.php';
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึกรหัสผ่านใหม่...';
 
       const apiEndpoint = window.location.pathname.endsWith('.php') 
-        ? '../api.php?action=student_confirm_new_password' 
+        ? 'api.php?action=student_confirm_new_password' 
         : '/admin/api/auth/student_confirm_new_password/';
 
       try {

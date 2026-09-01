@@ -1,6 +1,6 @@
 <?php
 // SSKRU Faculty & Staff Registration Page
-require_once dirname(__DIR__) . '/config.php';
+require_once __DIR__ . '/config.php';
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -253,7 +253,7 @@ require_once dirname(__DIR__) . '/config.php';
     </div>
 
     <div class="card-footer">
-      <a href="../login.php" class="back-link" id="link-back-login">
+      <a href="login.php" class="back-link" id="link-back-login">
         <i class="fa-solid fa-arrow-left"></i> ย้อนกลับไปหน้าเข้าสู่ระบบ
       </a>
     </div>
@@ -271,7 +271,7 @@ require_once dirname(__DIR__) . '/config.php';
         alert('รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน กรุณาตรวจสอบอีกครั้ง');
         return;
       }
-      const apiEndpoint = window.location.pathname.endsWith('.php') ? '../api.php?action=staff_register' : '/admin/api/auth/staff_register/';
+      const apiEndpoint = window.location.pathname.endsWith('.php') ? 'api.php?action=staff_register' : '/admin/api/auth/staff_register/';
 
       try {
         const res = await fetch(apiEndpoint, {

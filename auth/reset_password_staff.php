@@ -1,5 +1,5 @@
 <?php
-require_once dirname(__DIR__) . '/config.php';
+require_once __DIR__ . '/config.php';
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -305,7 +305,7 @@ require_once dirname(__DIR__) . '/config.php';
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังส่งคำขอ...';
 
       const isPhp = window.location.pathname.endsWith('.php');
-      const endpoint = isPhp ? '../api.php?action=staff_request_reset' : '/admin/api/auth/staff_request_reset/';
+      const endpoint = isPhp ? 'api.php?action=staff_request_reset' : '/admin/api/auth/staff_request_reset/';
 
       try {
         const res = await fetch(endpoint, {

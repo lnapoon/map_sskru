@@ -385,13 +385,13 @@ require_once __DIR__ . '/config.php';
 
   <script>
     if (window.location.pathname.endsWith('.php')) {
-      document.getElementById('link-reg-student').href = 'auth/register_student.php';
-      document.getElementById('link-reg-staff').href = 'auth/register_staff.php';
+      document.getElementById('link-reg-student').href = 'register_student.php';
+      document.getElementById('link-reg-staff').href = 'register_staff.php';
       if (document.getElementById('link-reset-student')) {
-        document.getElementById('link-reset-student').href = 'auth/reset_password_student.php';
+        document.getElementById('link-reset-student').href = 'reset_password_student.php';
       }
       if (document.getElementById('link-reset-staff')) {
-        document.getElementById('link-reset-staff').href = 'auth/reset_password_staff.php';
+        document.getElementById('link-reset-staff').href = 'reset_password_staff.php';
       }
     }
 

@@ -16,8 +16,8 @@ $input_data = json_decode($raw_input, true);
 $action = $_GET['action'] ?? null;
 
 if ($action) {
-    $accounts_file = __DIR__ . '/data/user_accounts.json';
-    $roster_file = __DIR__ . '/data/students_roster.json';
+    $accounts_file = dirname(__DIR__) . '/data/user_accounts.json';
+    $roster_file = dirname(__DIR__) . '/data/students_roster.json';
     
     $accounts = ['students' => [], 'staff' => []];
     if (file_exists($accounts_file)) {
@@ -143,7 +143,7 @@ if ($action) {
         exit();
     }
     
-    $resets_file = __DIR__ . '/data/password_resets.json';
+    $resets_file = dirname(__DIR__) . '/data/password_resets.json';
     $resets = [];
     if (file_exists($resets_file)) {
         $resets = json_decode(file_get_contents($resets_file), true) ?: [];
@@ -555,7 +555,7 @@ if ($action) {
         }
 
         function log_user_activity_php($uid, $name, $role, $email = '') {
-            $log_file = __DIR__ . '/data/user_activity_logs.json';
+            $log_file = dirname(__DIR__) . '/data/user_activity_logs.json';
             $logs = file_exists($log_file) ? json_decode(file_get_contents($log_file), true) ?: [] : [];
             $role_th = ($role === 'admin') ? 'ผู้ดูแลระบบ' : (($role === 'staff') ? 'บุคลากร / อาจารย์' : 'นักศึกษา');
             $entry = [
@@ -634,7 +634,7 @@ if ($action) {
 // ==========================================
 // BUILDINGS API
 // ==========================================
-$json_file = __DIR__ . '/data/buildings.json';
+$json_file = dirname(__DIR__) . '/data/buildings.json';
 
 function read_buildings_php() {
     global $json_file, $pdo;

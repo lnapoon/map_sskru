@@ -1169,7 +1169,7 @@ function isUserAdmin() {
 async function fetchAuthStatus() {
   try {
     const isPhp = window.location.pathname.endsWith('.php');
-    const endpoint = isPhp ? 'api.php?action=auth_status' : '/admin/api/auth/status/';
+    const endpoint = isPhp ? 'auth/api.php?action=auth_status' : '/admin/api/auth/status/';
     const res = await fetch(endpoint, { credentials: 'same-origin' });
     const data = await res.json();
     if (data.success) {
@@ -1428,7 +1428,7 @@ function initProfileGlobalListeners() {
       submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังตรวจสอบ...';
 
       const apiEndpoint = window.location.pathname.endsWith('.php')
-        ? 'api.php?action=verify_password'
+        ? 'auth/api.php?action=verify_password'
         : '/admin/api/auth/verify_password/';
 
       try {
@@ -1519,9 +1519,9 @@ async function handleLogout() {
     const isPhp = window.location.pathname.endsWith('.php');
     if (isPhp) {
       try {
-        await fetch('api.php?action=logout');
+        await fetch('auth/api.php?action=logout');
       } catch (e) {}
-      window.location.href = 'login.php';
+      window.location.href = 'auth/login.php';
     } else {
       window.location.href = '/logout/';
     }
@@ -1558,7 +1558,7 @@ async function loadBuildingsData() {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 1200);
 
-  const endpoints = ['/api/buildings', '/admin/api/buildings/', 'api.php', 'data/buildings.json'];
+  const endpoints = ['/api/buildings', '/admin/api/buildings/', 'auth/api.php', 'data/buildings.json'];
   for (const ep of endpoints) {
     try {
       const response = await fetch(ep, { signal: controller.signal });

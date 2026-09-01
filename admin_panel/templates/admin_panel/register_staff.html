@@ -257,7 +257,7 @@
 
   <script>
     if (window.location.pathname.endsWith('.php')) {
-      document.getElementById('link-back-login').href = 'login.php';
+      document.getElementById('link-back-login').href = 'auth/login.php';
     }
 
     async function handleStaffRegister(e) {
@@ -271,7 +271,7 @@
         alert('รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน กรุณาตรวจสอบอีกครั้ง');
         return;
       }
-      const apiEndpoint = window.location.pathname.endsWith('.php') ? 'api.php?action=staff_register' : '/admin/api/auth/staff_register/';
+      const apiEndpoint = window.location.pathname.endsWith('.php') ? 'auth/api.php?action=staff_register' : '/admin/api/auth/staff_register/';
 
       try {
         const res = await fetch(apiEndpoint, {

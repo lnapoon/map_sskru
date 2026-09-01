@@ -1,6 +1,6 @@
 <?php
 // SSKRU 3D Map Application (Native PHP & MySQL Integration)
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/auth/config.php';
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -21,7 +21,7 @@ require_once __DIR__ . '/config.php';
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="theme-color" content="#1a4fa0" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#0d2c5e" media="(prefers-color-scheme: dark)">
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="assets/manifest.json">
 
   <!-- PWA / iOS Safari -->
   <meta name="apple-mobile-web-app-capable" content="yes">

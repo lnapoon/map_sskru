@@ -1,5 +1,5 @@
 <?php
-require_once dirname(__DIR__) . '/config.php';
+require_once __DIR__ . '/config.php';
 $token = $_GET['token'] ?? '';
 ?>
 <!DOCTYPE html>
@@ -285,7 +285,7 @@ $token = $_GET['token'] ?? '';
     </div>
 
     <div class="card-footer">
-      <a href="../login.php" class="back-link" id="link-back-login">
+      <a href="login.php" class="back-link" id="link-back-login">
         <i class="fa-solid fa-arrow-left"></i> ย้อนกลับไปหน้าเข้าสู่ระบบ
       </a>
     </div>
@@ -308,7 +308,7 @@ $token = $_GET['token'] ?? '';
 
     async function verifyToken(token, otp) {
       try {
-        const res = await fetch('../api.php?action=staff_verify_reset_token', {
+        const res = await fetch('api.php?action=staff_verify_reset_token', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ token: token, otp: otp })
@@ -344,7 +344,7 @@ $token = $_GET['token'] ?? '';
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึกรหัสผ่านใหม่...';
 
       try {
-        const res = await fetch('../api.php?action=staff_confirm_new_password', {
+        const res = await fetch('api.php?action=staff_confirm_new_password', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ token: activeToken, new_password: pass1 })

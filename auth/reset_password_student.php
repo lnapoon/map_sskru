@@ -1,6 +1,6 @@
 <?php
 // SSKRU Student Password Reset Request Page
-require_once dirname(__DIR__) . '/config.php';
+require_once __DIR__ . '/config.php';
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -310,7 +310,7 @@ require_once dirname(__DIR__) . '/config.php';
       btn.disabled = true;
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังส่งอีเมลยืนยันสิทธิ์...';
 
-      const apiEndpoint = window.location.pathname.endsWith('.php') ? '../api.php?action=student_request_reset' : '/admin/api/auth/student_request_reset/';
+      const apiEndpoint = window.location.pathname.endsWith('.php') ? 'api.php?action=student_request_reset' : '/admin/api/auth/student_request_reset/';
 
       try {
         const res = await fetch(apiEndpoint, {
