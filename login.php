@@ -38,7 +38,6 @@ require_once __DIR__ . '/config.php';
       overflow: hidden;
     }
 
-    /* Animated background blobs */
     body::before, body::after {
       content: '';
       position: absolute;
@@ -63,7 +62,6 @@ require_once __DIR__ . '/config.php';
       100% { transform: translate(40px, -30px) scale(1.1); }
     }
 
-    /* Floating particles */
     .particles {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -98,7 +96,7 @@ require_once __DIR__ . '/config.php';
       border-radius: 24px;
       box-shadow: 0 25px 80px rgba(0,0,0,0.3);
       width: 100%;
-      max-width: 520px;
+      max-width: 480px;
       overflow: hidden;
       animation: cardIn 0.6s cubic-bezier(0.23, 1, 0.32, 1);
     }
@@ -153,7 +151,6 @@ require_once __DIR__ . '/config.php';
       font-weight: 400;
     }
 
-    /* Main Role Tabs */
     .role-switcher {
       display: flex;
       background: #f1f5f9;
@@ -164,7 +161,7 @@ require_once __DIR__ . '/config.php';
     }
     .role-btn {
       flex: 1;
-      padding: 10px 12px;
+      padding: 11px 12px;
       border: none;
       background: transparent;
       color: var(--text-secondary);
@@ -201,31 +198,6 @@ require_once __DIR__ . '/config.php';
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Sub Tabs */
-    .sub-tabs {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 20px;
-      border-bottom: 1.5px solid #f1f5f9;
-      padding-bottom: 10px;
-    }
-    .sub-tab-btn {
-      background: transparent;
-      border: none;
-      color: var(--text-secondary);
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      padding: 6px 12px;
-      border-radius: 8px;
-      transition: all 0.2s;
-    }
-    .sub-tab-btn.active {
-      background: rgba(26, 79, 160, 0.1);
-      color: var(--primary);
-    }
-
-    /* Form Fields */
     .form-group {
       margin-bottom: 18px;
     }
@@ -269,7 +241,6 @@ require_once __DIR__ . '/config.php';
       color: var(--primary-light);
     }
 
-    /* Buttons */
     .btn-primary {
       width: 100%;
       padding: 13px;
@@ -287,58 +258,20 @@ require_once __DIR__ . '/config.php';
       gap: 8px;
       box-shadow: 0 4px 16px rgba(26, 79, 160, 0.3);
       transition: all 0.25s ease;
-      margin-top: 8px;
+      margin-top: 10px;
     }
     .btn-primary:hover {
       transform: translateY(-1px);
       box-shadow: 0 6px 20px rgba(26, 79, 160, 0.4);
     }
 
-    /* Verification Result Card */
-    .verify-result-card {
-      margin-top: 18px;
-      padding: 16px;
-      border-radius: 14px;
-      background: #f8fafc;
-      border: 1.5px solid #e2e8f0;
-      display: none;
-    }
-    .verify-result-card.active {
-      display: block;
-      animation: fadeIn 0.3s ease-out;
-    }
-    .verify-result-card.error {
-      border-color: #fca5a5;
-      background: #fef2f2;
-    }
-    .result-info {
-      font-size: 13px;
-      line-height: 1.6;
-      color: var(--text);
-    }
-
-    .btn-contact-support {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      margin-top: 10px;
-      padding: 8px 14px;
-      background: #ef4444;
-      color: white;
-      border-radius: 10px;
-      text-decoration: none;
-      font-size: 12.5px;
-      font-weight: 600;
-    }
-
-    /* Card Footer */
-    .card-footer {
-      padding: 16px 28px;
-      background: #f8fafc;
-      border-top: 1px solid #e2e8f0;
+    .sub-link-container {
       text-align: center;
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px solid #f1f5f9;
     }
-    .guest-link {
+    .sub-link {
       color: var(--primary-light);
       text-decoration: none;
       font-size: 13px;
@@ -346,8 +279,10 @@ require_once __DIR__ . '/config.php';
       display: inline-flex;
       align-items: center;
       gap: 6px;
+      transition: color 0.2s;
     }
-    .guest-link:hover {
+    .sub-link:hover {
+      color: var(--primary-dark);
       text-decoration: underline;
     }
   </style>
@@ -363,7 +298,6 @@ require_once __DIR__ . '/config.php';
   </div>
 
   <div class="login-card">
-    <!-- Header -->
     <div class="card-header">
       <div class="university-badge">
         <i class="fa-solid fa-graduation-cap"></i>
@@ -378,47 +312,14 @@ require_once __DIR__ . '/config.php';
         <i class="fa-solid fa-user-graduate"></i> สำหรับนักศึกษา
       </button>
       <button class="role-btn" id="tab-staff" onclick="switchRole('staff')">
-        <i class="fa-solid fa-user-tie"></i> สำหรับบุคลากร & Admin
+        <i class="fa-solid fa-user-tie"></i> สำหรับบุคลากร
       </button>
     </div>
 
     <div class="card-body">
-      <!-- 1. STUDENT PANEL -->
+      <!-- 1. STUDENT LOGIN PANEL -->
       <div class="panel-content active" id="panel-student">
-        <div class="sub-tabs">
-          <button class="sub-tab-btn active" id="subtab-student-verify" onclick="switchStudentSubTab('verify')">
-            <i class="fa-solid fa-id-card"></i> ยืนยันตัวตน & ลงทะเบียน
-          </button>
-          <button class="sub-tab-btn" id="subtab-student-login" onclick="switchStudentSubTab('login')">
-            <i class="fa-solid fa-key"></i> เข้าสู่ระบบนักศึกษา
-          </button>
-        </div>
-
-        <!-- Verify Form -->
-        <form id="form-student-verify" onsubmit="handleStudentVerify(event)">
-          <div class="form-group">
-            <label class="form-label">รหัสนักศึกษา (Student ID)</label>
-            <div class="input-wrapper">
-              <i class="fa-solid fa-hashtag input-icon"></i>
-              <input type="text" id="verify-student-id" class="form-input" placeholder="เช่น 6512345678-9" required />
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">เลขบัตรประจำตัวประชาชน (13 หลัก)</label>
-            <div class="input-wrapper">
-              <i class="fa-solid fa-address-card input-icon"></i>
-              <input type="text" id="verify-citizen-id" class="form-input" placeholder="เช่น 1330100XXXXXX" maxlength="13" required />
-            </div>
-          </div>
-          <button type="submit" class="btn-primary">
-            <i class="fa-solid fa-magnifying-glass"></i> ตรวจสอบข้อมูลสิทธิ์นักศึกษา
-          </button>
-        </form>
-
-        <div class="verify-result-card" id="student-verify-result"></div>
-
-        <!-- Existing Student Login -->
-        <form id="form-student-login" style="display: none;" onsubmit="handleStudentLogin(event)">
+        <form id="form-student-login" onsubmit="handleStudentLogin(event)">
           <div class="form-group">
             <label class="form-label">รหัสนักศึกษา (Student ID)</label>
             <div class="input-wrapper">
@@ -437,20 +338,19 @@ require_once __DIR__ . '/config.php';
             <i class="fa-solid fa-right-to-bracket"></i> เข้าสู่ระบบนักศึกษา
           </button>
         </form>
+
+        <div class="sub-link-container" style="display: flex; flex-direction: column; gap: 8px;">
+          <a href="/register/student/" class="sub-link" id="link-reg-student">
+            <i class="fa-solid fa-user-plus"></i> ยังไม่ได้ลงทะเบียน? กดยืนยันตัวตนและลงทะเบียนนักศึกษาที่นี่
+          </a>
+          <a href="/reset_password/student/" class="sub-link" id="link-reset-student" style="color: #64748b; font-size: 12.5px;">
+            <i class="fa-solid fa-key"></i> ลืมรหัสผ่านนักศึกษา? รีเซ็ตรหัสผ่านด้วยอีเมลองค์กร (stu&lt;รหัส&gt;@sskru.ac.th)
+          </a>
+        </div>
       </div>
 
-      <!-- 2. STAFF & ADMIN PANEL -->
+      <!-- 2. STAFF LOGIN PANEL -->
       <div class="panel-content" id="panel-staff">
-        <div class="sub-tabs">
-          <button class="sub-tab-btn active" id="subtab-staff-login" onclick="switchStaffSubTab('login')">
-            <i class="fa-solid fa-user-lock"></i> เข้าสู่ระบบบุคลากร & Admin
-          </button>
-          <button class="sub-tab-btn" id="subtab-staff-reg" onclick="switchStaffSubTab('reg')">
-            <i class="fa-solid fa-user-plus"></i> สมัครสมาชิกบุคลากรใหม่
-          </button>
-        </div>
-
-        <!-- Staff/Admin Login -->
         <form id="form-staff-login" onsubmit="handleStaffLogin(event)">
           <div class="form-group">
             <label class="form-label">Username หรือ Email</label>
@@ -467,49 +367,29 @@ require_once __DIR__ . '/config.php';
             </div>
           </div>
           <button type="submit" class="btn-primary">
-            <i class="fa-solid fa-right-to-bracket"></i> เข้าสู่ระบบบุคลากร & Admin
+            <i class="fa-solid fa-right-to-bracket"></i> เข้าสู่ระบบบุคลากร
           </button>
         </form>
 
-        <!-- Staff Register -->
-        <form id="form-staff-reg" style="display: none;" onsubmit="handleStaffRegister(event)">
-          <div class="form-group">
-            <label class="form-label">อีเมลองค์กร / มหาวิทยาลัย (Email)</label>
-            <div class="input-wrapper">
-              <i class="fa-solid fa-envelope input-icon"></i>
-              <input type="email" id="reg-staff-email" class="form-input" placeholder="name@sskru.ac.th" required />
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">ชื่อผู้ใช้งาน (Username)</label>
-            <div class="input-wrapper">
-              <i class="fa-solid fa-user input-icon"></i>
-              <input type="text" id="reg-staff-username" class="form-input" placeholder="กำหนด Username" required />
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">รหัสผ่าน (Password)</label>
-            <div class="input-wrapper">
-              <i class="fa-solid fa-key input-icon"></i>
-              <input type="password" id="reg-staff-pass" class="form-input" placeholder="กำหนดรหัสผ่าน" required />
-            </div>
-          </div>
-          <button type="submit" class="btn-primary">
-            <i class="fa-solid fa-user-check"></i> สมัครสมาชิกบุคลากร
-          </button>
-        </form>
+        <div class="sub-link-container">
+          <a href="/register/staff/" class="sub-link" id="link-reg-staff">
+            <i class="fa-solid fa-user-plus"></i> ยังไม่มีบัญชีบุคลากร? สมัครสมาชิกบุคลากรใหม่ที่นี่
+          </a>
+        </div>
       </div>
-    </div>
-
-    <!-- Card Footer -->
-    <div class="card-footer">
-      <a href="/" class="guest-link">
-        <i class="fa-solid fa-compass"></i> เข้าใช้งานแบบผู้เข้าชมทั่วไป (Guest Visitor Access)
-      </a>
     </div>
   </div>
 
   <script>
+    // Adapt link for PHP environment if loaded on .php
+    if (window.location.pathname.endsWith('.php')) {
+      document.getElementById('link-reg-student').href = 'register_student.php';
+      document.getElementById('link-reg-staff').href = 'register_staff.php';
+      if (document.getElementById('link-reset-student')) {
+        document.getElementById('link-reset-student').href = 'reset_password_student.php';
+      }
+    }
+
     function switchRole(role) {
       document.querySelectorAll('.role-btn').forEach(btn => btn.classList.remove('active'));
       document.querySelectorAll('.panel-content').forEach(panel => panel.classList.remove('active'));
@@ -518,111 +398,20 @@ require_once __DIR__ . '/config.php';
       document.getElementById('panel-' + role).classList.add('active');
     }
 
-    function switchStudentSubTab(tab) {
-      document.getElementById('subtab-student-verify').classList.toggle('active', tab === 'verify');
-      document.getElementById('subtab-student-login').classList.toggle('active', tab === 'login');
-      document.getElementById('form-student-verify').style.display = tab === 'verify' ? 'block' : 'none';
-      document.getElementById('form-student-login').style.display = tab === 'login' ? 'block' : 'none';
-      document.getElementById('student-verify-result').style.display = 'none';
-    }
-
-    function switchStaffSubTab(tab) {
-      document.getElementById('subtab-staff-login').classList.toggle('active', tab === 'login');
-      document.getElementById('subtab-staff-reg').classList.toggle('active', tab === 'reg');
-      document.getElementById('form-staff-login').style.display = tab === 'login' ? 'block' : 'none';
-      document.getElementById('form-staff-reg').style.display = tab === 'reg' ? 'block' : 'none';
-    }
-
-    async function handleStudentVerify(e) {
-      e.preventDefault();
-      const studentId = document.getElementById('verify-student-id').value.trim();
-      const citizenId = document.getElementById('verify-citizen-id').value.trim();
-      const resCard = document.getElementById('student-verify-result');
-
-      resCard.className = 'verify-result-card active';
-      resCard.innerHTML = '<div class="result-info"><i class="fa-solid fa-spinner fa-spin"></i> กำลังตรวจสอบข้อมูลรหัสนักศึกษา...</div>';
-
-      try {
-        const res = await fetch('/admin/api/auth/student_verify/', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ student_id: studentId, citizen_id: citizenId })
-        });
-        const data = await res.json();
-
-        if (data.success && data.status === 'MATCHED') {
-          const info = data.student_info;
-          resCard.className = 'verify-result-card active';
-          resCard.innerHTML = `
-            <div class="result-info">
-              <p style="color:#10b981; font-weight:700; font-size:14px; margin-bottom:6px;"><i class="fa-solid fa-circle-check"></i> ตรวจสอบข้อมูลสิทธิ์สำเร็จ!</p>
-              <p><strong>ชื่อ-นามสกุล:</strong> ${info.name}</p>
-              <p><strong>รหัสนักศึกษา:</strong> ${info.student_id}</p>
-              <p><strong>สังกัด:</strong> ${info.faculty} (${info.major})</p>
-              <div style="margin-top:12px; border-top:1px solid #e2e8f0; padding-top:10px;">
-                <label class="form-label">กำหนดรหัสผ่านใหม่สำหรับบัญชีนักศึกษา:</label>
-                <input type="password" id="reg-student-password" class="form-input" placeholder="สร้างรหัสผ่าน" required style="margin-bottom:10px;" />
-                <button type="button" onclick="completeStudentRegister('${info.student_id}', '${citizenId}')" class="btn-primary">
-                  <i class="fa-solid fa-user-plus"></i> สร้างบัญชีและเข้าสู่ระบบ
-                </button>
-              </div>
-            </div>
-          `;
-        } else {
-          resCard.className = 'verify-result-card active error';
-          resCard.innerHTML = `
-            <div class="result-info" style="color:#dc2626;">
-              <p style="font-weight:700; font-size:14px; margin-bottom:4px;"><i class="fa-solid fa-triangle-exclamation"></i> ไม่พบข้อมูลในระบบ</p>
-              <p>${data.message || 'ไม่พบรหัสนักศึกษาในระบบ'}</p>
-              <a href="https://reg.sskru.ac.th" target="_blank" class="btn-contact-support">
-                <i class="fa-solid fa-headset"></i> ติดต่อเจ้าหน้าที่สำนักทะเบียนและประมวลผล SSKRU
-              </a>
-            </div>
-          `;
-        }
-      } catch (err) {
-        resCard.className = 'verify-result-card active error';
-        resCard.innerHTML = '<div class="result-info" style="color:#dc2626;"><i class="fa-solid fa-circle-xmark"></i> เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์</div>';
-      }
-    }
-
-    async function completeStudentRegister(studentId, citizenId) {
-      const password = document.getElementById('reg-student-password').value.trim();
-      if (!password) {
-        alert('กรุณากรอกรหัสผ่านที่ต้องการสร้าง');
-        return;
-      }
-      try {
-        const res = await fetch('/admin/api/auth/student_register/', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ student_id: studentId, citizen_id: citizenId, password: password })
-        });
-        const data = await res.json();
-        if (data.success) {
-          alert('ลงทะเบียนสำเร็จ! เข้าสู่ระบบในนาม ' + data.user_name);
-          window.location.href = '/';
-        } else {
-          alert(data.message || 'ลงทะเบียนไม่สำเร็จ');
-        }
-      } catch (e) {
-        alert('เกิดข้อผิดพลาดในการลงทะเบียน');
-      }
-    }
-
     async function handleStudentLogin(e) {
       e.preventDefault();
       const sid = document.getElementById('login-student-id').value.trim();
       const pass = document.getElementById('login-student-pass').value.trim();
+      const apiEndpoint = window.location.pathname.endsWith('.php') ? 'api.php?action=student_login' : '/admin/api/auth/student_login/';
       try {
-        const res = await fetch('/admin/api/auth/student_login/', {
+        const res = await fetch(apiEndpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ student_id: sid, password: pass })
         });
         const data = await res.json();
         if (data.success) {
-          window.location.href = '/';
+          window.location.href = window.location.pathname.endsWith('.php') ? 'index.php' : '/';
         } else {
           alert(data.message || 'รหัสนักศึกษาหรือรหัสผ่านไม่ถูกต้อง');
         }
@@ -635,43 +424,21 @@ require_once __DIR__ . '/config.php';
       e.preventDefault();
       const identifier = document.getElementById('staff-identifier').value.trim();
       const pass = document.getElementById('staff-password').value.trim();
+      const apiEndpoint = window.location.pathname.endsWith('.php') ? 'api.php?action=staff_login' : '/admin/api/auth/staff_login/';
       try {
-        const res = await fetch('/admin/api/auth/staff_login/', {
+        const res = await fetch(apiEndpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ identifier: identifier, password: pass })
         });
         const data = await res.json();
         if (data.success) {
-          window.location.href = data.redirect || '/';
+          window.location.href = data.redirect || (window.location.pathname.endsWith('.php') ? 'index.php' : '/');
         } else {
           alert(data.message || 'Username/Email หรือรหัสผ่านไม่ถูกต้อง');
         }
       } catch (e) {
         alert('เกิดข้อผิดพลาดในการเข้าสู่ระบบ');
-      }
-    }
-
-    async function handleStaffRegister(e) {
-      e.preventDefault();
-      const email = document.getElementById('reg-staff-email').value.trim();
-      const username = document.getElementById('reg-staff-username').value.trim();
-      const pass = document.getElementById('reg-staff-pass').value.trim();
-      try {
-        const res = await fetch('/admin/api/auth/staff_register/', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: email, username: username, password: pass })
-        });
-        const data = await res.json();
-        if (data.success) {
-          alert('สมัครสมาชิกบุคลากรสำเร็จ! ยินดีต้อนรับ คุณ ' + data.username);
-          window.location.href = '/';
-        } else {
-          alert(data.message || 'สมัครสมาชิกไม่สำเร็จ');
-        }
-      } catch (e) {
-        alert('เกิดข้อผิดพลาดในการสมัครสมาชิก');
       }
     }
   </script>

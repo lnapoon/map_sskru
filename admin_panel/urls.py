@@ -20,8 +20,10 @@ urlpatterns = [
     path('api/auth/student_register/',            views.student_register_api,        name='student_register_api'),
     path('api/auth/staff_register/',              views.staff_register_api,          name='staff_register_api'),
     path('api/auth/staff_login/',                 views.staff_login_api,             name='staff_login_api'),
+    path('api/auth/student_reset_password/',     views.student_reset_password_api,  name='student_reset_password_api'),
 
-    # Dedicated Register Pages
+    # Dedicated Register & Password Reset Pages
     path('register/student/',                     views.student_register_page,       name='student_register_page'),
     path('register/staff/',                       views.staff_register_page,         name='staff_register_page'),
+    path('reset_password/student/',               views.student_reset_password_page, name='student_reset_password_page'),
 ]

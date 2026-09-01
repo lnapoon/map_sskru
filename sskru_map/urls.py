@@ -12,6 +12,7 @@ urlpatterns = [
     path('login/', admin_views.student_login_page, name='student_login'),
     path('register/student/', admin_views.student_register_page, name='student_register_page'),
     path('register/staff/', admin_views.staff_register_page, name='staff_register_page'),
+    path('reset_password/student/', admin_views.student_reset_password_page, name='student_reset_password_page'),
     path('logout/', api_views.logout_view, name='logout'),
     path('admin/', include('admin_panel.urls')),
     path('api/track', track_event, name='track_event'),

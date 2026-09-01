@@ -335,9 +335,12 @@
           </button>
         </form>
 
-        <div class="sub-link-container">
+        <div class="sub-link-container" style="display: flex; flex-direction: column; gap: 8px;">
           <a href="/register/student/" class="sub-link" id="link-reg-student">
             <i class="fa-solid fa-user-plus"></i> ยังไม่ได้ลงทะเบียน? กดยืนยันตัวตนและลงทะเบียนนักศึกษาที่นี่
+          </a>
+          <a href="/reset_password/student/" class="sub-link" id="link-reset-student" style="color: #64748b; font-size: 12.5px;">
+            <i class="fa-solid fa-key"></i> ลืมรหัสผ่านนักศึกษา? รีเซ็ตรหัสผ่านด้วยอีเมลองค์กร (stu&lt;รหัส&gt;@sskru.ac.th)
           </a>
         </div>
       </div>
@@ -378,6 +381,9 @@
     if (window.location.pathname.endsWith('.php')) {
       document.getElementById('link-reg-student').href = 'register_student.php';
       document.getElementById('link-reg-staff').href = 'register_staff.php';
+      if (document.getElementById('link-reset-student')) {
+        document.getElementById('link-reset-student').href = 'reset_password_student.php';
+      }
     }
 
     function switchRole(role) {

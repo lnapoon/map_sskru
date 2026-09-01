@@ -664,3 +664,58 @@ def student_register_page(request):
 def staff_register_page(request):
     """หน้าสำหรับสมัครสมาชิกบุคลากรโดยเฉพาะ"""
     return render(request, 'admin_panel/register_staff.html')
+
+
+@csrf_exempt
+def student_reset_password_api(request):
+    """รีเซ็ตรหัสผ่านนักศึกษาผ่านอีเมลมหาวิทยาลัย (stu<student_id>@sskru.ac.th)"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Method not allowed'}, status=405)
+        
+    try:
+        data = json.loads(request.body)
+        student_id = data.get('student_id', '').strip()
+        email = data.get('email', '').strip().lower()
+        new_password = data.get('new_password', '').strip()
+        
+        if not student_id or not email or not new_password:
+            return JsonResponse({'success': False, 'message': 'กรุณากรอกข้อมูลให้ครบถ้วน'}, status=400)
+            
+        # Expected email pattern: stu<student_id>@sskru.ac.th or stu<student_id>.sskru.ac.th
+        clean_sid = student_id.replace('-', '').strip()
+        expected_prefix = f'stu{clean_sid}'
+        
+        if expected_prefix not in email or 'sskru.ac.th' not in email:
+            return JsonResponse({
+                'success': False,
+                'message': f'อีเมลยืนยันตัวตนไม่ถูกต้อง ต้องใช้อีเมลมหาวิทยาลัยรูปแบบ {expected_prefix}@sskru.ac.th เท่านั้น'
+            }, status=400)
+            
+        accounts = read_json_file(ACCOUNTS_FILE, default={'students': [], 'staff': []})
+        student_acc = next((acc for acc in accounts.get('students', []) if acc.get('student_id') == student_id), None)
+        
+        hashed_pass = hashlib.sha256(new_password.encode('utf-8')).hexdigest()
+        
+        if student_acc:
+            student_acc['password_hash'] = hashed_pass
+        else:
+            # Create new account entry if not exists yet
+            student_db = Student.objects.filter(student_id=student_id).first()
+            name = student_db.name if student_db else f'นักศึกษา {student_id}'
+            new_acc = {
+                'student_id': student_id,
+                'name': name,
+                'faculty': 'มหาวิทยาลัยราชภัฏศรีสะเกษ',
+                'password_hash': hashed_pass,
+                'created_at': datetime.now().isoformat()
+            }
+            accounts['students'].append(new_acc)
+            
+        write_json_file(ACCOUNTS_FILE, accounts)
+        return JsonResponse({'success': True, 'message': 'รีเซ็ตรหัสผ่านสำเร็จ! ท่านสามารถเข้าสู่ระบบด้วยรหัสผ่านใหม่ได้ทันที'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+def student_reset_password_page(request):
+    """หน้าสำหรับรีเซ็ตรหัสผ่านนักศึกษาผ่านอีเมลองค์กร"""
+    return render(request, 'admin_panel/reset_password_student.html')
