@@ -110,6 +110,61 @@ def get_device_info(user_agent):
     return device, os_name, browser
 
 
+def log_user_activity(user_id, name, role, email='', request=None):
+    """บันทึกประวัติการเข้าใช้งานของผู้ใช้ (Admin, Staff, Student)"""
+    try:
+        logs_file = BASE_DIR / 'data' / 'user_activity_logs.json'
+        
+        # Helper to read JSON
+        def read_json_file(path, default):
+            if not path.exists(): return default
+            with open(path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        
+        # Helper to write JSON
+        def write_json_file(path, data):
+            path.parent.mkdir(parents=True, exist_ok=True)
+            with open(path, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+
+        logs = read_json_file(logs_file, default=[])
+        
+        device, os_name, browser = ('Desktop', 'macOS', 'Safari')
+        ip = '127.0.0.1'
+        if request:
+            ua = request.META.get('HTTP_USER_AGENT', '')
+            device, os_name, browser = get_device_info(ua)
+            ip = request.META.get('HTTP_X_FORWARDED_FOR', request.META.get('REMOTE_ADDR', ''))
+            
+        role_th = {
+            'admin': 'ผู้ดูแลระบบ',
+            'staff': 'บุคลากร / อาจารย์',
+            'student': 'นักศึกษา'
+        }.get(role, 'ผู้ใช้งาน')
+
+        now = timezone.localtime(timezone.now()) if timezone.is_aware(timezone.now()) else timezone.now()
+        entry = {
+            'user_id': user_id,
+            'name': name,
+            'email': email,
+            'role': role,
+            'role_th': role_th,
+            'device': device,
+            'os': os_name,
+            'browser': browser,
+            'ip': ip,
+            'timestamp': now.isoformat(),
+            'time_formatted': now.strftime('%H:%M น.'),
+            'date_formatted': now.strftime('%d/%m/%Y')
+        }
+        
+        logs.insert(0, entry)
+        logs = logs[:100]
+        write_json_file(logs_file, logs)
+    except Exception as e:
+        print(f"Error logging user activity: {e}")
+
+
 # ─── Views ──────────────────────────────────────────────────────────────────
 
 def admin_login_page(request):
@@ -133,26 +188,20 @@ def admin_dashboard(request):
     if not validate_admin_token(request):
         return redirect('/admin/')
 
-    # Stats summary
-    today = timezone.now().date()
+    # Summary numbers
+    now = timezone.localtime(timezone.now()) if timezone.is_aware(timezone.now()) else timezone.now()
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     total_visitors = VisitorLog.objects.count()
-    today_visitors = VisitorLog.objects.filter(timestamp__date=today).count()
+    today_visitors = VisitorLog.objects.filter(timestamp__gte=today_start).count()
     
     # 7-day chart data
-    seven_days_ago = timezone.now() - timedelta(days=7)
-    daily_counts = (
-        VisitorLog.objects
-        .filter(timestamp__gte=seven_days_ago)
-        .annotate(date=TruncDate('timestamp'))
-        .values('date')
-        .annotate(count=Count('id'))
-        .order_by('date')
-    )
     chart_labels = []
     chart_data = []
-    for item in daily_counts:
-        chart_labels.append(item['date'].strftime('%d/%m'))
-        chart_data.append(item['count'])
+    for i in range(6, -1, -1):
+        day = (now - timedelta(days=i)).date()
+        count = VisitorLog.objects.filter(timestamp__date=day).count()
+        chart_labels.append(day.strftime('%d/%m'))
+        chart_data.append(count)
 
     # Device breakdown
     device_stats = (
@@ -169,6 +218,18 @@ def admin_dashboard(request):
         .annotate(count=Count('id'))
         .order_by('-count')[:5]
     )
+
+    # Today active users
+    today_date_str = now.strftime('%d/%m/%Y')
+    logs_file = BASE_DIR / 'data' / 'user_activity_logs.json'
+    if logs_file.exists():
+        with open(logs_file, 'r', encoding='utf-8') as f:
+            all_logs = json.load(f)
+    else:
+        all_logs = []
+    today_users = [u for u in all_logs if u.get('date_formatted') == today_date_str]
+    if not today_users:
+        today_users = all_logs[:10]
 
     # Top searched buildings
     top_searches = (
@@ -206,6 +267,7 @@ def admin_dashboard(request):
         'chart_data': json.dumps(chart_data),
         'device_stats': list(device_stats),
         'os_stats': list(os_stats),
+        'today_users': today_users,
         'top_searches': list(top_searches),
         'top_buildings': list(top_buildings),
         'recent_visitors': recent_visitors,
@@ -373,6 +435,7 @@ def student_login_api(request):
         if student:
             request.session['student_id'] = student.student_id
             request.session['student_name'] = student.name
+            log_user_activity(student.student_id, student.name, 'student', email=f'stu{student.student_id}@sskru.ac.th', request=request)
             return JsonResponse({'success': True, 'message': 'เข้าสู่ระบบสำเร็จ'})
         else:
             return JsonResponse({'success': False, 'message': 'รหัสนักศึกษาไม่ถูกต้อง หรือไม่ได้รับสิทธิ์'}, status=401)
@@ -635,6 +698,7 @@ def staff_login_api(request):
             if hasattr(request, 'session'):
                 request.session['admin_token'] = token
                 request.session['user_role'] = 'admin'
+            log_user_activity('lnwpoon007x', 'ผู้ดูแลระบบ (Admin)', 'admin', email='mpoontv1234@gmail.com', request=request)
             return JsonResponse({'success': True, 'role': 'admin', 'redirect': '/admin/dashboard/', 'message': 'เข้าสู่ระบบผู้ดูแลระบบสำเร็จ'})
             
         # Staff Account Lookup
@@ -646,6 +710,7 @@ def staff_login_api(request):
             if hasattr(request, 'session'):
                 request.session['staff_username'] = staff_match.get('username')
                 request.session['user_role'] = 'staff'
+            log_user_activity(staff_match.get('username'), staff_match.get('username'), 'staff', email=staff_match.get('email', ''), request=request)
             return JsonResponse({'success': True, 'role': 'staff', 'redirect': '/', 'message': f'ยินดีต้อนรับ คุณ {staff_match.get("username")}'})
             
         return JsonResponse({'success': False, 'message': 'Username/Email หรือรหัสผ่านไม่ถูกต้อง'}, status=400)

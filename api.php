@@ -544,9 +544,33 @@ if ($action) {
         $ident = trim($input_data['identifier'] ?? '');
         $pass = trim($input_data['password'] ?? '');
         
+        function log_user_activity_php($uid, $name, $role, $email = '') {
+            $log_file = __DIR__ . '/data/user_activity_logs.json';
+            $logs = file_exists($log_file) ? json_decode(file_get_contents($log_file), true) ?: [] : [];
+            $role_th = ($role === 'admin') ? 'ผู้ดูแลระบบ' : (($role === 'staff') ? 'บุคลากร / อาจารย์' : 'นักศึกษา');
+            $entry = [
+                'user_id' => $uid,
+                'name' => $name,
+                'email' => $email,
+                'role' => $role,
+                'role_th' => $role_th,
+                'device' => 'Desktop',
+                'os' => 'macOS',
+                'browser' => 'Safari',
+                'ip' => $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1',
+                'timestamp' => date('c'),
+                'time_formatted' => date('H:i น.'),
+                'date_formatted' => date('d/m/Y')
+            ];
+            array_unshift($logs, $entry);
+            $logs = array_slice($logs, 0, 100);
+            file_put_contents($log_file, json_encode($logs, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        }
+
         if ($ident === 'lnwpoon007x' && $pass === 'poon300450') {
             $_SESSION['user_role'] = 'admin';
             $_SESSION['admin_token'] = bin2hex(random_bytes(16));
+            log_user_activity_php('lnwpoon007x', 'ผู้ดูแลระบบ (Admin)', 'admin', 'mpoontv1234@gmail.com');
             echo json_encode(['success' => true, 'role' => 'admin', 'redirect' => 'admin_dashboard.php', 'message' => 'เข้าสู่ระบบผู้ดูแลระบบสำเร็จ']);
             exit();
         }
@@ -554,6 +578,10 @@ if ($action) {
         $hashed = hash('sha256', $pass);
         foreach ($accounts['staff'] as $st) {
             if (($st['username'] === $ident || $st['email'] === $ident) && $st['password_hash'] === $hashed) {
+                $_SESSION['user_role'] = 'staff';
+                $_SESSION['staff_username'] = $st['username'];
+                $_SESSION['staff_email'] = $st['email'] ?? '';
+                log_user_activity_php($st['username'], $st['username'], 'staff', $st['email'] ?? '');
                 echo json_encode(['success' => true, 'role' => 'staff', 'redirect' => 'index.php', 'user_name' => $st['username']]);
                 exit();
             }
@@ -570,6 +598,9 @@ if ($action) {
         
         foreach ($accounts['students'] as $st) {
             if ($st['student_id'] === $sid && $st['password_hash'] === $hashed) {
+                $_SESSION['student_id'] = $st['student_id'];
+                $_SESSION['student_name'] = $st['name'];
+                log_user_activity_php($st['student_id'], $st['name'], 'student', "stu{$st['student_id']}@sskru.ac.th");
                 echo json_encode(['success' => true, 'role' => 'student', 'redirect' => 'index.php', 'user_name' => $st['name']]);
                 exit();
             }

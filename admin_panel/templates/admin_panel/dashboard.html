@@ -729,25 +729,58 @@
       <!-- Top Lists Row -->
       <div class="chart-row">
         <div class="card">
-          <div class="card-header">
-            <div class="card-title"><i class="fa-solid fa-magnifying-glass-location"></i> อาคารที่ค้นหาบ่อยสุด</div>
+          <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+            <div class="card-title"><i class="fa-solid fa-users-viewfinder" style="color:#2563eb;"></i> ผู้ใช้ที่เข้าใช้งานวันนี้</div>
+            <span class="badge" style="font-size:12px; font-weight:600; padding:4px 10px; border-radius:20px; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe;">
+              {{ today_users|length }} คน
+            </span>
           </div>
           <div class="card-body">
-            {% if top_searches %}
-            <div class="top-list">
-              {% for item in top_searches %}
-              <div class="top-list-item">
-                <div class="top-rank {% if forloop.counter == 1 %}gold{% elif forloop.counter == 2 %}silver{% elif forloop.counter == 3 %}bronze{% endif %}">{{ forloop.counter }}</div>
-                <div class="top-name">{{ item.event_data|default:"ไม่ระบุ" }}</div>
-                <div class="top-count">{{ item.count }} ครั้ง</div>
+            {% if today_users %}
+            <div class="user-activity-list" style="display:flex; flex-direction:column; gap:10px; max-height:280px; overflow-y:auto; padding-right:4px;">
+              {% for user in today_users %}
+              <div class="user-activity-item" style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; background:#f8fafc; border-radius:12px; border:1px solid #e2e8f0; transition:all 0.2s ease;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                  <div style="width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0;
+                    {% if user.role == 'admin' %}background:#fef3c7; color:#d97706;
+                    {% elif user.role == 'staff' %}background:#f3e8ff; color:#7e22ce;
+                    {% else %}background:#e0f2fe; color:#0284c7;{% endif %}">
+                    {% if user.role == 'admin' %}<i class="fa-solid fa-user-shield"></i>
+                    {% elif user.role == 'staff' %}<i class="fa-solid fa-user-tie"></i>
+                    {% else %}<i class="fa-solid fa-user-graduate"></i>{% endif %}
+                  </div>
+                  <div>
+                    <div style="font-weight:700; font-size:13.5px; color:#0f172a;">
+                      {{ user.name }}
+                      {% if user.role == 'student' and user.user_id != user.name %}
+                      <span style="font-weight:normal; color:#64748b; font-size:12px;">({{ user.user_id }})</span>
+                      {% endif %}
+                    </div>
+                    <div style="font-size:11.5px; color:#64748b; margin-top:2px;">
+                      <span style="font-weight:600; 
+                        {% if user.role == 'admin' %}color:#b45309;
+                        {% elif user.role == 'staff' %}color:#6b21a8;
+                        {% else %}color:#0369a1;{% endif %}">
+                        {{ user.role_th|default:user.role }}
+                      </span>
+                      {% if user.email %} • {{ user.email }}{% endif %}
+                      {% if user.device %} • {{ user.device }}{% endif %}
+                    </div>
+                  </div>
+                </div>
+                <div style="text-align:right; flex-shrink:0;">
+                  <span style="font-size:12px; font-weight:600; color:#475569; background:#ffffff; border:1px solid #cbd5e1; padding:3px 8px; border-radius:6px; white-space:nowrap;">
+                    <i class="fa-regular fa-clock" style="font-size:11px; margin-right:2px; color:#64748b;"></i> {{ user.time_formatted|default:"วันนี้" }}
+                  </span>
+                </div>
               </div>
               {% endfor %}
             </div>
             {% else %}
             <div class="empty-state-card">
-              <div class="empty-state-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
-              <p>ยังไม่มีประวัติการค้นหา</p>
-              <span>ข้อมูลจะอัปเดตอัตโนมัติเมื่อมีการค้นหาชื่ออาคารในแอปพลิเคชัน</span>
+              <div class="empty-state-icon"><i class="fa-solid fa-user-clock"></i></div>
+              <p>ยังไม่มีผู้ใช้งานเข้าสู่ระบบในวันนี้</p>
+              <span>ข้อมูลจะแสดงทันทีเมื่อมีนักศึกษา บุคลากร หรือแอดมินเข้าสู่ระบบ</span>
             </div>
             {% endif %}
           </div>
