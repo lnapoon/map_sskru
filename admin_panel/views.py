@@ -230,10 +230,7 @@ def admin_dashboard(request):
 
 @csrf_exempt
 def admin_buildings_api(request):
-    """CRUD API สำหรับ buildings (Admin only)"""
-    if not validate_admin_token(request):
-        return JsonResponse({'success': False, 'message': 'Unauthorized'}, status=401)
-
+    """CRUD API สำหรับ buildings (Admin & API)"""
     buildings = read_buildings()
 
     if request.method == 'GET':
@@ -245,9 +242,19 @@ def admin_buildings_api(request):
             if not data.get('name') or not data.get('coords'):
                 return JsonResponse({'success': False, 'message': 'ข้อมูลไม่ครบ'}, status=400)
             
-            buildings.append(data)
+            # Check duplicate ID
+            b_id = data.get('id')
+            if b_id:
+                idx = next((i for i, b in enumerate(buildings) if b.get('id') == b_id), None)
+                if idx is not None:
+                    buildings[idx].update(data)
+                else:
+                    buildings.append(data)
+            else:
+                buildings.append(data)
+
             write_buildings(buildings)
-            return JsonResponse({'success': True, 'message': 'เพิ่มอาคารสำเร็จ'})
+            return JsonResponse({'success': True, 'message': 'เพิ่ม/อัปเดตอาคารสำเร็จ', 'data': data})
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=400)
 
@@ -255,22 +262,28 @@ def admin_buildings_api(request):
 
 @csrf_exempt
 def admin_building_detail_api(request, building_id):
-    """Update/Delete building (Admin only)"""
-    if not validate_admin_token(request):
-        return JsonResponse({'success': False, 'message': 'Unauthorized'}, status=401)
-
+    """Update/Delete building (Admin & API)"""
     buildings = read_buildings()
     building_id = int(building_id)
     idx = next((i for i, b in enumerate(buildings) if b.get('id') == building_id), None)
 
-    if idx is None:
+    if idx is None and request.method != 'PUT':
         return JsonResponse({'success': False, 'message': 'ไม่พบอาคาร'}, status=404)
 
-    if request.method == 'PUT':
+    if request.method == 'GET':
+        return JsonResponse({'success': True, 'data': buildings[idx]})
+
+    elif request.method == 'PUT':
         try:
             data = json.loads(request.body)
-            buildings[idx].update(data)
-            buildings[idx]['id'] = building_id
+            if idx is not None:
+                buildings[idx].update(data)
+                buildings[idx]['id'] = building_id
+            else:
+                data['id'] = building_id
+                buildings.append(data)
+                idx = len(buildings) - 1
+
             write_buildings(buildings)
             return JsonResponse({'success': True, 'message': 'อัปเดตข้อมูลสำเร็จ', 'data': buildings[idx]})
         except Exception as e:

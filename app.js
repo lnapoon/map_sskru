@@ -8,380 +8,267 @@
 const BUILDINGS = [
   {
     "id": 1,
-    "name": "วิทยาลัยกฎหมายและการปกครอง",
-    "nameEn": "College of Law and Government",
+    "name": "วิทยาลัยกฎหมายและการปกครอง ตึก 1",
+    "nameEn": "College of Law and Government (Building 1)",
     "category": "academic",
     "coords": [
-      734,
-      898
+      746,
+      888
     ],
     "realCoords": [
-      15.11762,
-      104.3592
+      15.118301,
+      104.360803
     ],
     "description": "วิทยาลัยกฎหมายและการปกครอง มุ่งผลิตบัณฑิตทางด้านนิติศาสตร์ รัฐศาสตร์ และรัฐประศาสนศาสตร์ เพื่อตอบสนองการพัฒนาท้องถิ่นและประเทศชาติ",
     "phone": "045-643-600 ต่อ 2100",
     "tags": [
-      "วกป",
-      "กฎหมาย",
+      "ตึก1",
+      "วิทยาลัยกฎหมาย",
       "ปกครอง",
+      "วกป",
       "law",
       "government",
       "1"
-    ]
+    ],
+    "code": "1"
   },
   {
     "id": 2,
-    "name": "สำนักวิทยบริการและเทคโนโลยีสารสนเทศ (ห้องสมุด)",
-    "nameEn": "Academic Resource and Information Technology Center (Library)",
+    "name": "หอสมุด (วิทยบริการและเทคโนโลยีสารสนเทศ)",
+    "nameEn": "Library (Academic Resource and IT Center)",
     "category": "library",
     "coords": [
-      782,
-      1140
+      777,
+      1146
     ],
     "realCoords": [
-      15.11795,
-      104.3607
+      15.11668,
+      104.361768
     ],
-    "description": "ศูนย์กลางการเรียนรู้และให้บริการห้องสมุด เทคโนโลยีสารสนเทศ แก่นักศึกษา คณาจารย์ และบุคคลภายนอก มีพื้นที่อ่านหนังสือ ค้นคว้า และบริการคอมพิวเตอร์อินเทอร์เน็ต",
+    "description": "ศูนย์กลางการเรียนรู้และให้บริการห้องสมุด เทคโนโลยีสารสนเทศ มีพื้นที่อ่านหนังสือ ค้นคว้า และบริการคอมพิวเตอร์อินเทอร์เน็ต",
     "phone": "045-643-600 ต่อ 1500",
     "tags": [
+      "หอสมุด",
       "วิทยบริการ",
       "ห้องสมุด",
-      "หอสมุด",
       "library",
       "arit",
       "it",
-      "สมุด",
       "2"
-    ]
+    ],
+    "code": "2"
   },
   {
     "id": 3,
-    "name": "อาคารศูนย์คอมพิวเตอร์",
-    "nameEn": "Computer Center Building",
+    "name": "อาคารศูนย์คอมพิวเตอร์ ตึก 3",
+    "nameEn": "Computer Center Building (Building 3)",
     "category": "library",
     "coords": [
       708,
-      1090
+      1082
     ],
     "realCoords": [
-      15.11745,
-      104.36045
+      15.116753,
+      104.360944
     ],
-    "description": "อาคารปฏิบัติการทางคอมพิวเตอร์และห้องเรียนคอมพิวเตอร์กลาง สำหรับวิชาเรียนทั่วไปและเป็นศูนย์แม่ข่ายระบบเครือข่ายอินเทอร์เน็ตของมหาวิทยาลัย",
+    "description": "อาคารปฏิบัติการทางคอมพิวเตอร์และห้องเรียนคอมพิวเตอร์กลาง สำหรับวิชาเรียนทั่วไปและเป็นศูนย์แม่ข่ายระบบเครือข่ายอินเทอร์เน็ต",
     "phone": "045-643-600 ต่อ 1600",
     "tags": [
       "ศูนย์คอม",
       "คอมพิวเตอร์",
+      "ตึก3",
       "computer",
       "com",
-      "คอม",
       "3"
-    ]
+    ],
+    "code": "3"
   },
   {
     "id": 4,
-    "name": "คณะศิลปศาสตร์และวิทยาศาสตร์",
-    "nameEn": "Faculty of Liberal Arts and Science",
+    "name": "คณะศิลปศาสตร์และวิทยาศาสตร์ ตึก 4",
+    "nameEn": "Faculty of Liberal Arts and Science (Building 4)",
     "category": "academic",
     "coords": [
-      826,
-      976
+      832,
+      965
     ],
     "realCoords": [
-      15.11825,
-      104.36005
+      15.118148,
+      104.361744
     ],
     "description": "สำนักงานคณบดีและห้องเรียนหลักของคณะศิลปศาสตร์และวิทยาศาสตร์ รวมถึงสาขาวิชาทางด้านวิทยาศาสตร์บริสุทธิ์และศิลปศาสตร์",
     "phone": "045-643-600 ต่อ 2000",
     "tags": [
+      "ตึก4",
       "ศศว",
       "ศิลปศาสตร์",
       "วิทยาศาสตร์",
       "las",
       "sci",
-      "science",
-      "วศ",
       "4"
-    ]
+    ],
+    "code": "4"
   },
   {
     "id": 5,
-    "name": "คณะครุศาสตร์",
-    "nameEn": "Faculty of Education",
+    "name": "คณะครุศาสตร์และการพัฒนามนุษย์ ตึก 5",
+    "nameEn": "Faculty of Education and Human Development (Building 5)",
     "category": "academic",
     "coords": [
-      833,
-      1208
+      834,
+      1214
     ],
     "realCoords": [
-      15.11865,
-      104.36115
+      15.116095,
+      104.362948
     ],
-    "description": "คณะวิชาผลิตครูและนักการศึกษาชั้นนำของจังหวัดศรีสะเกษ ผลิตบัณฑิตวิชาชีพครูในหลากหลายสาขาวิชา",
+    "description": "คณะวิชาผลิตครูและนักการศึกษา ผลิตบัณฑิตวิชาชีพครูในหลากหลายสาขาวิชาและการพัฒนามนุษย์",
     "phone": "045-643-600 ต่อ 2300",
     "tags": [
-      "ครุ",
+      "ตึก5",
       "ครุศาสตร์",
+      "ครุ",
       "ศึกษาศาสตร์",
       "edu",
       "education",
-      "ครู",
       "5"
-    ]
+    ],
+    "code": "5"
   },
   {
     "id": 6,
-    "name": "โรงเรียนสาธิตมหาวิทยาลัยราชภัฏศรีสะเกษ",
+    "name": "คณะพยาบาลศาสตร์ ตึก 6",
+    "nameEn": "Faculty of Nursing (Building 6)",
+    "category": "academic",
+    "coords": [
+      829,
+      724
+    ],
+    "realCoords": [
+      15.120299,
+      104.360957
+    ],
+    "description": "อาคารปฏิบัติการทางพยาบาลศาสตร์และสำนักงานคณะพยาบาลศาสตร์ มุ่งผลิตพยาบาลวิชาชีพที่มีทักษะเด่นด้านการดูแลสุขภาพชุมชน",
+    "phone": "045-643-600 ต่อ 2600",
+    "tags": [
+      "ตึก6",
+      "พยาบาลศาสตร์",
+      "พยาบาล",
+      "nursing",
+      "6"
+    ],
+    "code": "6"
+  },
+  {
+    "id": 7,
+    "name": "คณะมนุษยศาสตร์และสังคมศาสตร์ ตึก 7",
+    "nameEn": "Faculty of Humanities and Social Sciences (Building 7)",
+    "category": "academic",
+    "coords": [
+      876,
+      1049
+    ],
+    "realCoords": [
+      15.11812,
+      104.363541
+    ],
+    "description": "อาคารเรียนคณะมนุษยศาสตร์และสังคมศาสตร์ จัดการศึกษาทางด้านภาษาประยุกต์ การพัฒนาชุมชน รัฐศาสตร์ และศิลปกรรมศาสตร์",
+    "phone": "045-643-600 ต่อ 2200",
+    "tags": [
+      "ตึก7",
+      "มนุษยศาสตร์",
+      "สังคมศาสตร์",
+      "huso",
+      "7"
+    ],
+    "code": "7"
+  },
+  {
+    "id": 8,
+    "name": "คณะบริหารธุรกิจและการบัญชี ตึก 8",
+    "nameEn": "Faculty of Business Administration and Accounting (Building 8)",
+    "category": "academic",
+    "coords": [
+      921,
+      975
+    ],
+    "realCoords": [
+      15.11854,
+      104.363616
+    ],
+    "description": "อาคารเรียน คณะบริหารธุรกิจและการบัญชี จัดการศึกษาสาขาการบัญชี การจัดการ การตลาด คอมพิวเตอร์ธุรกิจ และการท่องเที่ยว",
+    "phone": "045-643-600 ต่อ 2500",
+    "tags": [
+      "ตึก8",
+      "บริหารธุรกิจ",
+      "บัญชี",
+      "business",
+      "8"
+    ],
+    "code": "8"
+  },
+  {
+    "id": 9,
+    "name": "สำนักงานอธิการบดี ตึก 9",
+    "nameEn": "Office of the President (Building 9)",
+    "category": "office",
+    "coords": [
+      656,
+      1242
+    ],
+    "realCoords": [
+      15.115523,
+      104.360639
+    ],
+    "description": "อาคารศูนย์กลางการบริหารงานราชการของมหาวิทยาลัย ที่ตั้งของสำนักแผนงาน กองคลัง กองกลาง กองนโยบาย และผู้บริหารระดับสูง",
+    "phone": "045-643-600 ต่อ 1000",
+    "tags": [
+      "ตึก9",
+      "อธิการบดี",
+      "สำนักงานอธิการบดี",
+      "president",
+      "9"
+    ],
+    "code": "9"
+  },
+  {
+    "id": 10,
+    "name": "โรงเรียนสาธิต",
     "nameEn": "Demonstration School of SSKRU",
     "category": "academic",
     "coords": [
-      768,
-      1286
+      770,
+      1283
     ],
     "realCoords": [
-      15.11805,
-      104.36155
+      15.115192,
+      104.362104
     ],
-    "description": "โรงเรียนระดับปฐมวัยและประถมศึกษาสำหรับการทดลองสอน วิจัยหลักสูตร และจัดการศึกษาสาธิตที่มีคุณภาพให้แก่ชุมชน",
+    "description": "โรงเรียนระดับปฐมวัยและประถมศึกษาสำหรับการทดลองสอน วิจัยหลักสูตร และจัดการศึกษาสาธิตที่มีคุณภาพ",
     "phone": "045-643-600 ต่อ 2400",
     "tags": [
       "สาธิต",
       "โรงเรียนสาธิต",
       "satit",
       "school",
-      "6"
-    ]
-  },
-  {
-    "id": 7,
-    "name": "คณะมนุษยศาสตร์และสังคมศาสตร์",
-    "nameEn": "Faculty of Humanities and Social Sciences",
-    "category": "academic",
-    "coords": [
-      917,
-      1091
-    ],
-    "realCoords": [
-      15.11895,
-      104.36055
-    ],
-    "description": "อาคารเรียนคณะมนุษยศาสตร์และสังคมศาสตร์ จัดการศึกษาทางด้านภาษาประยุกต์ การพัฒนาชุมชน รัฐศาสตร์ ศิลปกรรมศาสตร์ และดนตรี",
-    "phone": "045-643-600 ต่อ 2200",
-    "tags": [
-      "มนุษยศาสตร์",
-      "สังคมศาสตร์",
-      "huso",
-      "humanities",
-      "7"
-    ]
-  },
-  {
-    "id": 8,
-    "name": "คณะบริหารธุรกิจและการบัญชี",
-    "nameEn": "Faculty of Business Administration and Accounting",
-    "category": "academic",
-    "coords": [
-      924,
-      986
-    ],
-    "realCoords": [
-      15.11925,
-      104.35985
-    ],
-    "description": "อาคารเรียน คณะบริหารธุรกิจและการบัญชี จัดการศึกษาสาขาการบัญชี การจัดการ การตลาด คอมพิวเตอร์ธุรกิจ และการท่องเที่ยวการโรงแรม",
-    "phone": "045-643-600 ต่อ 2500",
-    "tags": [
-      "บริหาร",
-      "บัญชี",
-      "จัดการ",
-      "business",
-      "mba",
-      "accounting",
-      "บธ",
-      "8"
-    ]
-  },
-  {
-    "id": 9,
-    "name": "สำนักงานอธิการบดีและบริหารกลาง",
-    "nameEn": "Office of the President",
-    "category": "office",
-    "coords": [
-      663,
-      1236
-    ],
-    "realCoords": [
-      15.11702,
-      104.36118
-    ],
-    "description": "อาคารศูนย์กลางการบริหารงานราชการของมหาวิทยาลัย ที่ตั้งของสำนักแผนงาน กองคลัง กองกลาง กองนโยบาย และผู้บริหารระดับสูง",
-    "phone": "045-643-600 ต่อ 1000",
-    "tags": [
-      "อธิการ",
-      "อธิการบดี",
-      "สำนักงานอธิการบดี",
-      "op",
-      "president",
-      "ตึกอำนวยการ",
-      "9"
-    ]
-  },
-  {
-    "id": 10,
-    "name": "คณะพยาบาลศาสตร์",
-    "nameEn": "Faculty of Nursing",
-    "category": "academic",
-    "coords": [
-      812,
-      734
-    ],
-    "realCoords": [
-      15.11845,
-      104.35725
-    ],
-    "description": "อาคารปฏิบัติการทางพยาบาลศาสตร์และสำนักงานคณะพยาบาลศาสตร์ มุ่งผลิตพยาบาลวิชาชีพที่มีทักษะเด่นด้านการดูแลสุขภาพชุมชน",
-    "phone": "045-643-600 ต่อ 2600",
-    "tags": [
-      "พยาบาล",
-      "พยาบาลศาสตร์",
-      "nurse",
-      "nursing",
       "10"
-    ]
+    ],
+    "code": "10"
   },
   {
     "id": 11,
-    "name": "ศูนย์ฝึกเทคโนโลยีดิจิทัล",
-    "nameEn": "Digital Technology Training Center",
-    "category": "facility",
-    "coords": [
-      533,
-      772
-    ],
-    "realCoords": [
-      15.11595,
-      104.3579
-    ],
-    "description": "อาคารศูนย์ฝึกอบรม พัฒนาทักษะวิชาชีพ และให้บริการจัดประชุม สัมมนา อบรมทางคอมพิวเตอร์และเทคโนโลยีสารสนเทศแก่หน่วยงานภายในและภายนอก",
-    "phone": "045-643-600 ต่อ 1800",
-    "tags": [
-      "ศูนย์ฝึก",
-      "เทคโนโลยี",
-      "ฝึกงาน",
-      "ttc",
-      "training",
-      "11",
-      "ดิจิทัล"
-    ]
-  },
-  {
-    "id": 12,
-    "name": "โรงจอดรถบุคลากร",
-    "nameEn": "Staff Parking Garage",
-    "category": "other",
-    "coords": [
-      814,
-      885
-    ],
-    "realCoords": [
-      15.1179,
-      104.35825
-    ],
-    "description": "อาคารที่จอดรถขนาดใหญ่สำหรับคณาจารย์และบุคลากรทางวิชาการ มหาวิทยาลัยราชภัฏศรีสะเกษ",
-    "phone": "",
-    "tags": [
-      "จอดรถ",
-      "โรงรถ",
-      "โรงจอดรถ",
-      "parking",
-      "garage",
-      "12"
-    ]
-  },
-  {
-    "id": 13,
-    "name": "อาคารวิจัยและพัฒนาเทคโนโลยีอาหาร (Food technology)",
-    "nameEn": "Food Technology Building",
-    "category": "academic",
-    "coords": [
-      847,
-      937
-    ],
-    "realCoords": [
-      15.11835,
-      104.35885
-    ],
-    "description": "อาคารวิจัย ผลิต และตรวจสอบความปลอดภัยด้านอาหารของคณะวิทยาศาสตร์ ตลอดจนเป็นศูนย์วิจัยด้านการเพิ่มมูลค่าผลิตภัณฑ์เกษตรแปรรูป",
-    "phone": "045-643-600 ต่อ 2012",
-    "tags": [
-      "อาหาร",
-      "ฟู้ดเทค",
-      "food",
-      "13"
-    ]
-  },
-  {
-    "id": 14,
-    "name": "ศูนย์ศิลปวัฒนธรรม",
-    "nameEn": "Art and Culture Center",
-    "category": "facility",
-    "coords": [
-      582,
-      892
-    ],
-    "realCoords": [
-      15.11698,
-      104.35895
-    ],
-    "description": "สถานที่เก็บรวบรวม จัดแสดง นิทรรศการด้านศิลปะโบราณคดีและวัฒนธรรมอีสานใต้ เพื่อการอนุรักษ์ ทำนุบำรุง และสืบสานมรดกทางวัฒนธรรม",
-    "phone": "045-643-600 ต่อ 1200",
-    "tags": [
-      "ศิลปะ",
-      "วัฒนธรรม",
-      "ศูนย์ศิลป์",
-      "culture",
-      "art",
-      "14"
-    ]
-  },
-  {
-    "id": 15,
-    "name": "ศาลพระภูมิประจำมหาวิทยาลัย",
-    "nameEn": "Shrine of the University",
-    "category": "facility",
-    "coords": [
-      531,
-      992
-    ],
-    "realCoords": [
-      15.11695,
-      104.35998
-    ],
-    "description": "ศาลพระภูมิเจ้าที่สิ่งศักดิ์สิทธิ์ประจำมหาวิทยาลัยราชภัฏศรีสะเกษ เป็นศูนย์รวมจิตใจของบุคลากรและนักศึกษา",
-    "phone": "",
-    "tags": [
-      "พระ",
-      "ศาลพระ",
-      "shrine",
-      "15"
-    ]
-  },
-  {
-    "id": 16,
     "name": "หอประชุมทีปังกรรัศมีโชติ",
     "nameEn": "Dipangkorn Rasmijoti Convention Hall",
     "category": "facility",
     "coords": [
-      644,
-      668
+      637,
+      644
     ],
     "realCoords": [
-      15.1169,
-      104.35685
+      15.119754,
+      104.358862
     ],
-    "description": "หอประชุมอเนกประสงค์ขนาดใหญ่สำหรับใช้จัดพิธีพระราชทานปริญญาบัตร จัดงานสัมมนาขนาดใหญ่ กิจกรรมทางวิชาการ คอนเสิร์ต และการประชุมสำคัญระดับภูมิภาค",
+    "description": "หอประชุมอเนกประสงค์ขนาดใหญ่สำหรับใช้จัดพิธีพระราชทานปริญญาบัตร จัดงานสัมมนาขนาดใหญ่ กิจกรรมทางวิชาการ คอนเสิร์ต",
     "phone": "045-643-600 ต่อ 1100",
     "tags": [
       "หอประชุม",
@@ -389,124 +276,682 @@ const BUILDINGS = [
       "ทีปังกรรัศมีโชติ",
       "hall",
       "convention",
+      "11"
+    ],
+    "code": "11"
+  },
+  {
+    "id": 12,
+    "name": "สนามกีฬากลาง 1",
+    "nameEn": "Main Sports Stadium 1",
+    "category": "facility",
+    "coords": [
+      366,
+      504
+    ],
+    "realCoords": [
+      15.119459,
+      104.356094
+    ],
+    "description": "สนามกีฬากลาง 1 พร้อมลู่วิ่งและสนามฟุตบอลหญ้าจริง สำหรับการแข่งขันกีฬา การซ้อม และการออกกำลังกาย",
+    "phone": "",
+    "tags": [
+      "สนามกีฬากลาง",
+      "สนามกีฬากลาง1",
+      "สนาม1",
+      "stadium1",
+      "12"
+    ],
+    "code": "12"
+  },
+  {
+    "id": 13,
+    "name": "สนามกีฬากลาง 2",
+    "nameEn": "Main Sports Stadium 2",
+    "category": "facility",
+    "coords": [
+      514,
+      329
+    ],
+    "realCoords": [
+      15.12135,
+      104.356689
+    ],
+    "description": "สนามกีฬากลาง 2 ลู่วิ่งมาตรฐานและสนามฟุตบอลสำหรับการฝึกซ้อมและการแข่งขันกีฬาประเภทต่างๆ",
+    "phone": "",
+    "tags": [
+      "สนามกีฬากลาง2",
+      "สนาม2",
+      "stadium2",
+      "13"
+    ],
+    "code": "13"
+  },
+  {
+    "id": 14,
+    "name": "ลานกีฬา",
+    "nameEn": "Multi-purpose Sports Courts",
+    "category": "facility",
+    "coords": [
+      262,
+      666
+    ],
+    "realCoords": [
+      15.118025,
+      104.355782
+    ],
+    "description": "ลานกีฬากลางแจ้ง สนามบาสเกตบอล วอลเลย์บอล และตะกร้อ สำหรับนักศึกษาและบุคลากร",
+    "phone": "",
+    "tags": [
+      "ลานกีฬา",
+      "สนามบาส",
+      "sports court",
+      "14"
+    ],
+    "code": "14"
+  },
+  {
+    "id": 15,
+    "name": "ศูนย์อาหาร",
+    "nameEn": "University Food Center / Canteen",
+    "category": "facility",
+    "coords": [
+      517,
+      840
+    ],
+    "realCoords": [
+      15.118235,
+      104.358049
+    ],
+    "description": "ศูนย์อาหารกลาง มหาวิทยาลัยราชภัฏศรีสะเกษ ให้บริการอาหาร เครื่องดื่ม และร้านค้าสวัสดิการแก่นักศึกษา",
+    "phone": "",
+    "tags": [
+      "ศูนย์อาหาร",
+      "โรงอาหาร",
+      "คานทีน",
+      "canteen",
+      "food center",
+      "15"
+    ],
+    "code": "15"
+  },
+  {
+    "id": 16,
+    "name": "ศูนย์ภาษาและศิลปวัฒนธรรม",
+    "nameEn": "Language and Art Culture Center",
+    "category": "facility",
+    "coords": [
+      634,
+      916
+    ],
+    "realCoords": [
+      15.11782,
+      104.359393
+    ],
+    "description": "ศูนย์บริการพัฒนาทักษะทางภาษาต่างประเทศ และศูนย์อนุรักษ์ ทำนุบำรุงศิลปวัฒนธรรมท้องถิ่น",
+    "phone": "045-643-600 ต่อ 1200",
+    "tags": [
+      "ศูนย์ภาษา",
+      "ศิลปวัฒนธรรม",
+      "culture",
+      "language",
       "16"
-    ]
+    ],
+    "code": "16"
   },
   {
     "id": 17,
-    "name": "โรงแรมศรีพฤทธาลัย ราชภัฏสัมมนาคาร",
+    "name": "อาคารทองคูณ หงส์พันธ์",
+    "nameEn": "Thongkoon Hongsaphan Building",
+    "category": "academic",
+    "coords": [
+      580,
+      548
+    ],
+    "realCoords": [
+      15.120222,
+      104.357775
+    ],
+    "description": "อาคารเรียนอเนกประสงค์ทองคูณ หงส์พันธ์ สำหรับกิจกรรมเรียนการสอน การอบรม และห้องปฏิบัติการ",
+    "phone": "",
+    "tags": [
+      "ทองคูณ",
+      "หงส์พันธ์",
+      "อาคารทองคูณ",
+      "17"
+    ],
+    "code": "17"
+  },
+  {
+    "id": 18,
+    "name": "อาคารศูนย์กีฬาในร่ม สิริวรรณวรีกีฬาเวศน์",
+    "nameEn": "Siriwanwari Indoor Sports Complex",
+    "category": "facility",
+    "coords": [
+      530,
+      631
+    ],
+    "realCoords": [
+      15.119271,
+      104.357534
+    ],
+    "description": "โรงยิมอเนกประสงค์และศูนย์กีฬาในร่มสิริวรรณวรีกีฬาเวศน์ สำหรับการแข่งขันกีฬาในร่ม แบดมินตัน บาสเกตบอล",
+    "phone": "045-643-600 ต่อ 1900",
+    "tags": [
+      "สิริวรรณวรี",
+      "ศูนย์กีฬาในร่ม",
+      "โรงยิม",
+      "gym",
+      "indoor sports",
+      "18"
+    ],
+    "code": "18"
+  },
+  {
+    "id": 19,
+    "name": "ศูนย์ฝึกเทคโนโลยี",
+    "nameEn": "Technology Training Center",
+    "category": "facility",
+    "coords": [
+      540,
+      747
+    ],
+    "realCoords": [
+      15.118681,
+      104.35789
+    ],
+    "description": "อาคารศูนย์ปฏิบัติการและฝึกอบรมทางเทคโนโลยี การวิจัยพัฒนา และนวัตกรรมดิจิทัล",
+    "phone": "",
+    "tags": [
+      "ศูนย์ฝึกเทคโนโลยี",
+      "ฝึกเทคโนโลยี",
+      "tech training",
+      "19"
+    ],
+    "code": "19"
+  },
+  {
+    "id": 20,
+    "name": "สนามเปตอง",
+    "nameEn": "Petanque Court",
+    "category": "facility",
+    "coords": [
+      237,
+      388
+    ],
+    "realCoords": [
+      15.119406,
+      104.355251
+    ],
+    "description": "สนามเปตองมาตรฐานสำหรับการฝึกซ้อม การเรียนการสอนวิชาพละ และการแข่งขันกีฬาเปตอง",
+    "phone": "",
+    "tags": [
+      "f",
+      "สนามเปตอง",
+      "petanque court"
+    ],
+    "code": "20"
+  },
+  {
+    "id": 21,
+    "name": "อาคารวิทยาศาสตร์การกีฬา",
+    "nameEn": "Sports Science Building",
+    "category": "facility",
+    "coords": [
+      172,
+      573
+    ],
+    "realCoords": [
+      15.118451,
+      104.354878
+    ],
+    "description": "อาคารวิทยาศาสตร์การกีฬา มีห้องทดสอบสมรรถภาพ ฟิตเนส และห้องเรียนทฤษฎีทางกีฬา",
+    "phone": "045-643-600 ต่อ 1900",
+    "tags": [
+      "c",
+      "อาคารวิทยาศาสตร์การกีฬา",
+      "sports science building"
+    ],
+    "code": "21"
+  },
+  {
+    "id": 22,
+    "name": "โรงแรมศรีพฤทธาลัย (ราชภัฏสัมมนาคาร)",
     "nameEn": "Sriphrutthalai Rajabhat Hotel",
     "category": "other",
     "coords": [
       245,
-      828
+      855
     ],
     "realCoords": [
-      15.11425,
-      104.3589
+      15.117021,
+      104.355949
     ],
     "description": "โรงแรมและศูนย์จัดสัมมนาสัมมนาคาร ให้บริการห้องพัก ห้องจัดเลี้ยง และสระว่ายน้ำ ภายใต้การดูแลของมหาวิทยาลัย",
     "phone": "045-603-010",
     "tags": [
       "โรงแรม",
       "ศรีพฤทธาลัย",
-      "สัมมนา",
+      "สัมมนาคาร",
       "hotel",
-      "seminar",
-      "ฟิตเนส",
-      "17"
-    ]
+      "22"
+    ],
+    "code": "22"
   },
   {
-    "id": 18,
-    "name": "อาคารวิทยาศาสตร์การกีฬา",
-    "nameEn": "Sports Science Building",
-    "category": "facility",
+    "id": 23,
+    "name": "อาคารซ้อมดนตรี",
+    "nameEn": "Music Practice Building",
+    "category": "academic",
     "coords": [
-      164,
-      580
+      372,
+      874
     ],
     "realCoords": [
-      15.11495,
-      104.35755
+      15.117133,
+      104.35682
     ],
-    "description": "อาคารวิทยาศาสตร์การกีฬา มีฟิตเนสเซ็นเตอร์ โรงยิม และสนามบาสเกตบอลในร่มสำหรับกิจกรรมพัฒนานักศึกษา",
-    "phone": "045-643-600 ต่อ 1900",
-    "tags": [
-      "กีฬา",
-      "ยิม",
-      "สนาม",
-      "sports",
-      "gym",
-      "stadium",
-      "18"
-    ]
-  },
-  {
-    "id": 19,
-    "name": "ศาลาพระพุทธรูป",
-    "nameEn": "Buddha Image Pavilion",
-    "category": "facility",
-    "coords": [
-      542,
-      1039
-    ],
-    "realCoords": [
-      15.11695,
-      104.35998
-    ],
-    "description": "ศาลาที่ประดิษฐานพระพุทธรูปสิ่งศักดิ์สิทธิ์ประจำมหาวิทยาลัย เป็นที่เคารพสักการะของบุคลากรและผู้มาเยือน",
+    "description": "อาคารปฏิบัติการทางดนตรีและห้องซ้อมดนตรี สำหรับนักศึกษาสาขาดนตรีและการจัดกิจกรรมการแสดงดนตรี",
     "phone": "",
     "tags": [
-      "พระ",
-      "พระพุทธรูป",
-      "buddha",
-      "19"
-    ]
+      "ซ้อมดนตรี",
+      "ดนตรี",
+      "music building",
+      "23"
+    ],
+    "code": "23"
   },
   {
-    "id": 20,
-    "name": "สนามมวย",
-    "nameEn": "Tennis Courts",
-    "category": "facility",
-    "coords": [
-      607,
-      491
-    ],
-    "realCoords": [
-      15.1186,
-      104.3565
-    ],
-    "description": "สนามเทนนิสกลางแจ้งสำหรับการเรียนการสอน การแข่งขันและการออกกำลังกายของบุคลากรและนักศึกษา",
-    "phone": "",
-    "tags": [
-      "20",
-      "สนามมวย",
-      "tennis courts"
-    ]
-  },
-  {
-    "id": 21,
-    "name": "ร้านสะดวกซื้อ Mini Big C",
-    "nameEn": "Mini Big C Convenience Store",
+    "id": 24,
+    "name": "อาคารพักอาศัยบุคลากรมหาวิทยาลัย",
+    "nameEn": "University Staff Residence",
     "category": "other",
     "coords": [
-      622,
-      810
+      800,
+      626
     ],
     "realCoords": [
-      15.1172,
-      104.3582
+      15.121418,
+      104.36035
+    ],
+    "description": "แฟลตและอาคารพักอาศัยสวัสดิการสำหรับคณาจารย์และบุคลากร มหาวิทยาลัยราชภัฏศรีสะเกษ",
+    "phone": "",
+    "tags": [
+      "อาคารพักอาศัย",
+      "แฟลตบุคลากร",
+      "staff residence",
+      "24"
+    ],
+    "code": "24"
+  },
+  {
+    "id": 25,
+    "name": "เส้นทางศึกษาธรรมชาติ",
+    "nameEn": "Nature Study Trail",
+    "category": "facility",
+    "coords": [
+      668,
+      1007
+    ],
+    "realCoords": [
+      15.117406,
+      104.360332
+    ],
+    "description": "เส้นทางศึกษาธรรมชาติ สวนพฤกษศาสตร์ และพื้นที่สีเขียวเพื่อการพักผ่อนและการเรียนรู้ระบบนิเวศ",
+    "phone": "",
+    "tags": [
+      "ศึกษาธรรมชาติ",
+      "สวนพฤกษศาสตร์",
+      "nature trail",
+      "25"
+    ],
+    "code": "25"
+  },
+  {
+    "id": 26,
+    "name": "อาคารฝึกเทคโนโลยี",
+    "nameEn": "Technology Training Building",
+    "category": "facility",
+    "coords": [
+      508,
+      712
+    ],
+    "realCoords": [
+      15.118261,
+      104.357655
+    ],
+    "description": "อาคารฝึกอบรมเทคโนโลยีเฉพาะทางและห้องปฏิบัติการทักษะวิชาชีพ",
+    "phone": "",
+    "tags": [
+      "อาคารฝึกเทคโนโลยี",
+      "ฝึกเทคโนโลยี2",
+      "26"
+    ],
+    "code": "26"
+  },
+  {
+    "id": 27,
+    "name": "ศูนย์กีฬาอเนกประสงค์ หัวลำโพง",
+    "nameEn": "Hua Lamphong Multi-purpose Sports Center",
+    "category": "facility",
+    "coords": [
+      456,
+      670
+    ],
+    "realCoords": [
+      15.118804,
+      104.357051
+    ],
+    "description": "อาคารศูนย์กีฬาอเนกประสงค์หัวลำโพง สำหรับกิจกรรมกีฬา นันทนาการ และกิจกรรมนักศึกษา",
+    "phone": "",
+    "tags": [
+      "หัวลำโพง",
+      "ศูนย์กีฬาหัวลำโพง",
+      "sports center",
+      "27"
+    ],
+    "code": "27"
+  },
+  {
+    "id": 28,
+    "name": "อาคารส่งเสริมสุขภาพ",
+    "nameEn": "Health Promotion Building",
+    "category": "facility",
+    "coords": [
+      608,
+      481
+    ],
+    "realCoords": [
+      15.120864,
+      104.357702
+    ],
+    "description": "อาคารศูนย์ส่งเสริมสุขภาพและสุขภาวะ ให้บริการตรวจสุขภาพเบื้องต้นและการออกกำลังกายสร้างเสริมสุขภาพ",
+    "phone": "",
+    "tags": [
+      "ส่งเสริมสุขภาพ",
+      "สุขภาพ",
+      "health building",
+      "28"
+    ],
+    "code": "28"
+  },
+  {
+    "id": 29,
+    "name": "ร้านค้าสหกรณ์",
+    "nameEn": "University Cooperative Store",
+    "category": "other",
+    "coords": [
+      662,
+      544
+    ],
+    "realCoords": [
+      15.121014,
+      104.358714
+    ],
+    "description": "ร้านค้าสหกรณ์มหาวิทยาลัยราชภัฏศรีสะเกษ จำหน่ายเครื่องแบบนักศึกษา อุปกรณ์การเรียน และสินค้าอุปโภคบริโภค",
+    "phone": "",
+    "tags": [
+      "สหกรณ์",
+      "ร้านค้าสหกรณ์",
+      "coop",
+      "cooperative store",
+      "29"
+    ],
+    "code": "29"
+  },
+  {
+    "id": 30,
+    "name": "ฝ่ายอาคารสถานที่",
+    "nameEn": "Grounds and Buildings Division",
+    "category": "office",
+    "coords": [
+      842,
+      778
+    ],
+    "realCoords": [
+      15.119986,
+      104.361392
+    ],
+    "description": "สำนักงานฝ่ายอาคารสถานที่ ดูแลความสะอาด ภูมิทัศน์ ซ่อมบำรุงรักษา และสาธารณูปโภคภายในวิทยาเขต",
+    "phone": "045-643-600 ต่อ 1050",
+    "tags": [
+      "ฝ่ายอาคาร",
+      "อาคารสถานที่",
+      "grounds division",
+      "30"
+    ],
+    "code": "30"
+  },
+  {
+    "id": 31,
+    "name": "โรงน้ำดื่ม",
+    "nameEn": "Drinking Water Production Plant",
+    "category": "other",
+    "coords": [
+      851,
+      842
+    ],
+    "realCoords": [
+      15.119723,
+      104.361807
+    ],
+    "description": "อาคารผลิตและบรรจุน้ำดื่มสวัสดิการ มหาวิทยาลัยราชภัฏศรีสะเกษ ผลิตน้ำดื่มสะอาดมาตรฐานแก่หน่วยงานและนักศึกษา",
+    "phone": "",
+    "tags": [
+      "โรงน้ำดื่ม",
+      "น้ำดื่ม",
+      "water plant",
+      "31"
+    ],
+    "code": "31"
+  },
+  {
+    "id": 32,
+    "name": "ฝ่ายยานพาหนะ",
+    "nameEn": "Vehicle Division",
+    "category": "office",
+    "coords": [
+      868,
+      895
+    ],
+    "realCoords": [
+      15.119194,
+      104.362404
+    ],
+    "description": "สำนักงานฝ่ายยานพาหนะและโรงจอดรถบริการมหาวิทยาลัย ดูแลการจัดรถรับส่งและยานพาหนะส่วนกลาง",
+    "phone": "045-643-600 ต่อ 1060",
+    "tags": [
+      "ยานพาหนะ",
+      "ฝ่ายยานพาหนะ",
+      "vehicle division",
+      "32"
+    ],
+    "code": "32"
+  },
+  {
+    "id": 33,
+    "name": "อาคาร FOOD TECH",
+    "nameEn": "Food Technology Building (Food Tech)",
+    "category": "academic",
+    "coords": [
+      866,
+      936
+    ],
+    "realCoords": [
+      15.118569,
+      104.362534
+    ],
+    "description": "อาคารวิจัยและปฏิบัติการเทคโนโลยีอาหาร สาขาวิชาวิทยาศาสตร์และเทคโนโลยีการอาหาร",
+    "phone": "045-643-600 ต่อ 2012",
+    "tags": [
+      "food tech",
+      "ฟู้ดเทค",
+      "เทคโนโลยีอาหาร",
+      "33"
+    ],
+    "code": "33"
+  },
+  {
+    "id": 34,
+    "name": "หอพักนักศึกษามหาวิทยาลัย (หญิง)",
+    "nameEn": "Female Student Dormitory",
+    "category": "other",
+    "coords": [
+      755,
+      540
+    ],
+    "realCoords": [
+      15.121519,
+      104.358961
+    ],
+    "description": "หอพักนักศึกษาหญิงภายในวิทยาเขต มีระบบรักษาความปลอดภัย 24 ชั่วโมง และสิ่งอำนวยความสะดวกครบครัน",
+    "phone": "045-643-600 ต่อ 1700",
+    "tags": [
+      "หอหญิง",
+      "หอพักหญิง",
+      "หอพักนักศึกษาหญิง",
+      "female dorm",
+      "34"
+    ],
+    "code": "34"
+  },
+  {
+    "id": 35,
+    "name": "หอพักนักศึกษามหาวิทยาลัย (ชาย)",
+    "nameEn": "Male Student Dormitory",
+    "category": "other",
+    "coords": [
+      711,
+      479
+    ],
+    "realCoords": [
+      15.121478,
+      104.358201
+    ],
+    "description": "หอพักนักศึกษาชายภายในวิทยาเขต ให้บริการที่พักแก่ผู้เข้าศึกษาในมหาวิทยาลัยราชภัฏศรีสะเกษ",
+    "phone": "045-643-600 ต่อ 1710",
+    "tags": [
+      "หอชาย",
+      "หอพักชาย",
+      "หอพักนักศึกษาชาย",
+      "male dorm",
+      "35"
+    ],
+    "code": "35"
+  },
+  {
+    "id": 36,
+    "name": "บ้านพักบุคลากรมหาวิทยาลัย",
+    "nameEn": "University Staff Housing",
+    "category": "other",
+    "coords": [
+      802,
+      267
+    ],
+    "realCoords": [
+      15.124392,
+      104.359407
+    ],
+    "description": "บ้านพักสวัสดิการสำหรับคณาจารย์และบุคลากรมหาวิทยาลัยราชภัฏศรีสะเกษ บริเวณริมห้วยสำราญ",
+    "phone": "",
+    "tags": [
+      "บ้านพัก",
+      "บ้านพักบุคลากร",
+      "staff housing",
+      "36"
+    ],
+    "code": "36"
+  },
+  {
+    "id": 37,
+    "code": "37",
+    "name": "โรงจอดรถบุคลากร",
+    "nameEn": "Staff Parking Garage",
+    "category": "facility",
+    "coords": [
+      681,
+      879
+    ],
+    "realCoords": [
+      15.118922,
+      104.361253
+    ],
+    "description": "อาคารที่จอดรถขนาดใหญ่สำหรับคณาจารย์และบุคลากรทางวิชาการ มหาวิทยาลัยราชภัฏศรีสะเกษ",
+    "phone": "",
+    "tags": [
+      "37",
+      "โรงจอดรถบุคลากร",
+      "staff parking garage"
+    ]
+  },
+  {
+    "id": 38,
+    "code": "38",
+    "name": "ศาลพระภูมิประจำมหาวิทยาลัย",
+    "nameEn": "University Shrine",
+    "category": "facility",
+    "coords": [
+      805,
+      653
+    ],
+    "realCoords": [
+      15.116576,
+      104.358951
+    ],
+    "description": "ศาลพระภูมิเจ้าที่สิ่งศักดิ์สิทธิ์ประจำมหาวิทยาลัยราชภัฏศรีสะเกษ เป็นศูนย์รวมจิตใจของบุคลากรและนักศึกษา",
+    "phone": "",
+    "tags": [
+      "38",
+      "ศาลพระภูมิประจำมหาวิทยาลัย",
+      "university shrine",
+      "ศาลพระภูมิ"
+    ]
+  },
+  {
+    "id": 39,
+    "code": "39",
+    "name": "วัดป่าศรัทธาธรรม",
+    "nameEn": "Wat Pa Sattha Tham",
+    "category": "facility",
+    "coords": [
+      822,
+      559
+    ],
+    "realCoords": [
+      15.116257,
+      104.357996
+    ],
+    "description": "วัดป่าศรัทธาธรรม สถานปฏิบัติธรรมและศูนย์รวมจิตใจพุทธศาสนิกชนบริเวณใกล้มหาวิทยาลัย",
+    "phone": "",
+    "tags": [
+      "39",
+      "วัดป่าศรัทธาธรรม",
+      "wat pa sattha tham",
+      "วัดป่า"
+    ]
+  },
+  {
+    "id": 40,
+    "code": "C",
+    "name": "ร้านสะดวกซื้อ Mini Big C",
+    "nameEn": "Mini Big C Convenience Store",
+    "category": "facility",
+    "coords": [
+      701,
+      621
+    ],
+    "realCoords": [
+      15.118543,
+      104.358632
     ],
     "description": "ร้านสะดวกซื้อ มินิ บิ๊กซี สาขาภายในมหาวิทยาลัยราชภัฏศรีสะเกษ ให้บริการอาหาร เครื่องดื่ม และของใช้จำเป็นตลอด 24 ชั่วโมง",
     "phone": "",
     "tags": [
-      "บิ๊กซี",
-      "bigc",
+      "40",
       "c",
-      "มินิบิ๊กซี",
-      "ร้านสะดวกซื้อ",
-      "21"
+      "ร้านสะดวกซื้อ mini big c",
+      "mini big c",
+      "บิ๊กซี"
     ]
   }
 ];
@@ -539,11 +984,11 @@ const GEOFENCE = {
 };
 
 // --- 2. Linear Calibration Equations (Convention Hall / Education Center) ---
-const LAT1 = 15.116900, LNG1 = 104.356850;
-const Y1 = 252, X1 = 472;
+const LAT1 = 15.119754, LNG1 = 104.358862;
+const Y1 = 637, X1 = 644;
 
-const LAT2 = 15.118650, LNG2 = 104.361150;
-const Y2 = 772, X2 = 942;
+const LAT2 = 15.116095, LNG2 = 104.362948;
+const Y2 = 831, X2 = 1045;
 
 const KY = (Y2 - Y1) / (LAT2 - LAT1);
 const KX = (X2 - X1) / (LNG2 - LNG1);
@@ -784,8 +1229,17 @@ function handleLogout() {
 
 // Load dataset (attempts to fetch from backend REST API first, then falls back to LocalStorage)
 async function loadBuildingsData() {
+  const CURRENT_DATA_VER = "v9.5";
+  if (localStorage.getItem("sskru_data_version") !== CURRENT_DATA_VER) {
+    localStorage.removeItem("sskru_buildings");
+    localStorage.setItem("sskru_data_version", CURRENT_DATA_VER);
+  }
+
   try {
-    const response = await fetch('/api/buildings');
+    let response = await fetch('/api/buildings');
+    if (!response.ok) {
+      response = await fetch('api.php');
+    }
     if (response.ok) {
       const json = await response.json();
       if (json.success && Array.isArray(json.data) && json.data.length > 0) {
@@ -848,9 +1302,19 @@ function initMap() {
     maxBoundsViscosity: 0.2
   });
 
-  L.imageOverlay("images/Map.png?v=3.5", IMAGE_BOUNDS).addTo(map);
+  L.imageOverlay("images/Map.png?v=4.1", IMAGE_BOUNDS).addTo(map);
   map.fitBounds(campusBounds, { padding: [10, 10] });
   renderMarkers();
+
+  // Admin Right-Click to Add New Location directly on Map
+  map.on("contextmenu", (e) => {
+    if (isUserAdmin()) {
+      const y = Math.round(e.latlng.lat);
+      const x = Math.round(e.latlng.lng);
+      openAddBuildingForm(y, x);
+      showToast(`คลิกขวาที่พิกัด [Y: ${y}, X: ${x}] เปิดฟอร์มเพิ่มสถานที่ใหม่`);
+    }
+  });
 }
 
 // --- 4. Campus Road Network Waypoints (Strictly follow campus asphalt roads!) ---
@@ -1008,7 +1472,7 @@ function renderMarkers() {
   const adminActive = isUserAdmin();
 
   filteredList.forEach(b => {
-    const displayNum = b.id === 21 ? "C" : b.id;
+    const displayNum = (b.code || b.id);
     const isSelected = selectedBuilding && selectedBuilding.id === b.id;
 
     const customIcon = L.divIcon({
@@ -1089,7 +1553,7 @@ function renderBuildingCarousel(list) {
 
   list.forEach(b => {
     const status = getBuildingStatus(b);
-    const displayNum = b.id === 21 ? "C" : b.id;
+    const displayNum = (b.code || b.id);
 
     const card = document.createElement("div");
     card.className = `carousel-card ${b.category}`;
@@ -1155,7 +1619,7 @@ function populateDropdownSelectors() {
   const sorted = [...adminBuildings].sort((a, b) => a.id - b.id);
 
   sorted.forEach(b => {
-    const displayNum = b.id === 21 ? "C" : b.id;
+    const displayNum = (b.code || b.id);
     const optText = `${displayNum}. ${b.name}`;
 
     const optS = document.createElement("option");
@@ -1250,7 +1714,7 @@ function getBuildingStatus(b) {
 function selectBuilding(b) {
   selectedBuilding = b;
   trackEvent('building_select', b.name);
-  const displayNum = b.id === 21 ? "C" : b.id;
+  const displayNum = (b.code || b.id);
 
   const card = document.getElementById(`b-card-${b.id}`);
   const wrapper = document.getElementById("building-carousel-wrapper");
@@ -1348,7 +1812,7 @@ function closeInfoPanel() {
 }
 
 function shareBuildingLocation(b) {
-  const displayNum = b.id === 21 ? "C" : b.id;
+  const displayNum = (b.code || b.id);
   const shareTitle = `ตำแหน่ง ${b.name}`;
   const shareText = `เช็คพิกัดอาคาร ${displayNum}. ${b.name} (${b.nameEn}) ในวิทยาเขต มรภ.ศรีสะเกษ ได้ที่พิกัดด้านล่าง`;
   const shareUrl = `https://www.google.com/maps/search/?api=1&query=${b.realCoords[0]},${b.realCoords[1]}`;
@@ -1454,7 +1918,7 @@ function handleSearchInput(e) {
 
   dropdown.innerHTML = "";
   matches.forEach(b => {
-    const displayNum = b.id === 21 ? "C" : b.id;
+    const displayNum = (b.code || b.id);
     const item = document.createElement("div");
     item.className = "autocomplete-item";
     item.setAttribute("role", "option");
@@ -1941,7 +2405,7 @@ function calculateWalkingRoute() {
 
   if (customGPSLeg) {
     const startB = adminBuildings.find(b => b.id === startNodeId);
-    const startBNum = startB.id === 21 ? "C" : startB.id;
+    const startBNum = (startB.code || startB.id);
     const stepCard = document.createElement("div");
     stepCard.className = "nav-step-item";
     stepCard.innerHTML = `
@@ -1957,7 +2421,7 @@ function calculateWalkingRoute() {
   buildingNodes.forEach((nodeId, idx) => {
     const b = adminBuildings.find(item => item.id === Number(nodeId));
     if (!b) return;
-    const bNum = b.id === 21 ? "C" : b.id;
+    const bNum = (b.code || b.id);
 
     const stepCard = document.createElement("div");
     stepCard.className = "nav-step-item";
@@ -2070,14 +2534,14 @@ async function saveBuildingsToStorage(actionType = null, buildingItem = null) {
   // Sync to Backend REST API if server is online
   if (isServerConnected && actionType && buildingItem) {
     try {
-      let url = '/admin/api/buildings/';
-      let method = 'POST';
+      let url = `/api/buildings/${buildingItem.id}/`;
+      let method = 'PUT';
 
-      if (actionType === 'PUT') {
-        url = `/admin/api/buildings/${buildingItem.id}/`;
-        method = 'PUT';
+      if (actionType === 'POST') {
+        url = '/api/buildings/';
+        method = 'POST';
       } else if (actionType === 'DELETE') {
-        url = `/admin/api/buildings/${buildingItem.id}/`;
+        url = `/api/buildings/${buildingItem.id}/`;
         method = 'DELETE';
       }
 
@@ -2090,7 +2554,15 @@ async function saveBuildingsToStorage(actionType = null, buildingItem = null) {
         opts.body = JSON.stringify(buildingItem);
       }
 
-      const res = await fetch(url, opts);
+      let res = await fetch(url, opts);
+      if (!res.ok) {
+        let phpUrl = `api.php${buildingItem.id ? '?id=' + buildingItem.id : ''}`;
+        res = await fetch(phpUrl, opts);
+      }
+      if (!res.ok) {
+        let adminUrl = actionType === 'POST' ? '/admin/api/buildings/' : `/admin/api/buildings/${buildingItem.id}/`;
+        res = await fetch(adminUrl, opts);
+      }
       const resData = await res.json();
       if (resData.success) {
         console.log("Synced change with backend:", resData.message);
@@ -2130,7 +2602,7 @@ function exitAdminMode() {
 
 // Form management - open edit form
 function openEditBuildingForm(b) {
-  const displayNum = b.id === 21 ? "C" : b.id;
+  const displayNum = (b.code || b.id);
 
   document.getElementById("building-form-title").innerHTML = `<i class="fa-solid fa-edit"></i> แก้ไขข้อมูลอาคาร: ตึก ${displayNum}`;
   document.getElementById("edit-building-id").value = b.id;
@@ -2229,6 +2701,7 @@ function handleBuildingFormSubmit(e) {
 
   const newB = {
     id: id,
+    code: numInput,
     name: name,
     nameEn: nameEn,
     category: category,
@@ -2258,7 +2731,11 @@ function handleBuildingFormSubmit(e) {
   }
 
   saveBuildingsToStorage(actionType, newB);
-  renderMarkers();
+  if (selectedBuilding && (selectedBuilding.id === newB.id || selectedBuilding.id === Number(idVal))) {
+    selectBuilding(newB);
+  } else {
+    renderMarkers();
+  }
   document.getElementById("building-form-overlay").classList.remove("active");
 }
 
@@ -2324,7 +2801,7 @@ function renderAdminDashboardTable() {
   }
 
   [...filtered].sort((a,b) => a.id - b.id).forEach(b => {
-    const displayNum = b.id === 21 ? "C" : b.id;
+    const displayNum = (b.code || b.id);
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td><strong>${displayNum}</strong></td>
@@ -2712,7 +3189,7 @@ function handleMobileSearchInput(e, dropdown) {
   }
 
   matches.forEach(b => {
-    const displayNum = b.id === 21 ? "C" : b.id;
+    const displayNum = (b.code || b.id);
     const item = document.createElement("div");
     item.className = "autocomplete-item";
     item.innerHTML = `

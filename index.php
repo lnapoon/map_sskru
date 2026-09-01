@@ -1,3 +1,7 @@
+<?php
+// SSKRU 3D Map Application (Native PHP & MySQL Integration)
+require_once __DIR__ . '/config.php';
+?>
 <!DOCTYPE html>
 <html lang="th">
 <head>
