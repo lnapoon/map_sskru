@@ -43,7 +43,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 
   <!-- Main Dynamic Stylesheet -->
-  <link rel="stylesheet" href="styles.css?v=12.0" />
+  <link rel="stylesheet" href="styles.css?v=13.0" />
 </head>
 <body>
 
@@ -142,24 +142,80 @@
         <h3>โปรไฟล์ผู้ใช้</h3>
       </div>
       <div class="profile-panel-body">
-        <!-- Avatar -->
+        <!-- Avatar Section with Edit Trigger -->
         <div class="profile-avatar-section">
-          <div class="profile-avatar-large" id="profile-avatar-large">
-            <i class="fa-solid fa-user-graduate"></i>
+          <div class="profile-avatar-wrapper">
+            <div class="profile-avatar-large" id="profile-avatar-large">
+              <i class="fa-solid fa-user-graduate"></i>
+            </div>
+            <button type="button" class="profile-avatar-edit-btn" id="btn-avatar-edit" title="เปลี่ยนรูปโปรไฟล์">
+              <i class="fa-solid fa-camera"></i>
+            </button>
+            <input type="file" id="profile-avatar-input" accept="image/*" style="display:none;" />
           </div>
           <div class="profile-name" id="profile-name">ผู้ใช้งาน</div>
           <div class="profile-role-badge" id="profile-role-badge">นักศึกษา</div>
         </div>
 
-        <!-- Info Cards -->
+        <!-- Editable Bio Section -->
+        <div class="profile-editable-section">
+          <div class="profile-section-title">
+            <i class="fa-solid fa-pen-to-square"></i> ข้อมูลส่วนตัวที่แก้ไขได้
+          </div>
+          <div class="profile-form-group">
+            <label class="profile-form-label">คำแนะนำตัว / Bio <span class="char-count" id="bio-char-count">0/120</span></label>
+            <textarea id="profile-bio-input" class="profile-bio-textarea" maxlength="120" placeholder="เขียนข้อความแนะนำตัวสั้นๆ หรือคติประจำใจ..."></textarea>
+          </div>
+          <div class="profile-form-group">
+            <label class="profile-form-label">ชื่อเล่น (Nickname)</label>
+            <input type="text" id="profile-nickname-input" class="profile-text-input" placeholder="เช่น พูน" maxlength="30" />
+          </div>
+          <button type="button" class="profile-save-btn" id="btn-save-profile">
+            <i class="fa-solid fa-floppy-disk"></i> บันทึกข้อมูลโปรไฟล์
+          </button>
+        </div>
+
+        <!-- Locked Identity Cards Section -->
         <div class="profile-info-cards">
-          <div class="profile-info-card">
+          <div class="profile-section-title locked-title">
+            <i class="fa-solid fa-lock"></i> ข้อมูลระบุตัวตน (ล็อคความปลอดภัยโดยมหาวิทยาลัย)
+          </div>
+          <div class="profile-info-card locked">
+            <div class="profile-info-icon"><i class="fa-solid fa-user-check"></i></div>
+            <div class="profile-info-detail">
+              <div class="profile-info-label">ชื่อ-นามสกุลจริง (ล็อค)</div>
+              <div class="profile-info-value" id="profile-fullname-locked">—</div>
+            </div>
+            <span class="locked-badge"><i class="fa-solid fa-lock"></i></span>
+          </div>
+
+          <div class="profile-info-card locked">
             <div class="profile-info-icon"><i class="fa-solid fa-id-card"></i></div>
             <div class="profile-info-detail">
-              <div class="profile-info-label">รหัสประจำตัว</div>
+              <div class="profile-info-label">รหัสนักศึกษา (ล็อค)</div>
               <div class="profile-info-value" id="profile-student-id">—</div>
             </div>
+            <span class="locked-badge"><i class="fa-solid fa-lock"></i></span>
           </div>
+
+          <div class="profile-info-card locked">
+            <div class="profile-info-icon"><i class="fa-solid fa-envelope"></i></div>
+            <div class="profile-info-detail">
+              <div class="profile-info-label">อีเมลมหาวิทยาลัย (ล็อค)</div>
+              <div class="profile-info-value" id="profile-email-locked">—</div>
+            </div>
+            <span class="locked-badge"><i class="fa-solid fa-lock"></i></span>
+          </div>
+
+          <div class="profile-info-card locked">
+            <div class="profile-info-icon"><i class="fa-solid fa-university"></i></div>
+            <div class="profile-info-detail">
+              <div class="profile-info-label">สังกัดสถาบัน (ล็อค)</div>
+              <div class="profile-info-value">มหาวิทยาลัยราชภัฏศรีสะเกษ</div>
+            </div>
+            <span class="locked-badge"><i class="fa-solid fa-lock"></i></span>
+          </div>
+
           <div class="profile-info-card">
             <div class="profile-info-icon"><i class="fa-solid fa-shield-halved"></i></div>
             <div class="profile-info-detail">
@@ -167,13 +223,7 @@
               <div class="profile-info-value" id="profile-access-level">ดูแผนที่และค้นหาอาคาร</div>
             </div>
           </div>
-          <div class="profile-info-card">
-            <div class="profile-info-icon"><i class="fa-solid fa-university"></i></div>
-            <div class="profile-info-detail">
-              <div class="profile-info-label">สถาบัน</div>
-              <div class="profile-info-value">มหาวิทยาลัยราชภัฏศรีสะเกษ</div>
-            </div>
-          </div>
+
           <div class="profile-info-card">
             <div class="profile-info-icon"><i class="fa-solid fa-clock"></i></div>
             <div class="profile-info-detail">

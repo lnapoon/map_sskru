@@ -1232,39 +1232,134 @@ function populateProfilePanel() {
   const nameEl = document.getElementById('profile-name');
   const roleEl = document.getElementById('profile-role-badge');
   const idEl = document.getElementById('profile-student-id');
+  const fullnameLockedEl = document.getElementById('profile-fullname-locked');
+  const emailLockedEl = document.getElementById('profile-email-locked');
   const accessEl = document.getElementById('profile-access-level');
   const lastAccessEl = document.getElementById('profile-last-access');
   const avatarEl = document.getElementById('profile-avatar-large');
+  const bioInput = document.getElementById('profile-bio-input');
+  const nickInput = document.getElementById('profile-nickname-input');
+  const bioCount = document.getElementById('bio-char-count');
+
+  const userKey = currentUserInfo.studentId || currentUserInfo.username || 'guest';
+
+  // Load Custom Avatar if exists
+  const savedAvatar = localStorage.getItem('sskru_avatar_' + userKey);
+  if (savedAvatar) {
+    avatarEl.innerHTML = `<img src="${savedAvatar}" alt="Profile Avatar" />`;
+  }
+
+  // Load Saved Bio & Nickname
+  const savedBio = localStorage.getItem('sskru_bio_' + userKey) || '';
+  const savedNick = localStorage.getItem('sskru_nick_' + userKey) || '';
+  if (bioInput) {
+    bioInput.value = savedBio;
+    if (bioCount) bioCount.textContent = `${savedBio.length}/120`;
+  }
+  if (nickInput) nickInput.value = savedNick;
 
   if (currentUserInfo.isAdmin) {
-    nameEl.textContent = 'ผู้ดูแลระบบ (Admin)';
+    nameEl.textContent = savedNick ? `${savedNick} (Admin)` : 'ผู้ดูแลระบบ (Admin)';
+    if (fullnameLockedEl) fullnameLockedEl.textContent = 'ผู้ดูแลระบบหลัก SSKRU';
     roleEl.textContent = 'ผู้ดูแลระบบ';
     roleEl.classList.add('admin');
     idEl.textContent = 'ADMIN';
+    if (emailLockedEl) emailLockedEl.textContent = 'admin@sskru.ac.th';
     accessEl.textContent = 'จัดการอาคาร, ลากหมุด, แก้ไขข้อมูล';
-    avatarEl.classList.add('admin');
-    avatarEl.innerHTML = '<i class="fa-solid fa-user-shield"></i>';
+    if (!savedAvatar) {
+      avatarEl.classList.add('admin');
+      avatarEl.innerHTML = '<i class="fa-solid fa-user-shield"></i>';
+    }
   } else if (currentUserInfo.isStudent) {
-    nameEl.textContent = currentUserInfo.studentName || 'นักศึกษา';
+    const rawName = currentUserInfo.studentName || 'นักศึกษา';
+    nameEl.textContent = savedNick ? `${rawName} (${savedNick})` : rawName;
+    if (fullnameLockedEl) fullnameLockedEl.textContent = rawName;
     roleEl.textContent = 'นักศึกษา';
     roleEl.classList.remove('admin');
-    idEl.textContent = currentUserInfo.studentId || '—';
+    const sid = currentUserInfo.studentId || '—';
+    idEl.textContent = sid;
+    
+    const cleanSid = sid.replace(/-/g, '').trim();
+    if (emailLockedEl) emailLockedEl.textContent = `stu${cleanSid}@sskru.ac.th`;
     accessEl.textContent = 'ดูแผนที่และค้นหาอาคาร';
-    avatarEl.classList.remove('admin');
-    avatarEl.innerHTML = '<i class="fa-solid fa-user-graduate"></i>';
+    if (!savedAvatar) {
+      avatarEl.classList.remove('admin');
+      avatarEl.innerHTML = '<i class="fa-solid fa-user-graduate"></i>';
+    }
   }
 
   lastAccessEl.textContent = new Date().toLocaleString('th-TH', {
     dateStyle: 'medium',
     timeStyle: 'short',
   });
+
+  initProfileEventListeners(userKey);
+}
+
+function initProfileEventListeners(userKey) {
+  const avatarEditBtn = document.getElementById('btn-avatar-edit');
+  const avatarInput = document.getElementById('profile-avatar-input');
+  const avatarEl = document.getElementById('profile-avatar-large');
+  const bioInput = document.getElementById('profile-bio-input');
+  const bioCount = document.getElementById('bio-char-count');
+  const saveBtn = document.getElementById('btn-save-profile');
+
+  if (avatarEditBtn && avatarInput) {
+    avatarEditBtn.onclick = () => avatarInput.click();
+    avatarInput.onchange = (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        if (file.size > 2 * 1024 * 1024) {
+          alert('ขนาดไฟล์รูปภาพต้องไม่เกิน 2MB');
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          const base64Img = evt.target.result;
+          avatarEl.innerHTML = `<img src="${base64Img}" alt="Avatar" />`;
+          localStorage.setItem('sskru_avatar_' + userKey, base64Img);
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+  }
+
+  if (bioInput && bioCount) {
+    bioInput.oninput = () => {
+      bioCount.textContent = `${bioInput.value.length}/120`;
+    };
+  }
+
+  if (saveBtn) {
+    saveBtn.onclick = () => {
+      const bioVal = document.getElementById('profile-bio-input')?.value.trim() || '';
+      const nickVal = document.getElementById('profile-nickname-input')?.value.trim() || '';
+      
+      localStorage.setItem('sskru_bio_' + userKey, bioVal);
+      localStorage.setItem('sskru_nick_' + userKey, nickVal);
+
+      // Update header display name with nickname
+      const nameEl = document.getElementById('profile-name');
+      const rawName = currentUserInfo.studentName || (currentUserInfo.isAdmin ? 'ผู้ดูแลระบบ' : 'ผู้ใช้งาน');
+      if (nameEl) {
+        nameEl.textContent = nickVal ? `${rawName} (${nickVal})` : rawName;
+      }
+
+      saveBtn.innerHTML = '<i class="fa-solid fa-circle-check"></i> บันทึกสำเร็จแล้ว!';
+      saveBtn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+      setTimeout(() => {
+        saveBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> บันทึกข้อมูลโปรไฟล์';
+        saveBtn.style.background = 'linear-gradient(135deg, #1a4fa0, #2563eb)';
+      }, 2000);
+    };
+  }
 }
 
 // ── Profile Panel Open/Close ──
 function openProfilePanel() {
+  populateProfilePanel();
   document.getElementById('profile-panel').classList.add('open');
   document.getElementById('profile-panel-backdrop').classList.add('open');
-  // Close side drawer if open
   closeSideDrawer();
 }
 
