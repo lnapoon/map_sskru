@@ -653,9 +653,12 @@ require_once __DIR__ . '/config.php';
           </div>
         </div>
       </div>
-      <div class="pdpa-footer">
-        <button class="pdpa-btn pdpa-btn-accept" id="btn-pdpa-accept">
+      <div class="pdpa-footer" style="display: flex; gap: 10px; width: 100%;">
+        <button class="pdpa-btn pdpa-btn-accept" id="btn-pdpa-accept" style="flex: 1;">
           <i class="fa-solid fa-circle-check"></i> ยินยอมและเข้าสู่ระบบแผนที่
+        </button>
+        <button class="pdpa-btn" id="btn-pdpa-decline" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);">
+          <i class="fa-solid fa-circle-xmark"></i> ปฏิเสธ
         </button>
       </div>
     </div>
@@ -671,7 +674,7 @@ require_once __DIR__ . '/config.php';
        SCRIPTS
        ========================================== -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script src="app.js?v=10.0"></script>
+  <script src="app.js?v=11.0"></script>
 
 </body>
 </html>

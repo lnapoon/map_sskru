@@ -1086,20 +1086,33 @@ document.addEventListener("DOMContentLoaded", async () => {
 function initPDPAConsent() {
   const overlay = document.getElementById("pdpa-modal-overlay");
   const acceptBtn = document.getElementById("btn-pdpa-accept");
-  if (!overlay || !acceptBtn) return;
+  const declineBtn = document.getElementById("btn-pdpa-decline");
+  if (!overlay) return;
 
   const isConsentGiven = localStorage.getItem("sskru_pdpa_consent") === "granted";
   if (!isConsentGiven) {
     overlay.classList.add("active");
   }
 
-  acceptBtn.onclick = () => {
-    localStorage.setItem("sskru_pdpa_consent", "granted");
-    overlay.classList.remove("active");
-    if (typeof showToast === 'function') {
-      showToast("ยอมรับเงื่อนไขคุ้มครองข้อมูลส่วนบุคคล (PDPA) เรียบร้อยแล้ว");
-    }
-  };
+  if (acceptBtn) {
+    acceptBtn.onclick = () => {
+      localStorage.setItem("sskru_pdpa_consent", "granted");
+      overlay.classList.remove("active");
+      if (typeof showToast === 'function') {
+        showToast("ยินยอมรับสิทธิ์ตำแหน่งและคุ้มครองข้อมูลส่วนบุคคล (PDPA) เรียบร้อยแล้ว");
+      }
+    };
+  }
+
+  if (declineBtn) {
+    declineBtn.onclick = () => {
+      localStorage.setItem("sskru_pdpa_consent", "declined");
+      overlay.classList.remove("active");
+      if (typeof showToast === 'function') {
+        showToast("ปฏิเสธการเข้าถึงสิทธิ์พิกัดตำแหน่ง GPS เรียบร้อยแล้ว");
+      }
+    };
+  }
 }
 
 // Theme Toggle System (Dark / Light Mode)
@@ -1250,7 +1263,7 @@ function handleLogout() {
 
 // Load dataset (Instant initial render + ultra-fast async background sync)
 async function loadBuildingsData() {
-  const CURRENT_DATA_VER = "v10.0";
+  const CURRENT_DATA_VER = "v11.0";
   if (localStorage.getItem("sskru_data_version") !== CURRENT_DATA_VER) {
     localStorage.removeItem("sskru_buildings");
     localStorage.setItem("sskru_data_version", CURRENT_DATA_VER);
