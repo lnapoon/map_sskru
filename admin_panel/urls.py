@@ -23,6 +23,7 @@ urlpatterns = [
     path('api/auth/student_request_reset/',       views.student_request_reset_api,   name='student_request_reset_api'),
     path('api/auth/student_verify_reset_token/',  views.student_verify_reset_token_api, name='student_verify_reset_token_api'),
     path('api/auth/student_confirm_new_password/', views.student_confirm_new_password_api, name='student_confirm_new_password_api'),
+    path('api/auth/verify_password/',             views.verify_current_user_password_api, name='verify_current_user_password_api'),
 
     # Dedicated Register & Password Reset Pages
     path('register/student/',                     views.student_register_page,       name='student_register_page'),

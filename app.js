@@ -1258,13 +1258,61 @@ function populateProfilePanel() {
   }
   if (nickInput) nickInput.value = savedNick;
 
+  let isPrivacyUnlocked = false;
+
+  function updatePrivacyDisplay() {
+    const rawName = currentUserInfo.isAdmin ? 'ผู้ดูแลระบบหลัก SSKRU' : (currentUserInfo.studentName || 'นักศึกษา');
+    const sid = currentUserInfo.isAdmin ? 'ADMIN' : (currentUserInfo.studentId || '—');
+    const cleanSid = sid.replace(/-/g, '').trim();
+    const rawEmail = currentUserInfo.isAdmin ? 'admin@sskru.ac.th' : `stu${cleanSid}@sskru.ac.th`;
+
+    const toggleBtn = document.getElementById('btn-toggle-privacy');
+    const toggleLabel = document.getElementById('privacy-toggle-label');
+    const privacyIcon = document.getElementById('privacy-icon');
+
+    if (isPrivacyUnlocked) {
+      if (fullnameLockedEl) {
+        fullnameLockedEl.textContent = rawName;
+        fullnameLockedEl.classList.remove('privacy-masked');
+      }
+      if (idEl) {
+        idEl.textContent = sid;
+        idEl.classList.remove('privacy-masked');
+      }
+      if (emailLockedEl) {
+        emailLockedEl.textContent = rawEmail;
+        emailLockedEl.classList.remove('privacy-masked');
+      }
+      if (toggleBtn) {
+        toggleBtn.className = 'btn-toggle-privacy unlocked';
+        if (toggleLabel) toggleLabel.textContent = 'ซ่อนข้อมูล';
+        if (privacyIcon) privacyIcon.className = 'fa-solid fa-eye-slash';
+      }
+    } else {
+      if (fullnameLockedEl) {
+        fullnameLockedEl.textContent = '••••••••••••';
+        fullnameLockedEl.classList.add('privacy-masked');
+      }
+      if (idEl) {
+        idEl.textContent = '••••••••••';
+        idEl.classList.add('privacy-masked');
+      }
+      if (emailLockedEl) {
+        emailLockedEl.textContent = '••••••••••••••••••••';
+        emailLockedEl.classList.add('privacy-masked');
+      }
+      if (toggleBtn) {
+        toggleBtn.className = 'btn-toggle-privacy';
+        if (toggleLabel) toggleLabel.textContent = 'แสดงข้อมูล';
+        if (privacyIcon) privacyIcon.className = 'fa-solid fa-eye';
+      }
+    }
+  }
+
   if (currentUserInfo.isAdmin) {
     nameEl.textContent = savedNick ? `${savedNick} (Admin)` : 'ผู้ดูแลระบบ (Admin)';
-    if (fullnameLockedEl) fullnameLockedEl.textContent = 'ผู้ดูแลระบบหลัก SSKRU';
     roleEl.textContent = 'ผู้ดูแลระบบ';
     roleEl.classList.add('admin');
-    idEl.textContent = 'ADMIN';
-    if (emailLockedEl) emailLockedEl.textContent = 'admin@sskru.ac.th';
     accessEl.textContent = 'จัดการอาคาร, ลากหมุด, แก้ไขข้อมูล';
     if (!savedAvatar) {
       avatarEl.classList.add('admin');
@@ -1273,14 +1321,8 @@ function populateProfilePanel() {
   } else if (currentUserInfo.isStudent) {
     const rawName = currentUserInfo.studentName || 'นักศึกษา';
     nameEl.textContent = savedNick ? `${rawName} (${savedNick})` : rawName;
-    if (fullnameLockedEl) fullnameLockedEl.textContent = rawName;
     roleEl.textContent = 'นักศึกษา';
     roleEl.classList.remove('admin');
-    const sid = currentUserInfo.studentId || '—';
-    idEl.textContent = sid;
-    
-    const cleanSid = sid.replace(/-/g, '').trim();
-    if (emailLockedEl) emailLockedEl.textContent = `stu${cleanSid}@sskru.ac.th`;
     accessEl.textContent = 'ดูแผนที่และค้นหาอาคาร';
     if (!savedAvatar) {
       avatarEl.classList.remove('admin');
@@ -1288,12 +1330,105 @@ function populateProfilePanel() {
     }
   }
 
+  updatePrivacyDisplay();
+
   lastAccessEl.textContent = new Date().toLocaleString('th-TH', {
     dateStyle: 'medium',
     timeStyle: 'short',
   });
 
   initProfileEventListeners(userKey);
+  initPrivacyShieldListeners(userKey, updatePrivacyDisplay, () => isPrivacyUnlocked, (val) => { isPrivacyUnlocked = val; });
+}
+
+function initPrivacyShieldListeners(userKey, updatePrivacyDisplay, getUnlocked, setUnlocked) {
+  const toggleBtn = document.getElementById('btn-toggle-privacy');
+  const modalBackdrop = document.getElementById('privacy-modal-backdrop');
+  const closeBtn = document.getElementById('btn-close-privacy-modal');
+  const submitBtn = document.getElementById('btn-submit-privacy-password');
+  const passInput = document.getElementById('privacy-password-input');
+  const errorMsg = document.getElementById('privacy-error-msg');
+
+  if (toggleBtn) {
+    toggleBtn.onclick = () => {
+      if (getUnlocked()) {
+        // Re-lock
+        setUnlocked(false);
+        updatePrivacyDisplay();
+      } else {
+        // Open password modal
+        if (modalBackdrop) {
+          modalBackdrop.style.display = 'flex';
+          if (passInput) {
+            passInput.value = '';
+            passInput.focus();
+          }
+          if (errorMsg) errorMsg.style.display = 'none';
+        }
+      }
+    };
+  }
+
+  if (closeBtn && modalBackdrop) {
+    closeBtn.onclick = () => {
+      modalBackdrop.style.display = 'none';
+    };
+  }
+
+  if (submitBtn && passInput) {
+    const handleVerify = async () => {
+      const pass = passInput.value.trim();
+      if (!pass) {
+        if (errorMsg) {
+          errorMsg.textContent = 'กรุณากรอกรหัสผ่าน';
+          errorMsg.style.display = 'block';
+        }
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังตรวจสอบ...';
+
+      const apiEndpoint = window.location.pathname.endsWith('.php')
+        ? 'api.php?action=verify_password'
+        : '/admin/api/auth/verify_password/';
+
+      try {
+        const res = await fetch(apiEndpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: pass, student_id: currentUserInfo.studentId || '' })
+        });
+        const data = await res.json();
+
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fa-solid fa-unlock"></i> ยืนยันรหัสผ่านเพื่อแสดงข้อมูล';
+
+        if (data.success) {
+          setUnlocked(true);
+          updatePrivacyDisplay();
+          modalBackdrop.style.display = 'none';
+        } else {
+          if (errorMsg) {
+            errorMsg.textContent = data.message || 'รหัสผ่านไม่ถูกต้อง';
+            errorMsg.style.display = 'block';
+          }
+        }
+      } catch (err) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fa-solid fa-unlock"></i> ยืนยันรหัสผ่านเพื่อแสดงข้อมูล';
+        if (errorMsg) {
+          errorMsg.textContent = 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์';
+          errorMsg.style.display = 'block';
+        }
+      }
+    };
+
+    submitBtn.onclick = handleVerify;
+    passInput.onkeydown = (e) => {
+      if (e.key === 'Enter') handleVerify();
+    };
+  }
 }
 
 function initProfileEventListeners(userKey) {

@@ -47,7 +47,7 @@ require_once __DIR__ . '/config.php';
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 
   <!-- Main Dynamic Stylesheet -->
-  <link rel="stylesheet" href="styles.css?v=13.0" />
+  <link rel="stylesheet" href="styles.css?v=14.0" />
 </head>
 <body>
 
@@ -179,16 +179,20 @@ require_once __DIR__ . '/config.php';
           </button>
         </div>
 
-        <!-- Locked Identity Cards Section -->
+        <!-- Locked Identity Cards Section with Privacy Shield -->
         <div class="profile-info-cards">
-          <div class="profile-section-title locked-title">
-            <i class="fa-solid fa-lock"></i> ข้อมูลระบุตัวตน (ล็อคความปลอดภัยโดยมหาวิทยาลัย)
+          <div class="profile-section-title locked-title" style="display: flex; justify-content: space-between; align-items: center;">
+            <span><i class="fa-solid fa-shield-halved"></i> ข้อมูลระบุตัวตน</span>
+            <button type="button" class="btn-toggle-privacy" id="btn-toggle-privacy" title="ปลดล็อคเพื่อดูข้อมูล">
+              <i class="fa-solid fa-eye" id="privacy-icon"></i> <span id="privacy-toggle-label">แสดงข้อมูล</span>
+            </button>
           </div>
+
           <div class="profile-info-card locked">
             <div class="profile-info-icon"><i class="fa-solid fa-user-check"></i></div>
             <div class="profile-info-detail">
               <div class="profile-info-label">ชื่อ-นามสกุลจริง (ล็อค)</div>
-              <div class="profile-info-value" id="profile-fullname-locked">—</div>
+              <div class="profile-info-value privacy-masked" id="profile-fullname-locked">••••••••••••</div>
             </div>
             <span class="locked-badge"><i class="fa-solid fa-lock"></i></span>
           </div>
@@ -197,7 +201,7 @@ require_once __DIR__ . '/config.php';
             <div class="profile-info-icon"><i class="fa-solid fa-id-card"></i></div>
             <div class="profile-info-detail">
               <div class="profile-info-label">รหัสนักศึกษา (ล็อค)</div>
-              <div class="profile-info-value" id="profile-student-id">—</div>
+              <div class="profile-info-value privacy-masked" id="profile-student-id">••••••••••</div>
             </div>
             <span class="locked-badge"><i class="fa-solid fa-lock"></i></span>
           </div>
@@ -206,7 +210,7 @@ require_once __DIR__ . '/config.php';
             <div class="profile-info-icon"><i class="fa-solid fa-envelope"></i></div>
             <div class="profile-info-detail">
               <div class="profile-info-label">อีเมลมหาวิทยาลัย (ล็อค)</div>
-              <div class="profile-info-value" id="profile-email-locked">—</div>
+              <div class="profile-info-value privacy-masked" id="profile-email-locked">••••••••••••••••••••</div>
             </div>
             <span class="locked-badge"><i class="fa-solid fa-lock"></i></span>
           </div>
@@ -233,6 +237,32 @@ require_once __DIR__ . '/config.php';
             <div class="profile-info-detail">
               <div class="profile-info-label">เข้าใช้งานล่าสุด</div>
               <div class="profile-info-value" id="profile-last-access">—</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Password Prompt Modal for Privacy Shield -->
+        <div class="privacy-modal-backdrop" id="privacy-modal-backdrop" style="display:none;">
+          <div class="privacy-modal-card">
+            <div class="privacy-modal-header">
+              <div class="privacy-modal-icon"><i class="fa-solid fa-shield-halved"></i></div>
+              <h4>ยืนยันรหัสผ่านเพื่อดูข้อมูล</h4>
+              <button type="button" class="privacy-modal-close" id="btn-close-privacy-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="privacy-modal-body">
+              <p style="font-size:12.5px; color:#64748b; margin-bottom:12px; line-height:1.5;">
+                เพื่อความปลอดภัยของข้อมูลส่วนบุคคล กรุณากรอกรหัสผ่านของคุณเพื่อปลดล็อคการแสดงผล
+              </p>
+              <div class="form-group" style="margin-bottom:12px;">
+                <div class="input-wrapper" style="position:relative;">
+                  <i class="fa-solid fa-key" style="position:absolute; left:12px; top:12px; color:#94a3b8; font-size:14px;"></i>
+                  <input type="password" id="privacy-password-input" class="form-input" style="width:100%; padding:10px 14px 10px 38px; border-radius:10px; border:1.5px solid #cbd5e1; font-size:13px;" placeholder="กรอกรหัสผ่านของคุณ" />
+                </div>
+                <div id="privacy-error-msg" style="color:#ef4444; font-size:12px; margin-top:6px; display:none;"></div>
+              </div>
+              <button type="button" class="btn-primary" id="btn-submit-privacy-password" style="width:100%; padding:10px; border-radius:10px; font-weight:600; font-size:13.5px; background:linear-gradient(135deg, #1a4fa0, #2563eb);">
+                <i class="fa-solid fa-unlock"></i> ยืนยันรหัสผ่านเพื่อแสดงข้อมูล
+              </button>
             </div>
           </div>
         </div>

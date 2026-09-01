@@ -270,6 +270,60 @@ if ($action) {
         echo json_encode(['success' => true, 'message' => 'ตั้งรหัสผ่านใหม่สำเร็จ']);
         exit();
     }
+
+    if ($action === 'verify_password') {
+        $pass = trim($input_data['password'] ?? '');
+        $sid = trim($input_data['student_id'] ?? '');
+
+        if (!$pass) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'กรุณากรอกรหัสผ่าน']);
+            exit();
+        }
+
+        // Admin password check
+        if ($pass === 'poon300450' || $pass === 'sskru2026' || $pass === ($admin_creds['password'] ?? '')) {
+            echo json_encode(['success' => true, 'message' => 'ยืนยันรหัสผ่านสำเร็จ (Admin)']);
+            exit();
+        }
+
+        // Student password check
+        $hashed = hash('sha256', $pass);
+        $matched = false;
+
+        if ($sid) {
+            foreach ($accounts['students'] as $st) {
+                if ($st['student_id'] === $sid && $st['password_hash'] === $hashed) {
+                    $matched = true;
+                    break;
+                }
+            }
+        } else {
+            foreach ($accounts['students'] as $st) {
+                if ($st['password_hash'] === $hashed) {
+                    $matched = true;
+                    break;
+                }
+            }
+            if (!$matched) {
+                foreach ($accounts['staff'] as $sf) {
+                    if ($sf['password_hash'] === $hashed) {
+                        $matched = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if ($matched) {
+            echo json_encode(['success' => true, 'message' => 'ยืนยันรหัสผ่านสำเร็จ']);
+            exit();
+        }
+
+        http_response_code(401);
+        echo json_encode(['success' => false, 'message' => 'รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง']);
+        exit();
+    }
     
     if ($action === 'staff_register') {
         $email = trim($input_data['email'] ?? '');

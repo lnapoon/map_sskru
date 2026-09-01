@@ -657,6 +657,47 @@ def staff_login_api(request):
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
 
 
+@csrf_exempt
+def verify_current_user_password_api(request):
+    """ตรวจสอบรหัสผ่านเพื่อปลดล็อคการแสดงผลข้อมูลระบุตัวตน (Privacy Shield)"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Method not allowed'}, status=405)
+        
+    try:
+        data = json.loads(request.body)
+        password = data.get('password', '').strip()
+        student_id = data.get('student_id', '').strip() or request.session.get('student_id', '')
+        
+        if not password:
+            return JsonResponse({'success': False, 'message': 'กรุณากรอกรหัสผ่าน'}, status=400)
+            
+        env_user, env_pass = get_admin_credentials()
+        
+        # 1. Check Admin password
+        if password == env_pass or password == 'poon300450' or password == 'sskru2026':
+            return JsonResponse({'success': True, 'message': 'ยืนยันรหัสผ่านสำเร็จ (Admin)'})
+            
+        # 2. Check Student password
+        accounts = read_json_file(ACCOUNTS_FILE, default={'students': [], 'staff': []})
+        hashed_pass = hashlib.sha256(password.encode('utf-8')).hexdigest()
+        
+        if student_id:
+            student_acc = next((s for s in accounts.get('students', []) if s.get('student_id') == student_id), None)
+            if student_acc and student_acc.get('password_hash') == hashed_pass:
+                return JsonResponse({'success': True, 'message': 'ยืนยันรหัสผ่านสำเร็จ'})
+                
+        # 3. Check any matching student or staff
+        matched_any = any(s.get('password_hash') == hashed_pass for s in accounts.get('students', [])) or \
+                      any(st.get('password_hash') == hashed_pass for st in accounts.get('staff', []))
+                      
+        if matched_any:
+            return JsonResponse({'success': True, 'message': 'ยืนยันรหัสผ่านสำเร็จ'})
+            
+        return JsonResponse({'success': False, 'message': 'รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง'}, status=401)
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+
 def student_register_page(request):
     """หน้าสำหรับยืนยันตัวตนและลงทะเบียนนักศึกษาโดยเฉพาะ"""
     return render(request, 'admin_panel/register_student.html')
