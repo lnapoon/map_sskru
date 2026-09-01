@@ -256,7 +256,7 @@ require_once __DIR__ . '/config.php';
           <label class="form-label">Username หรือ Email ของบุคลากร</label>
           <div class="input-wrapper">
             <i class="fa-solid fa-at input-icon"></i>
-            <input type="text" id="staff-identifier-input" class="form-input" placeholder="กรอก Username หรือ Email เช่น mpoontv1234@gmail.com" required />
+            <input type="text" id="staff-identifier-input" class="form-input" placeholder="กรอก Username หรือ Email" required />
           </div>
         </div>
 

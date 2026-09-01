@@ -219,10 +219,10 @@ require_once __DIR__ . '/config.php';
     <div class="card-body">
       <form id="form-staff-reg" onsubmit="handleStaffRegister(event)">
         <div class="form-group">
-          <label class="form-label">อีเมลใช้งานจริง (Email เช่น Gmail, Hotmail, @sskru.ac.th)</label>
+          <label class="form-label">อีเมล (Email)</label>
           <div class="input-wrapper">
             <i class="fa-solid fa-envelope input-icon"></i>
-            <input type="email" id="reg-staff-email" class="form-input" placeholder="เช่น mpoontv1234@gmail.com หรือ name@sskru.ac.th" required />
+            <input type="email" id="reg-staff-email" class="form-input" placeholder="กรอกอีเมล" required />
           </div>
         </div>
         <div class="form-group">
