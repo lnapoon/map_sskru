@@ -1228,26 +1228,70 @@ function updateDrawerUserInfo() {
   }
 }
 
+let isProfilePrivacyUnlocked = false;
+
+function updateProfilePrivacyDisplay() {
+  const fullnameLockedEl = document.getElementById('profile-fullname-locked');
+  const idEl = document.getElementById('profile-student-id');
+  const emailLockedEl = document.getElementById('profile-email-locked');
+  const toggleBtn = document.getElementById('btn-toggle-privacy');
+  const toggleLabel = document.getElementById('privacy-toggle-label');
+  const privacyIcon = document.getElementById('privacy-icon');
+
+  const rawName = currentUserInfo.isAdmin ? 'ผู้ดูแลระบบหลัก SSKRU' : (currentUserInfo.studentName || 'นักศึกษา');
+  const sid = currentUserInfo.isAdmin ? 'ADMIN' : (currentUserInfo.studentId || '—');
+  const cleanSid = sid.replace(/-/g, '').trim();
+  const rawEmail = currentUserInfo.isAdmin ? 'admin@sskru.ac.th' : `stu${cleanSid}@sskru.ac.th`;
+
+  if (isProfilePrivacyUnlocked) {
+    if (fullnameLockedEl) {
+      fullnameLockedEl.textContent = rawName;
+      fullnameLockedEl.classList.remove('privacy-masked');
+    }
+    if (idEl) {
+      idEl.textContent = sid;
+      idEl.classList.remove('privacy-masked');
+    }
+    if (emailLockedEl) {
+      emailLockedEl.textContent = rawEmail;
+      emailLockedEl.classList.remove('privacy-masked');
+    }
+    if (toggleBtn) {
+      toggleBtn.className = 'btn-toggle-privacy unlocked';
+      if (toggleLabel) toggleLabel.textContent = 'ซ่อนข้อมูล';
+      if (privacyIcon) privacyIcon.className = 'fa-solid fa-eye-slash';
+    }
+  } else {
+    if (fullnameLockedEl) {
+      fullnameLockedEl.textContent = '••••••••••••';
+      fullnameLockedEl.classList.add('privacy-masked');
+    }
+    if (idEl) {
+      idEl.textContent = '••••••••••';
+      idEl.classList.add('privacy-masked');
+    }
+    if (emailLockedEl) {
+      emailLockedEl.textContent = '••••••••••••••••••••';
+      emailLockedEl.classList.add('privacy-masked');
+    }
+    if (toggleBtn) {
+      toggleBtn.className = 'btn-toggle-privacy';
+      if (toggleLabel) toggleLabel.textContent = 'แสดงข้อมูล';
+      if (privacyIcon) privacyIcon.className = 'fa-solid fa-eye';
+    }
+  }
+}
+
 function populateProfilePanel() {
   const nameEl = document.getElementById('profile-name');
   const roleEl = document.getElementById('profile-role-badge');
-  const idEl = document.getElementById('profile-student-id');
-  const fullnameLockedEl = document.getElementById('profile-fullname-locked');
-  const emailLockedEl = document.getElementById('profile-email-locked');
   const accessEl = document.getElementById('profile-access-level');
   const lastAccessEl = document.getElementById('profile-last-access');
-  const avatarEl = document.getElementById('profile-avatar-large');
   const bioInput = document.getElementById('profile-bio-input');
   const nickInput = document.getElementById('profile-nickname-input');
   const bioCount = document.getElementById('bio-char-count');
 
   const userKey = currentUserInfo.studentId || currentUserInfo.username || 'guest';
-
-  // Load Custom Avatar if exists
-  const savedAvatar = localStorage.getItem('sskru_avatar_' + userKey);
-  if (savedAvatar) {
-    avatarEl.innerHTML = `<img src="${savedAvatar}" alt="Profile Avatar" />`;
-  }
 
   // Load Saved Bio & Nickname
   const savedBio = localStorage.getItem('sskru_bio_' + userKey) || '';
@@ -1258,110 +1302,59 @@ function populateProfilePanel() {
   }
   if (nickInput) nickInput.value = savedNick;
 
-  let isPrivacyUnlocked = false;
-
-  function updatePrivacyDisplay() {
-    const rawName = currentUserInfo.isAdmin ? 'ผู้ดูแลระบบหลัก SSKRU' : (currentUserInfo.studentName || 'นักศึกษา');
-    const sid = currentUserInfo.isAdmin ? 'ADMIN' : (currentUserInfo.studentId || '—');
-    const cleanSid = sid.replace(/-/g, '').trim();
-    const rawEmail = currentUserInfo.isAdmin ? 'admin@sskru.ac.th' : `stu${cleanSid}@sskru.ac.th`;
-
-    const toggleBtn = document.getElementById('btn-toggle-privacy');
-    const toggleLabel = document.getElementById('privacy-toggle-label');
-    const privacyIcon = document.getElementById('privacy-icon');
-
-    if (isPrivacyUnlocked) {
-      if (fullnameLockedEl) {
-        fullnameLockedEl.textContent = rawName;
-        fullnameLockedEl.classList.remove('privacy-masked');
-      }
-      if (idEl) {
-        idEl.textContent = sid;
-        idEl.classList.remove('privacy-masked');
-      }
-      if (emailLockedEl) {
-        emailLockedEl.textContent = rawEmail;
-        emailLockedEl.classList.remove('privacy-masked');
-      }
-      if (toggleBtn) {
-        toggleBtn.className = 'btn-toggle-privacy unlocked';
-        if (toggleLabel) toggleLabel.textContent = 'ซ่อนข้อมูล';
-        if (privacyIcon) privacyIcon.className = 'fa-solid fa-eye-slash';
-      }
-    } else {
-      if (fullnameLockedEl) {
-        fullnameLockedEl.textContent = '••••••••••••';
-        fullnameLockedEl.classList.add('privacy-masked');
-      }
-      if (idEl) {
-        idEl.textContent = '••••••••••';
-        idEl.classList.add('privacy-masked');
-      }
-      if (emailLockedEl) {
-        emailLockedEl.textContent = '••••••••••••••••••••';
-        emailLockedEl.classList.add('privacy-masked');
-      }
-      if (toggleBtn) {
-        toggleBtn.className = 'btn-toggle-privacy';
-        if (toggleLabel) toggleLabel.textContent = 'แสดงข้อมูล';
-        if (privacyIcon) privacyIcon.className = 'fa-solid fa-eye';
-      }
-    }
-  }
-
   if (currentUserInfo.isAdmin) {
-    nameEl.textContent = savedNick ? `${savedNick} (Admin)` : 'ผู้ดูแลระบบ (Admin)';
-    roleEl.textContent = 'ผู้ดูแลระบบ';
-    roleEl.classList.add('admin');
-    accessEl.textContent = 'จัดการอาคาร, ลากหมุด, แก้ไขข้อมูล';
-    if (!savedAvatar) {
-      avatarEl.classList.add('admin');
-      avatarEl.innerHTML = '<i class="fa-solid fa-user-shield"></i>';
+    if (nameEl) nameEl.textContent = savedNick ? `${savedNick} (Admin)` : 'ผู้ดูแลระบบ (Admin)';
+    if (roleEl) {
+      roleEl.textContent = 'ผู้ดูแลระบบ';
+      roleEl.classList.add('admin');
     }
+    if (accessEl) accessEl.textContent = 'จัดการอาคาร, ลากหมุด, แก้ไขข้อมูล';
   } else if (currentUserInfo.isStudent) {
     const rawName = currentUserInfo.studentName || 'นักศึกษา';
-    nameEl.textContent = savedNick ? `${rawName} (${savedNick})` : rawName;
-    roleEl.textContent = 'นักศึกษา';
-    roleEl.classList.remove('admin');
-    accessEl.textContent = 'ดูแผนที่และค้นหาอาคาร';
-    if (!savedAvatar) {
-      avatarEl.classList.remove('admin');
-      avatarEl.innerHTML = '<i class="fa-solid fa-user-graduate"></i>';
+    if (nameEl) nameEl.textContent = savedNick ? `${rawName} (${savedNick})` : rawName;
+    if (roleEl) {
+      roleEl.textContent = 'นักศึกษา';
+      roleEl.classList.remove('admin');
     }
+    if (accessEl) accessEl.textContent = 'ดูแผนที่และค้นหาอาคาร';
   }
 
-  updatePrivacyDisplay();
+  updateProfilePrivacyDisplay();
 
-  lastAccessEl.textContent = new Date().toLocaleString('th-TH', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  });
-
-  initProfileEventListeners(userKey);
-  initPrivacyShieldListeners(userKey, updatePrivacyDisplay, () => isPrivacyUnlocked, (val) => { isPrivacyUnlocked = val; });
+  if (lastAccessEl) {
+    lastAccessEl.textContent = new Date().toLocaleString('th-TH', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    });
+  }
 }
 
-function initPrivacyShieldListeners(userKey, updatePrivacyDisplay, getUnlocked, setUnlocked) {
+function initProfileGlobalListeners() {
   const toggleBtn = document.getElementById('btn-toggle-privacy');
   const modalBackdrop = document.getElementById('privacy-modal-backdrop');
   const closeBtn = document.getElementById('btn-close-privacy-modal');
   const submitBtn = document.getElementById('btn-submit-privacy-password');
   const passInput = document.getElementById('privacy-password-input');
   const errorMsg = document.getElementById('privacy-error-msg');
+  const bioInput = document.getElementById('profile-bio-input');
+  const bioCount = document.getElementById('bio-char-count');
+  const saveBtn = document.getElementById('btn-save-profile');
 
   if (toggleBtn) {
-    toggleBtn.onclick = () => {
-      if (getUnlocked()) {
+    toggleBtn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (isProfilePrivacyUnlocked) {
         // Re-lock
-        setUnlocked(false);
-        updatePrivacyDisplay();
+        isProfilePrivacyUnlocked = false;
+        updateProfilePrivacyDisplay();
       } else {
         // Open password modal
         if (modalBackdrop) {
           modalBackdrop.style.display = 'flex';
           if (passInput) {
             passInput.value = '';
-            passInput.focus();
+            setTimeout(() => passInput.focus(), 100);
           }
           if (errorMsg) errorMsg.style.display = 'none';
         }
@@ -1370,8 +1363,17 @@ function initPrivacyShieldListeners(userKey, updatePrivacyDisplay, getUnlocked, 
   }
 
   if (closeBtn && modalBackdrop) {
-    closeBtn.onclick = () => {
+    closeBtn.onclick = (e) => {
+      e.preventDefault();
       modalBackdrop.style.display = 'none';
+    };
+  }
+
+  if (modalBackdrop) {
+    modalBackdrop.onclick = (e) => {
+      if (e.target === modalBackdrop) {
+        modalBackdrop.style.display = 'none';
+      }
     };
   }
 
@@ -1405,9 +1407,10 @@ function initPrivacyShieldListeners(userKey, updatePrivacyDisplay, getUnlocked, 
         submitBtn.innerHTML = '<i class="fa-solid fa-unlock"></i> ยืนยันรหัสผ่านเพื่อแสดงข้อมูล';
 
         if (data.success) {
-          setUnlocked(true);
-          updatePrivacyDisplay();
+          isProfilePrivacyUnlocked = true;
+          updateProfilePrivacyDisplay();
           modalBackdrop.style.display = 'none';
+          showToast('ปลดล็อคแสดงข้อมูลระบุตัวตนเรียบร้อยแล้ว');
         } else {
           if (errorMsg) {
             errorMsg.textContent = data.message || 'รหัสผ่านไม่ถูกต้อง';
@@ -1429,35 +1432,6 @@ function initPrivacyShieldListeners(userKey, updatePrivacyDisplay, getUnlocked, 
       if (e.key === 'Enter') handleVerify();
     };
   }
-}
-
-function initProfileEventListeners(userKey) {
-  const avatarEditBtn = document.getElementById('btn-avatar-edit');
-  const avatarInput = document.getElementById('profile-avatar-input');
-  const avatarEl = document.getElementById('profile-avatar-large');
-  const bioInput = document.getElementById('profile-bio-input');
-  const bioCount = document.getElementById('bio-char-count');
-  const saveBtn = document.getElementById('btn-save-profile');
-
-  if (avatarEditBtn && avatarInput) {
-    avatarEditBtn.onclick = () => avatarInput.click();
-    avatarInput.onchange = (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        if (file.size > 2 * 1024 * 1024) {
-          alert('ขนาดไฟล์รูปภาพต้องไม่เกิน 2MB');
-          return;
-        }
-        const reader = new FileReader();
-        reader.onload = (evt) => {
-          const base64Img = evt.target.result;
-          avatarEl.innerHTML = `<img src="${base64Img}" alt="Avatar" />`;
-          localStorage.setItem('sskru_avatar_' + userKey, base64Img);
-        };
-        reader.readAsDataURL(file);
-      }
-    };
-  }
 
   if (bioInput && bioCount) {
     bioInput.oninput = () => {
@@ -1467,6 +1441,7 @@ function initProfileEventListeners(userKey) {
 
   if (saveBtn) {
     saveBtn.onclick = () => {
+      const userKey = currentUserInfo.studentId || currentUserInfo.username || 'guest';
       const bioVal = document.getElementById('profile-bio-input')?.value.trim() || '';
       const nickVal = document.getElementById('profile-nickname-input')?.value.trim() || '';
       
@@ -3227,6 +3202,8 @@ function setupEventListeners() {
   if (btnThemeToggleMobile) btnThemeToggleMobile.onclick = () => toggleTheme();
 
   // ============ PROFILE PANEL ============
+  initProfileGlobalListeners();
+  
   const btnProfileTrigger = document.getElementById("btn-profile-trigger");
   if (btnProfileTrigger) btnProfileTrigger.onclick = () => openProfilePanel();
 

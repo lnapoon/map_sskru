@@ -142,16 +142,10 @@
         <h3>โปรไฟล์ผู้ใช้</h3>
       </div>
       <div class="profile-panel-body">
-        <!-- Avatar Section with Edit Trigger -->
+        <!-- Avatar Section (Clean without edit button) -->
         <div class="profile-avatar-section">
-          <div class="profile-avatar-wrapper">
-            <div class="profile-avatar-large" id="profile-avatar-large">
-              <i class="fa-solid fa-user-graduate"></i>
-            </div>
-            <button type="button" class="profile-avatar-edit-btn" id="btn-avatar-edit" title="เปลี่ยนรูปโปรไฟล์">
-              <i class="fa-solid fa-camera"></i>
-            </button>
-            <input type="file" id="profile-avatar-input" accept="image/*" style="display:none;" />
+          <div class="profile-avatar-large" id="profile-avatar-large">
+            <i class="fa-solid fa-user-graduate"></i>
           </div>
           <div class="profile-name" id="profile-name">ผู้ใช้งาน</div>
           <div class="profile-role-badge" id="profile-role-badge">นักศึกษา</div>
@@ -233,32 +227,6 @@
             <div class="profile-info-detail">
               <div class="profile-info-label">เข้าใช้งานล่าสุด</div>
               <div class="profile-info-value" id="profile-last-access">—</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Password Prompt Modal for Privacy Shield -->
-        <div class="privacy-modal-backdrop" id="privacy-modal-backdrop" style="display:none;">
-          <div class="privacy-modal-card">
-            <div class="privacy-modal-header">
-              <div class="privacy-modal-icon"><i class="fa-solid fa-shield-halved"></i></div>
-              <h4>ยืนยันรหัสผ่านเพื่อดูข้อมูล</h4>
-              <button type="button" class="privacy-modal-close" id="btn-close-privacy-modal"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="privacy-modal-body">
-              <p style="font-size:12.5px; color:#64748b; margin-bottom:12px; line-height:1.5;">
-                เพื่อความปลอดภัยของข้อมูลส่วนบุคคล กรุณากรอกรหัสผ่านของคุณเพื่อปลดล็อคการแสดงผล
-              </p>
-              <div class="form-group" style="margin-bottom:12px;">
-                <div class="input-wrapper" style="position:relative;">
-                  <i class="fa-solid fa-key" style="position:absolute; left:12px; top:12px; color:#94a3b8; font-size:14px;"></i>
-                  <input type="password" id="privacy-password-input" class="form-input" style="width:100%; padding:10px 14px 10px 38px; border-radius:10px; border:1.5px solid #cbd5e1; font-size:13px;" placeholder="กรอกรหัสผ่านของคุณ" />
-                </div>
-                <div id="privacy-error-msg" style="color:#ef4444; font-size:12px; margin-top:6px; display:none;"></div>
-              </div>
-              <button type="button" class="btn-primary" id="btn-submit-privacy-password" style="width:100%; padding:10px; border-radius:10px; font-weight:600; font-size:13.5px; background:linear-gradient(135deg, #1a4fa0, #2563eb);">
-                <i class="fa-solid fa-unlock"></i> ยืนยันรหัสผ่านเพื่อแสดงข้อมูล
-              </button>
             </div>
           </div>
         </div>
@@ -740,6 +708,32 @@
     </div>
   </div>
 
+  <!-- Password Prompt Modal for Privacy Shield -->
+  <div class="privacy-modal-backdrop" id="privacy-modal-backdrop" style="display:none;">
+    <div class="privacy-modal-card">
+      <div class="privacy-modal-header">
+        <div class="privacy-modal-icon"><i class="fa-solid fa-shield-halved"></i></div>
+        <h4>ยืนยันรหัสผ่านเพื่อดูข้อมูล</h4>
+        <button type="button" class="privacy-modal-close" id="btn-close-privacy-modal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="privacy-modal-body">
+        <p style="font-size:12.5px; color:#64748b; margin-bottom:12px; line-height:1.5;">
+          เพื่อความปลอดภัยของข้อมูลส่วนบุคคล กรุณากรอกรหัสผ่านบัญชีของคุณเพื่อปลดล็อคการแสดงผล
+        </p>
+        <div class="form-group" style="margin-bottom:12px;">
+          <div class="input-wrapper" style="position:relative;">
+            <i class="fa-solid fa-key" style="position:absolute; left:12px; top:12px; color:#94a3b8; font-size:14px;"></i>
+            <input type="password" id="privacy-password-input" class="form-input" style="width:100%; padding:10px 14px 10px 38px; border-radius:10px; border:1.5px solid #cbd5e1; font-size:13px;" placeholder="กรอกรหัสผ่านของคุณ" />
+          </div>
+          <div id="privacy-error-msg" style="color:#ef4444; font-size:12px; margin-top:6px; display:none;"></div>
+        </div>
+        <button type="button" class="btn-primary" id="btn-submit-privacy-password" style="width:100%; padding:10px; border-radius:10px; font-weight:600; font-size:13.5px; background:linear-gradient(135deg, #1a4fa0, #2563eb);">
+          <i class="fa-solid fa-unlock"></i> ยืนยันรหัสผ่านเพื่อแสดงข้อมูล
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Notification -->
   <div class="toast-container" id="toast-bar">
     <i class="fa-solid fa-circle-check" style="color: var(--color-open);"></i>
@@ -750,7 +744,7 @@
        SCRIPTS
        ========================================== -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script src="app.js?v=11.0"></script>
+  <script src="app.js?v=15.0"></script>
 
 </body>
 </html>
