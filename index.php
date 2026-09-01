@@ -149,7 +149,7 @@ require_once __DIR__ . '/config.php';
         <!-- Avatar Section (Clean without edit button) -->
         <div class="profile-avatar-section">
           <div class="profile-avatar-large" id="profile-avatar-large">
-            <i class="fa-solid fa-circle-user"></i>
+            <i class="fa-solid fa-user-graduate"></i>
           </div>
           <div class="profile-name" id="profile-name">ผู้ใช้งาน</div>
           <div class="profile-role-badge" id="profile-role-badge">นักศึกษา</div>
@@ -748,7 +748,7 @@ require_once __DIR__ . '/config.php';
        SCRIPTS
        ========================================== -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script src="app.js?v=16.0"></script>
+  <script src="app.js?v=17.0"></script>
 
 </body>
 </html>

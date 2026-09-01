@@ -1325,7 +1325,7 @@ function populateProfilePanel() {
     if (accessEl) accessEl.textContent = 'ดูแผนที่และค้นหาอาคาร';
     if (avatarEl) {
       avatarEl.className = 'profile-avatar-large';
-      avatarEl.innerHTML = '<i class="fa-solid fa-circle-user"></i>';
+      avatarEl.innerHTML = '<i class="fa-solid fa-user-graduate"></i>';
     }
   }
 
