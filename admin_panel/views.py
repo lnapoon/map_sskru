@@ -1078,9 +1078,7 @@ def staff_request_reset_api(request):
             'success': True,
             'message': f'ระบบได้ส่งรหัส OTP และลิงก์ยืนยันตัวตนไปยังอีเมล {target_email} เรียบร้อยแล้ว (รหัสมีอายุ 15 นาที)',
             'email': target_email,
-            'token': token,
-            'email_sent': email_sent,
-            'verify_url': verify_url
+            'email_sent': email_sent
         })
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=500)

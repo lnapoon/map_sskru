@@ -265,29 +265,32 @@ require_once __DIR__ . '/config.php';
         </button>
       </form>
 
-      <!-- Clean Success Box (Shows Email Sent Only) -->
+      <!-- Clean Success Box (Shows Email Sent Only - Strictly via Email) -->
       <div class="success-result-box" id="success-box">
-        <div class="success-icon"><i class="fa-solid fa-circle-check"></i></div>
-        <div class="success-title">ส่งรหัสยืนยันสิทธิ์สำเร็จ!</div>
+        <div class="success-icon"><i class="fa-solid fa-envelope-circle-check"></i></div>
+        <div class="success-title">ส่งอีเมลยืนยันสิทธิ์สำเร็จ!</div>
         <div class="success-desc">
-          ระบบได้ส่งรหัส OTP และลิงก์ตั้งรหัสผ่านใหม่ไปยังอีเมล <strong id="res-email"></strong> แล้ว กรุณาตรวจสอบกล่องจดหมาย (Inbox/Spam) ของท่าน
+          ระบบได้ส่งรหัส OTP และลิงก์สำหรับตั้งรหัสผ่านใหม่ไปยัง<br>
+          <strong id="res-email" style="color:#0f172a; font-size:14px; background:#e2e8f0; padding:2px 8px; border-radius:6px; display:inline-block; margin-top:6px;"></strong>
         </div>
-        <div style="margin-top: 14px;">
-          <a href="reset_password_staff_verify.php" id="link-goto-verify" style="display: inline-block; background: #166534; color: white; padding: 10px 18px; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 600;">
-            <i class="fa-solid fa-arrow-right"></i> ไปยังหน้ากรอก OTP และตั้งรหัสผ่านใหม่
-          </a>
+        <div style="background:#ffffff; border:1px solid #bbf7d0; border-radius:12px; padding:12px; font-size:12.5px; color:#64748b; line-height:1.5; margin-top:14px; text-align:left;">
+          <i class="fa-solid fa-circle-info" style="color:#2563eb;"></i> กรุณาเปิดกล่องจดหมายอีเมล (Inbox / Spam) ของท่าน และคลิกลิงก์ยืนยันที่ได้รับในอีเมลเพื่อดำเนินการตั้งรหัสผ่านใหม่ (ลิงก์มีอายุ 15 นาที)
         </div>
       </div>
     </div>
 
     <div class="card-footer">
-      <a href="login.php" class="back-link" id="link-back-login">
+      <a href="/login/" class="back-link" id="link-back-login">
         <i class="fa-solid fa-arrow-left"></i> ย้อนกลับไปหน้าเข้าสู่ระบบ
       </a>
     </div>
   </div>
 
   <script>
+    if (window.location.pathname.endsWith('.php')) {
+      document.getElementById('link-back-login').href = 'login.php';
+    }
+
     async function handleRequestReset(e) {
       e.preventDefault();
       const identifier = document.getElementById('staff-identifier-input').value.trim();
@@ -301,8 +304,11 @@ require_once __DIR__ . '/config.php';
       btn.disabled = true;
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังส่งคำขอ...';
 
+      const isPhp = window.location.pathname.endsWith('.php');
+      const endpoint = isPhp ? 'api.php?action=staff_request_reset' : '/admin/api/auth/staff_request_reset/';
+
       try {
-        const res = await fetch('api.php?action=staff_request_reset', {
+        const res = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ identifier: identifier })
@@ -313,10 +319,6 @@ require_once __DIR__ . '/config.php';
           document.getElementById('form-staff-request-reset').style.display = 'none';
           document.getElementById('res-email').textContent = data.email;
           document.getElementById('success-box').style.display = 'block';
-
-          if (data.token) {
-            document.getElementById('link-goto-verify').href = `reset_password_staff_verify.php?token=${data.token}`;
-          }
         } else {
           alert(data.message || 'ไม่สามารถส่งรหัสยืนยันได้ กรุณาลองใหม่อีกครั้ง');
           btn.disabled = false;

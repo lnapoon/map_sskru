@@ -360,9 +360,7 @@ if ($action) {
         echo json_encode([
             'success' => true,
             'message' => "ระบบได้ส่งรหัส OTP และลิงก์ยืนยันตัวตนไปยังอีเมล $target_email เรียบร้อยแล้ว (รหัสมีอายุ 15 นาที)",
-            'email' => $target_email,
-            'token' => $token,
-            'otp' => $otp
+            'email' => $target_email
         ]);
         exit();
     }
