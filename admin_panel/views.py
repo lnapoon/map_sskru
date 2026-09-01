@@ -612,8 +612,9 @@ def staff_register_api(request):
         accounts['staff'].append(new_staff)
         write_json_file(ACCOUNTS_FILE, accounts)
         
-        request.session['staff_username'] = username
-        request.session['user_role'] = 'staff'
+        if hasattr(request, 'session'):
+            request.session['staff_username'] = username
+            request.session['user_role'] = 'staff'
         
         return JsonResponse({'success': True, 'message': 'สมัครสมาชิกบุคลากรสำเร็จ!', 'username': username})
     except Exception as e:
@@ -638,8 +639,9 @@ def staff_login_api(request):
         # Admin Login Fallback
         if (identifier == env_user or identifier == 'admin' or identifier == 'lnwpoon007x') and (password == env_pass or password == 'poon300450' or password == 'sskru2026'):
             token = create_admin_session()
-            request.session['admin_token'] = token
-            request.session['user_role'] = 'admin'
+            if hasattr(request, 'session'):
+                request.session['admin_token'] = token
+                request.session['user_role'] = 'admin'
             return JsonResponse({'success': True, 'role': 'admin', 'redirect': '/admin/dashboard/', 'message': 'เข้าสู่ระบบผู้ดูแลระบบสำเร็จ'})
             
         # Staff Account Lookup
@@ -648,8 +650,9 @@ def staff_login_api(request):
         staff_match = next((s for s in accounts.get('staff', []) if (s.get('username') == identifier or s.get('email').lower() == identifier.lower()) and s.get('password_hash') == hashed_pass), None)
         
         if staff_match:
-            request.session['staff_username'] = staff_match.get('username')
-            request.session['user_role'] = 'staff'
+            if hasattr(request, 'session'):
+                request.session['staff_username'] = staff_match.get('username')
+                request.session['user_role'] = 'staff'
             return JsonResponse({'success': True, 'role': 'staff', 'redirect': '/', 'message': f'ยินดีต้อนรับ คุณ {staff_match.get("username")}'})
             
         return JsonResponse({'success': False, 'message': 'Username/Email หรือรหัสผ่านไม่ถูกต้อง'}, status=400)
@@ -863,8 +866,8 @@ def student_verify_reset_token_api(request):
         
     try:
         data = json.loads(request.body)
-        token = data.get('token', '').strip()
-        otp = data.get('otp', '').strip()
+        token = str(data.get('token') or '').strip()
+        otp = str(data.get('otp') or '').strip()
         
         resets = read_json_file(RESETS_FILE, default=[])
         matched = None
@@ -956,4 +959,238 @@ def student_reset_password_verify_page(request):
     """หน้าสร้างรหัสผ่านใหม่หลังจากยืนยันสิทธิ์อีเมลมหาวิทยาลัยสำเร็จ"""
     token = request.GET.get('token', '')
     return render(request, 'admin_panel/reset_password_verify.html', {'token': token})
+
+
+@csrf_exempt
+def staff_request_reset_api(request):
+    """ขั้นตอนที่ 1: ส่งคำขอรีเซ็ตรหัสผ่านสำหรับบุคลากร/อาจารย์ และส่ง OTP/Token ไปยังอีเมลจริง"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Method not allowed'}, status=405)
+        
+    try:
+        data = json.loads(request.body)
+        identifier = data.get('identifier', '').strip()
+        
+        if not identifier:
+            return JsonResponse({'success': False, 'message': 'กรุณากรอก Username หรือ Email ของบุคลากร'}, status=400)
+            
+        accounts = read_json_file(ACCOUNTS_FILE, default={'students': [], 'staff': []})
+        staff_match = next((s for s in accounts.get('staff', []) if s.get('username') == identifier or s.get('email', '').lower() == identifier.lower()), None)
+        
+        env_user, env_pass = get_admin_credentials()
+        
+        target_username = None
+        target_email = None
+        
+        if staff_match:
+            target_username = staff_match.get('username')
+            target_email = staff_match.get('email')
+        elif identifier == env_user or identifier == 'admin' or identifier == 'lnwpoon007x' or identifier.lower() == 'mpoontv1234@gmail.com':
+            target_username = 'ผู้ดูแลระบบหลัก (Admin)'
+            target_email = os.getenv('EMAIL_HOST_USER', 'mpoontv1234@gmail.com')
+        else:
+            return JsonResponse({'success': False, 'message': 'ไม่พบบัญชีบุคลากรที่ระบุในระบบ กรุณาตรวจสอบ Username หรือ Email อีกครั้ง'}, status=404)
+            
+        # Generate Secure Token & OTP
+        token = secrets.token_hex(24)
+        otp = str(secrets.randbelow(900000) + 100000)
+        expires_at = (datetime.now() + timedelta(minutes=15)).isoformat()
+        
+        resets = read_json_file(RESETS_FILE, default=[])
+        resets = [r for r in resets if r.get('username') != target_username and r.get('email') != target_email]
+        
+        reset_entry = {
+            'role': 'staff',
+            'username': target_username,
+            'email': target_email,
+            'token': token,
+            'otp': otp,
+            'expires_at': expires_at,
+            'used': False,
+            'created_at': datetime.now().isoformat()
+        }
+        resets.append(reset_entry)
+        write_json_file(RESETS_FILE, resets)
+        
+        verify_url = f'/reset_password/staff/verify/?token={token}'
+        verify_full_url = request.build_absolute_uri(verify_url)
+        
+        # Real SMTP Email Dispatcher
+        email_sent = False
+        try:
+            from django.core.mail import EmailMultiAlternatives
+            from django.conf import settings
+            
+            subject = '🔒 ยืนยันสิทธิ์รีเซ็ตรหัสผ่านบุคลากร — SSKRU Campus Map'
+            from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'SSKRU Campus Map <noreply@sskru.ac.th>')
+            to_email = [target_email]
+            
+            text_content = f"""
+สวัสดี คุณ {target_username}
+
+ระบบได้รับคำขอรีเซ็ตรหัสผ่านสำหรับบัญชีบุคลากรของคุณในระบบ SSKRU Campus Map
+
+รหัส OTP ยืนยันสิทธิ์ของคุณคือ: {otp}
+
+หรือคลิกลิงก์ด้านล่างเพื่อยืนยันตัวตนและตั้งรหัสผ่านใหม่ (ลิงก์มีอายุ 15 นาที):
+{verify_full_url}
+
+หากคุณไม่ได้เป็นผู้ทำรายการนี้ กรุณาเพิกเฉยต่ออีเมลฉบับนี้
+            """.strip()
+            
+            html_content = f"""
+            <!DOCTYPE html>
+            <html>
+            <head><meta charset="UTF-8"></head>
+            <body style="font-family: 'Sarabun', Arial, sans-serif; background-color: #f1f5f9; padding: 20px; color: #1e293b;">
+              <div style="max-width: 520px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+                <div style="background: linear-gradient(135deg, #0d2c5e, #1a4fa0); padding: 24px; text-align: center; color: #ffffff;">
+                  <h2 style="margin: 0; font-size: 20px;">มหาวิทยาลัยราชภัฏศรีสะเกษ</h2>
+                  <p style="margin: 4px 0 0; font-size: 13px; opacity: 0.85;">ระบบแผนที่และสารสนเทศอาคาร (SSKRU Faculty & Staff)</p>
+                </div>
+                <div style="padding: 28px;">
+                  <h3 style="color: #0f172a; margin-top: 0;">เรียน คุณ {target_username}</h3>
+                  <p style="color: #475569; font-size: 14px; line-height: 1.6;">
+                    ระบบได้รับคำขอรีเซ็ตรหัสผ่านสำหรับบัญชีบุคลากรของคุณ กรุณาใช้รหัส OTP หรือคลิกปุ่มด้านล่างเพื่อยืนยันสิทธิ์และตั้งรหัสผ่านใหม่:
+                  </p>
+                  
+                  <div style="background: #f8fafc; border: 1.5px dashed #cbd5e1; border-radius: 12px; padding: 16px; text-align: center; margin: 20px 0;">
+                    <div style="font-size: 12px; color: #64748b; margin-bottom: 4px;">รหัส OTP ยืนยันสิทธิ์ (มีอายุ 15 นาที)</div>
+                    <div style="font-size: 28px; font-weight: bold; color: #1a4fa0; letter-spacing: 6px;">{otp}</div>
+                  </div>
+                  
+                  <div style="text-align: center; margin: 24px 0;">
+                    <a href="{verify_full_url}" style="background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; display: inline-block; font-size: 14px;">
+                      👉 คลิกที่นี่เพื่อยืนยันสิทธิ์ & ตั้งรหัสผ่านใหม่
+                    </a>
+                  </div>
+                  
+                  <p style="font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 14px; margin-bottom: 0;">
+                    * หากคุณไม่ได้เป็นผู้ทำรายการนี้ กรุณาเพิกเฉยต่ออีเมลฉบับนี้ รหัสผ่านเดิมของคุณจะยังคงปลอดภัย
+                  </p>
+                </div>
+              </div>
+            </body>
+            </html>
+            """
+            
+            msg = EmailMultiAlternatives(subject, text_content, from_email, to_email)
+            msg.attach_alternative(html_content, "text/html")
+            msg.send(fail_silently=True)
+            email_sent = True
+        except Exception as mail_err:
+            print(f"Mail send notice: {mail_err}")
+            
+        return JsonResponse({
+            'success': True,
+            'message': f'ระบบได้ส่งรหัส OTP และลิงก์ยืนยันตัวตนไปยังอีเมล {target_email} เรียบร้อยแล้ว (รหัสมีอายุ 15 นาที)',
+            'email': target_email,
+            'token': token,
+            'email_sent': email_sent,
+            'verify_url': verify_url
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+
+@csrf_exempt
+def staff_verify_reset_token_api(request):
+    """ขั้นตอนที่ 2: ตรวจสอบความถูกต้องของ Token หรือ OTP ยืนยันสิทธิ์สำหรับบุคลากร"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Method not allowed'}, status=405)
+        
+    try:
+        data = json.loads(request.body)
+        token = str(data.get('token') or '').strip()
+        otp = str(data.get('otp') or '').strip()
+        
+        resets = read_json_file(RESETS_FILE, default=[])
+        matched = None
+        for r in resets:
+            if not r.get('used'):
+                if (token and r.get('token') == token) or (otp and r.get('otp') == otp):
+                    matched = r
+                    break
+                    
+        if not matched:
+            return JsonResponse({'success': False, 'message': 'ลิงก์ยืนยันตัวตนหรือรหัส OTP ไม่ถูกต้อง หรือถูกใช้งานไปแล้ว'}, status=400)
+            
+        exp = datetime.fromisoformat(matched.get('expires_at'))
+        if datetime.now() > exp:
+            return JsonResponse({'success': False, 'message': 'ลิงก์ยืนยันตัวตนหมดอายุแล้ว กรุณาทำรายการใหม่อีกครั้ง'}, status=400)
+            
+        return JsonResponse({
+            'success': True,
+            'token': matched.get('token'),
+            'username': matched.get('username'),
+            'email': matched.get('email')
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+
+@csrf_exempt
+def staff_confirm_new_password_api(request):
+    """ขั้นตอนที่ 3: บันทึกรหัสผ่านใหม่สำหรับบัญชีบุคลากรหลังจากยืนยันสิทธิ์อีเมลสำเร็จ"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Method not allowed'}, status=405)
+        
+    try:
+        data = json.loads(request.body)
+        token = data.get('token', '').strip()
+        new_password = data.get('new_password', '').strip()
+        
+        if not token or not new_password:
+            return JsonResponse({'success': False, 'message': 'ข้อมูลไม่ครบถ้วน'}, status=400)
+            
+        resets = read_json_file(RESETS_FILE, default=[])
+        matched = next((r for r in resets if r.get('token') == token and not r.get('used')), None)
+        
+        if not matched:
+            return JsonResponse({'success': False, 'message': 'Token ยืนยันสิทธิ์ไม่ถูกต้องหรือหมดอายุ'}, status=400)
+            
+        exp = datetime.fromisoformat(matched.get('expires_at'))
+        if datetime.now() > exp:
+            return JsonResponse({'success': False, 'message': 'Token หมดอายุแล้ว กรุณาทำรายการใหม่อีกครั้ง'}, status=400)
+            
+        username = matched.get('username')
+        email = matched.get('email')
+        
+        # Update Accounts DB
+        accounts = read_json_file(ACCOUNTS_FILE, default={'students': [], 'staff': []})
+        hashed_pass = hashlib.sha256(new_password.encode('utf-8')).hexdigest()
+        
+        staff_acc = next((acc for acc in accounts.get('staff', []) if acc.get('username') == username or acc.get('email') == email), None)
+        if staff_acc:
+            staff_acc['password_hash'] = hashed_pass
+        else:
+            accounts['staff'].append({
+                'username': username,
+                'email': email,
+                'password_hash': hashed_pass,
+                'created_at': datetime.now().isoformat()
+            })
+        write_json_file(ACCOUNTS_FILE, accounts)
+        
+        # Mark token used
+        matched['used'] = True
+        write_json_file(RESETS_FILE, resets)
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'สร้างและตั้งรหัสผ่านใหม่สำหรับบุคลากรสำเร็จ! ท่านสามารถเข้าสู่ระบบด้วยรหัสผ่านใหม่ได้ทันที'
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+
+def staff_reset_password_page(request):
+    """หน้าสำหรับขอส่งลิงก์ยืนยันตัวตนไปยังอีเมลบุคลากร"""
+    return render(request, 'admin_panel/reset_password_staff.html')
+
+def staff_reset_password_verify_page(request):
+    """หน้าสร้างรหัสผ่านใหม่หลังจากยืนยันสิทธิ์อีเมลบุคลากรสำเร็จ"""
+    token = request.GET.get('token', '')
+    return render(request, 'admin_panel/reset_password_staff_verify.html', {'token': token})
+
 

@@ -371,8 +371,11 @@ require_once __DIR__ . '/config.php';
           </button>
         </form>
 
-        <div class="sub-link-container">
-          <a href="/register/staff/" class="sub-link" id="link-reg-staff">
+        <div class="sub-link-container" style="display: flex; flex-direction: column; gap: 8px; margin-top: 14px;">
+          <a href="reset_password_staff.php" class="sub-link" id="link-reset-staff" style="color: #2563eb; font-weight: 600;">
+            <i class="fa-solid fa-key"></i> ลืมรหัสผ่านบุคลากร? กู้คืนรหัสผ่านที่นี่
+          </a>
+          <a href="register_staff.php" class="sub-link" id="link-reg-staff">
             <i class="fa-solid fa-user-plus"></i> ยังไม่มีบัญชีบุคลากร? สมัครสมาชิกบุคลากรใหม่ที่นี่
           </a>
         </div>
@@ -381,12 +384,14 @@ require_once __DIR__ . '/config.php';
   </div>
 
   <script>
-    // Adapt link for PHP environment if loaded on .php
     if (window.location.pathname.endsWith('.php')) {
       document.getElementById('link-reg-student').href = 'register_student.php';
       document.getElementById('link-reg-staff').href = 'register_staff.php';
       if (document.getElementById('link-reset-student')) {
         document.getElementById('link-reset-student').href = 'reset_password_student.php';
+      }
+      if (document.getElementById('link-reset-staff')) {
+        document.getElementById('link-reset-staff').href = 'reset_password_staff.php';
       }
     }
 

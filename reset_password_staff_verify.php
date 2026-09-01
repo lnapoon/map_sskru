@@ -1,0 +1,370 @@
+<?php
+require_once __DIR__ . '/config.php';
+$token = $_GET['token'] ?? '';
+?>
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>สร้างรหัสผ่านใหม่สำหรับบุคลากร — SSKRU Campus Map</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #1a4fa0;
+      --primary-dark: #0d2c5e;
+      --primary-light: #2563eb;
+      --accent: #f59e0b;
+      --danger: #ef4444;
+      --success: #10b981;
+      --surface: #ffffff;
+      --text: #1e293b;
+      --text-secondary: #64748b;
+    }
+
+    body {
+      font-family: 'Sarabun', 'Outfit', sans-serif;
+      background: linear-gradient(135deg, #0d2c5e 0%, #1a4fa0 40%, #2563eb 70%, #1e40af 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .particles {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+    }
+    .particle {
+      position: absolute;
+      width: 6px; height: 6px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 50%;
+      animation: rise 12s linear infinite;
+    }
+    .particle:nth-child(2) { left: 15%; width: 4px; height: 4px; animation-delay: 2s; animation-duration: 14s; }
+    .particle:nth-child(3) { left: 35%; width: 8px; height: 8px; animation-delay: 4s; animation-duration: 10s; }
+    @keyframes rise {
+      0% { bottom: -10%; opacity: 0; }
+      100% { bottom: 110%; opacity: 0; }
+    }
+
+    .login-card {
+      position: relative;
+      z-index: 1;
+      background: rgba(255,255,255,0.96);
+      backdrop-filter: blur(20px);
+      border-radius: 24px;
+      box-shadow: 0 25px 80px rgba(0,0,0,0.3);
+      width: 100%;
+      max-width: 480px;
+      overflow: hidden;
+      animation: cardIn 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+    @keyframes cardIn {
+      0% { opacity: 0; transform: translateY(30px) scale(0.95); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .card-header {
+      background: linear-gradient(135deg, var(--primary-dark), var(--primary-light));
+      padding: 32px 28px 24px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .card-header::after {
+      content: '';
+      position: absolute;
+      bottom: -20px; left: -10%; right: -10%;
+      height: 40px;
+      background: rgba(255,255,255,0.96);
+      border-radius: 50% 50% 0 0;
+    }
+
+    .university-badge {
+      width: 68px; height: 68px;
+      background: rgba(255,255,255,0.15);
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 12px;
+      font-size: 30px;
+      color: white;
+    }
+
+    .card-header h1 {
+      color: white;
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+    .card-header p {
+      color: rgba(255,255,255,0.85);
+      font-size: 12.5px;
+    }
+
+    .card-body {
+      padding: 28px;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .input-icon {
+      position: absolute;
+      left: 14px;
+      color: var(--text-secondary);
+      font-size: 15px;
+    }
+    .form-input {
+      width: 100%;
+      padding: 12px 14px 12px 42px;
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
+      color: var(--text);
+      font-size: 13.5px;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+    .form-input:focus {
+      border-color: var(--primary-light);
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 13px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 14.5px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 16px rgba(26, 79, 160, 0.3);
+      transition: all 0.25s ease;
+      margin-top: 10px;
+    }
+    .btn-primary:hover {
+      transform: translateY(-1px);
+    }
+
+    .card-footer {
+      padding: 16px 28px;
+      background: #f8fafc;
+      border-top: 1px solid #e2e8f0;
+      text-align: center;
+    }
+    .back-link {
+      color: var(--primary-light);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .back-link:hover {
+      text-decoration: underline;
+    }
+
+    .user-info-banner {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-bottom: 18px;
+      font-size: 13px;
+      color: #1e40af;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="particles">
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+  </div>
+
+  <div class="login-card">
+    <div class="card-header">
+      <div class="university-badge">
+        <i class="fa-solid fa-lock-open"></i>
+      </div>
+      <h1>ตั้งรหัสผ่านใหม่ (บุคลากร)</h1>
+      <p>มหาวิทยาลัยราชภัฏศรีสะเกษ (SSKRU Faculty & Staff)</p>
+    </div>
+
+    <div class="card-body">
+      <!-- Step A: Enter OTP / Token -->
+      <div id="section-verify-token">
+        <div class="intro-text" style="font-size: 13px; color: #64748b; margin-bottom: 16px; line-height: 1.5;">
+          กรุณากรอกรหัส <strong>OTP 6 หลัก</strong> ที่ได้รับในอีเมลของท่านเพื่อยืนยันสิทธิ์:
+        </div>
+
+        <form id="form-verify-otp" onsubmit="handleVerifyOtp(event)">
+          <div class="form-group">
+            <label class="form-label">รหัส OTP ยืนยันสิทธิ์ (6 หลัก)</label>
+            <div class="input-wrapper">
+              <i class="fa-solid fa-shield-halved input-icon"></i>
+              <input type="text" id="otp-input" class="form-input" placeholder="กรอกรหัส OTP เช่น 123456" maxlength="6" style="letter-spacing: 4px; font-weight: bold; font-size: 16px;" required />
+            </div>
+          </div>
+          <button type="submit" class="btn-primary" id="btn-verify-otp">
+            <i class="fa-solid fa-check"></i> ตรวจสอบรหัส OTP
+          </button>
+        </form>
+      </div>
+
+      <!-- Step B: Set New Password Form -->
+      <div id="section-new-password" style="display: none;">
+        <div class="user-info-banner">
+          <i class="fa-solid fa-circle-user" style="font-size: 20px;"></i>
+          <div>
+            <div>บัญชีบุคลากร: <strong id="display-staff-name"></strong></div>
+            <div style="font-size: 11.5px; opacity: 0.85;" id="display-staff-email"></div>
+          </div>
+        </div>
+
+        <form id="form-set-new-password" onsubmit="handleSetNewPassword(event)">
+          <div class="form-group">
+            <label class="form-label">รหัสผ่านใหม่ (New Password)</label>
+            <div class="input-wrapper">
+              <i class="fa-solid fa-lock input-icon"></i>
+              <input type="password" id="new-password-input" class="form-input" placeholder="กำหนดรหัสผ่านใหม่" required minlength="4" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">ยืนยันรหัสผ่านใหม่ (Confirm Password)</label>
+            <div class="input-wrapper">
+              <i class="fa-solid fa-lock-check input-icon"></i>
+              <input type="password" id="confirm-password-input" class="form-input" placeholder="กรอกรหัสผ่านใหม่อีกครั้ง" required minlength="4" />
+            </div>
+          </div>
+
+          <button type="submit" class="btn-primary" id="btn-submit-new-pass">
+            <i class="fa-solid fa-floppy-disk"></i> บันทึกและตั้งรหัสผ่านใหม่
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card-footer">
+      <a href="login.php" class="back-link" id="link-back-login">
+        <i class="fa-solid fa-arrow-left"></i> ย้อนกลับไปหน้าเข้าสู่ระบบ
+      </a>
+    </div>
+  </div>
+
+  <script>
+    let activeToken = "<?= htmlspecialchars($token, ENT_QUOTES, 'UTF-8') ?>";
+
+    // Auto verify if token is passed in URL query
+    if (activeToken) {
+      verifyToken(activeToken, '');
+    }
+
+    async function handleVerifyOtp(e) {
+      e.preventDefault();
+      const otp = document.getElementById('otp-input').value.trim();
+      if (!otp) return;
+      verifyToken('', otp);
+    }
+
+    async function verifyToken(token, otp) {
+      try {
+        const res = await fetch('api.php?action=staff_verify_reset_token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: token, otp: otp })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          activeToken = data.token;
+          document.getElementById('section-verify-token').style.display = 'none';
+          document.getElementById('section-new-password').style.display = 'block';
+          document.getElementById('display-staff-name').textContent = data.username;
+          document.getElementById('display-staff-email').textContent = data.email;
+        } else {
+          if (otp) alert(data.message || 'รหัส OTP ไม่ถูกต้องหรือหมดอายุ');
+        }
+      } catch (err) {
+        if (otp) alert('เกิดข้อผิดพลาดในการตรวจสอบรหัส OTP');
+      }
+    }
+
+    async function handleSetNewPassword(e) {
+      e.preventDefault();
+      const pass1 = document.getElementById('new-password-input').value.trim();
+      const pass2 = document.getElementById('confirm-password-input').value.trim();
+      const btn = document.getElementById('btn-submit-new-pass');
+
+      if (pass1 !== pass2) {
+        alert('รหัสผ่านทั้งสองช่องไม่ตรงกัน กรุณาตรวจสอบอีกครั้ง');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึกรหัสผ่านใหม่...';
+
+      try {
+        const res = await fetch('api.php?action=staff_confirm_new_password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: activeToken, new_password: pass1 })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          alert('ตั้งรหัสผ่านใหม่สำหรับบุคลากรสำเร็จ! ท่านสามารถเข้าสู่ระบบด้วยรหัสผ่านใหม่ได้ทันที');
+          window.location.href = 'login.php';
+        } else {
+          alert(data.message || 'ไม่สามารถตั้งรหัสผ่านใหม่ได้ กรุณาลองใหม่อีกครั้ง');
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> บันทึกและตั้งรหัสผ่านใหม่';
+        }
+      } catch (err) {
+        alert('เกิดข้อผิดพลาดในการบันทึกรหัสผ่านใหม่');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> บันทึกและตั้งรหัสผ่านใหม่';
+      }
+    }
+  </script>
+</body>
+</html>

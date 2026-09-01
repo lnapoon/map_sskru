@@ -9,5 +9,12 @@
       "created_at": "2026-09-01T23:42:05.051060"
     }
   ],
-  "staff": []
+  "staff": [
+    {
+      "email": "mpoontv1234@gmail.com",
+      "username": "poon_staff",
+      "password_hash": "91df923741250d13d1d5bf907f0f0ffa8f0e1b4175b4a0015501c40859b87744",
+      "created_at": "2026-09-02T00:54:56.748546"
+    }
+  ]
 }

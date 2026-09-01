@@ -23,6 +23,9 @@ urlpatterns = [
     path('api/auth/student_request_reset/',       views.student_request_reset_api,   name='student_request_reset_api'),
     path('api/auth/student_verify_reset_token/',  views.student_verify_reset_token_api, name='student_verify_reset_token_api'),
     path('api/auth/student_confirm_new_password/', views.student_confirm_new_password_api, name='student_confirm_new_password_api'),
+    path('api/auth/staff_request_reset/',         views.staff_request_reset_api,     name='staff_request_reset_api'),
+    path('api/auth/staff_verify_reset_token/',    views.staff_verify_reset_token_api, name='staff_verify_reset_token_api'),
+    path('api/auth/staff_confirm_new_password/',  views.staff_confirm_new_password_api, name='staff_confirm_new_password_api'),
     path('api/auth/verify_password/',             views.verify_current_user_password_api, name='verify_current_user_password_api'),
 
     # Dedicated Register & Password Reset Pages
@@ -30,4 +33,6 @@ urlpatterns = [
     path('register/staff/',                       views.staff_register_page,         name='staff_register_page'),
     path('reset_password/student/',               views.student_reset_password_page, name='student_reset_password_page'),
     path('reset_password/student/verify/',        views.student_reset_password_verify_page, name='student_reset_password_verify_page'),
+    path('reset_password/staff/',                 views.staff_reset_password_page,   name='staff_reset_password_page'),
+    path('reset_password/staff/verify/',          views.staff_reset_password_verify_page, name='staff_reset_password_verify_page'),
 ]

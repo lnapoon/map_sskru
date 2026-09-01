@@ -271,6 +271,170 @@ if ($action) {
         exit();
     }
 
+    if ($action === 'staff_request_reset') {
+        $identifier = trim($input_data['identifier'] ?? '');
+        if (!$identifier) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'กรุณากรอก Username หรือ Email ของบุคลากร']);
+            exit();
+        }
+
+        $target_username = null;
+        $target_email = null;
+
+        foreach ($accounts['staff'] as $st) {
+            if ($st['username'] === $identifier || strtolower($st['email']) === strtolower($identifier)) {
+                $target_username = $st['username'];
+                $target_email = $st['email'];
+                break;
+            }
+        }
+
+        if (!$target_username) {
+            if ($identifier === 'admin' || $identifier === 'lnwpoon007x' || strtolower($identifier) === 'mpoontv1234@gmail.com') {
+                $target_username = 'ผู้ดูแลระบบ (Admin)';
+                $target_email = 'mpoontv1234@gmail.com';
+            } else {
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'ไม่พบบัญชีบุคลากรที่ระบุในระบบ']);
+                exit();
+            }
+        }
+
+        $token = bin2hex(random_bytes(24));
+        $otp = strval(rand(100000, 999999));
+        $expires_at = date('c', strtotime('+15 minutes'));
+
+        // Clear previous resets for this staff
+        $resets = array_values(array_filter($resets, function($r) use ($target_username, $target_email) {
+            return ($r['username'] ?? '') !== $target_username && ($r['email'] ?? '') !== $target_email;
+        }));
+
+        $reset_entry = [
+            'role' => 'staff',
+            'username' => $target_username,
+            'email' => $target_email,
+            'token' => $token,
+            'otp' => $otp,
+            'expires_at' => $expires_at,
+            'used' => false,
+            'created_at' => date('c')
+        ];
+        $resets[] = $reset_entry;
+        file_put_contents($resets_file, json_encode($resets, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+
+        // SMTP Email notice (if mail configured)
+        @mail(
+            $target_email,
+            '=?UTF-8?B?'.base64_encode('🔒 ยืนยันสิทธิ์รีเซ็ตรหัสผ่านบุคลากร — SSKRU Campus Map').'?=',
+            "สวัสดี คุณ $target_username\n\nรหัส OTP สำหรับยืนยันสิทธิ์รีเซ็ตรหัสผ่านของคุณคือ: $otp\n(รหัสมีอายุ 15 นาที)\n\nหากคุณไม่ได้เป็นผู้ทำรายการนี้ กรุณาเพิกเฉยต่ออีเมลฉบับนี้",
+            "From: SSKRU Campus Map <noreply@sskru.ac.th>\r\nContent-Type: text/plain; charset=UTF-8"
+        );
+
+        echo json_encode([
+            'success' => true,
+            'message' => "ระบบได้ส่งรหัส OTP และลิงก์ยืนยันตัวตนไปยังอีเมล $target_email เรียบร้อยแล้ว (รหัสมีอายุ 15 นาที)",
+            'email' => $target_email,
+            'token' => $token,
+            'otp' => $otp
+        ]);
+        exit();
+    }
+
+    if ($action === 'staff_verify_reset_token') {
+        $token = trim($input_data['token'] ?? '');
+        $otp = trim($input_data['otp'] ?? '');
+
+        $matched = null;
+        foreach ($resets as $r) {
+            if (!$r['used']) {
+                if (($token && ($r['token'] ?? '') === $token) || ($otp && ($r['otp'] ?? '') === $otp)) {
+                    $matched = $r;
+                    break;
+                }
+            }
+        }
+
+        if (!$matched) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'ลิงก์ยืนยันตัวตนหรือรหัส OTP ไม่ถูกต้อง หรือถูกใช้งานไปแล้ว']);
+            exit();
+        }
+
+        if (time() > strtotime($matched['expires_at'])) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'ลิงก์ยืนยันตัวตนหมดอายุแล้ว']);
+            exit();
+        }
+
+        echo json_encode([
+            'success' => true,
+            'token' => $matched['token'],
+            'username' => $matched['username'] ?? 'Staff',
+            'email' => $matched['email'] ?? ''
+        ]);
+        exit();
+    }
+
+    if ($action === 'staff_confirm_new_password') {
+        $token = trim($input_data['token'] ?? '');
+        $new_pass = trim($input_data['new_password'] ?? '');
+
+        if (!$token || !$new_pass) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'ข้อมูลไม่ครบถ้วน']);
+            exit();
+        }
+
+        $matched_idx = -1;
+        for ($i = 0; $i < count($resets); $i++) {
+            if (!$resets[$i]['used'] && ($resets[$i]['token'] ?? '') === $token) {
+                $matched_idx = $i;
+                break;
+            }
+        }
+
+        if ($matched_idx === -1) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Token ยืนยันสิทธิ์ไม่ถูกต้องหรือหมดอายุ']);
+            exit();
+        }
+
+        if (time() > strtotime($resets[$matched_idx]['expires_at'])) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Token หมดอายุแล้ว']);
+            exit();
+        }
+
+        $username = $resets[$matched_idx]['username'] ?? '';
+        $email = $resets[$matched_idx]['email'] ?? '';
+        $hashed = hash('sha256', $new_pass);
+
+        $found = false;
+        foreach ($accounts['staff'] as &$acc) {
+            if ($acc['username'] === $username || (isset($acc['email']) && strtolower($acc['email']) === strtolower($email))) {
+                $acc['password_hash'] = $hashed;
+                $found = true;
+                break;
+            }
+        }
+        if (!$found) {
+            $accounts['staff'][] = [
+                'username' => $username,
+                'email' => $email,
+                'password_hash' => $hashed,
+                'created_at' => date('c')
+            ];
+        }
+        file_put_contents($accounts_file, json_encode($accounts, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+
+        $resets[$matched_idx]['used'] = true;
+        file_put_contents($resets_file, json_encode($resets, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+
+        echo json_encode(['success' => true, 'message' => 'สร้างและตั้งรหัสผ่านใหม่สำหรับบุคลากรสำเร็จ']);
+        exit();
+    }
+
     if ($action === 'verify_password') {
         $pass = trim($input_data['password'] ?? '');
         $sid = trim($input_data['student_id'] ?? '');

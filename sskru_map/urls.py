@@ -14,6 +14,8 @@ urlpatterns = [
     path('register/staff/', admin_views.staff_register_page, name='staff_register_page'),
     path('reset_password/student/', admin_views.student_reset_password_page, name='student_reset_password_page'),
     path('reset_password/student/verify/', admin_views.student_reset_password_verify_page, name='student_reset_password_verify_page'),
+    path('reset_password/staff/', admin_views.staff_reset_password_page, name='staff_reset_password_page'),
+    path('reset_password/staff/verify/', admin_views.staff_reset_password_verify_page, name='staff_reset_password_verify_page'),
     path('logout/', api_views.logout_view, name='logout'),
     path('admin/', include('admin_panel.urls')),
     path('api/track', track_event, name='track_event'),
