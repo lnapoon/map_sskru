@@ -667,6 +667,7 @@ def verify_current_user_password_api(request):
         data = json.loads(request.body)
         password = data.get('password', '').strip()
         student_id = data.get('student_id', '').strip() or request.session.get('student_id', '')
+        clean_sid = student_id.replace('-', '').strip()
         
         if not password:
             return JsonResponse({'success': False, 'message': 'กรุณากรอกรหัสผ่าน'}, status=400)
@@ -677,22 +678,28 @@ def verify_current_user_password_api(request):
         if password == env_pass or password == 'poon300450' or password == 'sskru2026':
             return JsonResponse({'success': True, 'message': 'ยืนยันรหัสผ่านสำเร็จ (Admin)'})
             
-        # 2. Check Student password
+        # 2. Check Student password from ACCOUNTS_FILE
         accounts = read_json_file(ACCOUNTS_FILE, default={'students': [], 'staff': []})
         hashed_pass = hashlib.sha256(password.encode('utf-8')).hexdigest()
         
-        if student_id:
-            student_acc = next((s for s in accounts.get('students', []) if s.get('student_id') == student_id), None)
-            if student_acc and student_acc.get('password_hash') == hashed_pass:
-                return JsonResponse({'success': True, 'message': 'ยืนยันรหัสผ่านสำเร็จ'})
+        # Match by specific student_id
+        if student_id or clean_sid:
+            student_acc = next((s for s in accounts.get('students', []) if s.get('student_id') == student_id or s.get('student_id') == clean_sid), None)
+            if student_acc:
+                if student_acc.get('password_hash') == hashed_pass or student_acc.get('password') == password:
+                    return JsonResponse({'success': True, 'message': 'ยืนยันรหัสผ่านสำเร็จ'})
                 
-        # 3. Check any matching student or staff
-        matched_any = any(s.get('password_hash') == hashed_pass for s in accounts.get('students', [])) or \
-                      any(st.get('password_hash') == hashed_pass for st in accounts.get('staff', []))
+        # Match across any registered student or staff account
+        matched_any = any(s.get('password_hash') == hashed_pass or s.get('password') == password for s in accounts.get('students', [])) or \
+                      any(st.get('password_hash') == hashed_pass or st.get('password') == password for st in accounts.get('staff', []))
                       
         if matched_any:
             return JsonResponse({'success': True, 'message': 'ยืนยันรหัสผ่านสำเร็จ'})
             
+        # Fallback: Check if password matches student ID or citizen ID
+        if password == student_id or password == clean_sid:
+            return JsonResponse({'success': True, 'message': 'ยืนยันรหัสผ่านสำเร็จ'})
+
         return JsonResponse({'success': False, 'message': 'รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง'}, status=401)
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=500)

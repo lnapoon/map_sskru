@@ -1302,6 +1302,8 @@ function populateProfilePanel() {
   }
   if (nickInput) nickInput.value = savedNick;
 
+  const avatarEl = document.getElementById('profile-avatar-large');
+
   if (currentUserInfo.isAdmin) {
     if (nameEl) nameEl.textContent = savedNick ? `${savedNick} (Admin)` : 'ผู้ดูแลระบบ (Admin)';
     if (roleEl) {
@@ -1309,6 +1311,10 @@ function populateProfilePanel() {
       roleEl.classList.add('admin');
     }
     if (accessEl) accessEl.textContent = 'จัดการอาคาร, ลากหมุด, แก้ไขข้อมูล';
+    if (avatarEl) {
+      avatarEl.className = 'profile-avatar-large admin';
+      avatarEl.innerHTML = '<i class="fa-solid fa-user-shield"></i>';
+    }
   } else if (currentUserInfo.isStudent) {
     const rawName = currentUserInfo.studentName || 'นักศึกษา';
     if (nameEl) nameEl.textContent = savedNick ? `${rawName} (${savedNick})` : rawName;
@@ -1317,6 +1323,10 @@ function populateProfilePanel() {
       roleEl.classList.remove('admin');
     }
     if (accessEl) accessEl.textContent = 'ดูแผนที่และค้นหาอาคาร';
+    if (avatarEl) {
+      avatarEl.className = 'profile-avatar-large';
+      avatarEl.innerHTML = '<i class="fa-solid fa-circle-user"></i>';
+    }
   }
 
   updateProfilePrivacyDisplay();
