@@ -1,26 +1,42 @@
 [
   {
+    "student_id": "6812732120",
+    "citizen_id": "1330100123456",
+    "name": "นายมนต์พระกาญจน์ คำเหลือ",
+    "name_en": "Mr. Monphrakan Khamluea",
+    "faculty": "มหาวิทยาลัยราชภัฏศรีสะเกษ",
+    "major": "เทคโนโลยีดิจิทัล"
+  },
+  {
+    "student_id": "6812732119",
+    "citizen_id": "1330100123457",
+    "name": "นายภูพิรัฐ แซ่โค้ว",
+    "name_en": "Mr. Phupirat Saekhow",
+    "faculty": "มหาวิทยาลัยราชภัฏศรีสะเกษ",
+    "major": "เทคโนโลยีดิจิทัล"
+  },
+  {
+    "student_id": "6812732137",
+    "citizen_id": "1330100123458",
+    "name": "นางสาวญาณภา มงคล",
+    "name_en": "Ms. Yanapha Mongkhon",
+    "faculty": "มหาวิทยาลัยราชภัฏศรีสะเกษ",
+    "major": "เทคโนโลยีดิจิทัล"
+  },
+  {
+    "student_id": "6812732124",
+    "citizen_id": "1330100123459",
+    "name": "นายสกล มะลิลา",
+    "name_en": "Mr. Sakol Malila",
+    "faculty": "มหาวิทยาลัยราชภัฏศรีสะเกษ",
+    "major": "เทคโนโลยีดิจิทัล"
+  },
+  {
     "student_id": "6512345678-9",
     "citizen_id": "1330100123456",
     "name": "นายสมชาย ใจดี",
     "name_en": "Mr. Somchai Jaidee",
     "faculty": "คณะวิทยาการจัดการ",
     "major": "เทคโนโลยีดิจิทัล"
-  },
-  {
-    "student_id": "6588888888-8",
-    "citizen_id": "1339900888888",
-    "name": "นางสาววิภาดา รัตนกุล",
-    "name_en": "Ms. Wiphada Rattanakul",
-    "faculty": "คณะครุศาสตร์",
-    "major": "การประถมศึกษา"
-  },
-  {
-    "student_id": "6610020030-1",
-    "citizen_id": "1330500555666",
-    "name": "นายอนันต์ สุขเสริฐ",
-    "name_en": "Mr. Anan Suksert",
-    "faculty": "วิทยาลัยกฎหมายและการปกครอง",
-    "major": "นิติศาสตร์"
   }
 ]
