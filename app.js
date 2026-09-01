@@ -1066,6 +1066,7 @@ let adminBuildings = [];
 // window.isAdminMode and window.isStudentMode are not needed if we use the local vars
 document.addEventListener("DOMContentLoaded", async () => {
   initTheme();
+  initPDPAConsent();
   await fetchAuthStatus();
   initMap();
   init3dEngine();
@@ -1080,6 +1081,26 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   setInterval(updateRealTimeStatus, 30000);
 });
+
+// PDPA Thai Digital Law Compliance System
+function initPDPAConsent() {
+  const overlay = document.getElementById("pdpa-modal-overlay");
+  const acceptBtn = document.getElementById("btn-pdpa-accept");
+  if (!overlay || !acceptBtn) return;
+
+  const isConsentGiven = localStorage.getItem("sskru_pdpa_consent") === "granted";
+  if (!isConsentGiven) {
+    overlay.classList.add("active");
+  }
+
+  acceptBtn.onclick = () => {
+    localStorage.setItem("sskru_pdpa_consent", "granted");
+    overlay.classList.remove("active");
+    if (typeof showToast === 'function') {
+      showToast("ยอมรับเงื่อนไขคุ้มครองข้อมูลส่วนบุคคล (PDPA) เรียบร้อยแล้ว");
+    }
+  };
+}
 
 // Theme Toggle System (Dark / Light Mode)
 function initTheme() {

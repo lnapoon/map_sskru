@@ -614,6 +614,45 @@ require_once __DIR__ . '/config.php';
     </div>
   </div>
 
+  <!-- PDPA Thai Digital Law Consent Modal -->
+  <div class="pdpa-overlay" id="pdpa-modal-overlay">
+    <div class="pdpa-card">
+      <div class="pdpa-header">
+        <div class="pdpa-icon-badge">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <div>
+          <h3 class="pdpa-title">ข้อตกลงคุ้มครองข้อมูลส่วนบุคคล (PDPA)</h3>
+          <p class="pdpa-subtitle">ปฏิบัติตาม พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 และกฎหมายดิจิทัลของไทย</p>
+        </div>
+      </div>
+      <div class="pdpa-body">
+        <p class="pdpa-intro">ระบบแผนที่ผังเมือง 3D มหาวิทยาลัยราชภัฏศรีสะเกษ ขออนุญาตประมวลผลข้อมูลการใช้งานเพื่อให้บริการนำทางและอำนวยความสะดวกในการเข้าถึงสถานที่ ดังนี้:</p>
+        <div class="pdpa-purpose-list">
+          <div class="pdpa-purpose-item">
+            <i class="fa-solid fa-location-crosshairs pdpa-item-icon"></i>
+            <div>
+              <strong>พิกัดตำแหน่งปัจจุบัน (GPS Location)</strong>
+              <p>ใช้สำหรับคำนวณระยะทางและนำทางจากตำแหน่งของคุณไปยัง 40 อาคารในมหาวิทยาลัย</p>
+            </div>
+          </div>
+          <div class="pdpa-purpose-item">
+            <i class="fa-solid fa-cookie-bite pdpa-item-icon"></i>
+            <div>
+              <strong>ตัวเลือกและความจำระบบ (LocalStorage & Preferences)</strong>
+              <p>ใช้สำหรับบันทึกธีมการแสดงผล (Dark/Light Mode) และอาคารที่คุณค้นหาบ่อย</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pdpa-footer">
+        <button class="pdpa-btn pdpa-btn-accept" id="btn-pdpa-accept">
+          <i class="fa-solid fa-circle-check"></i> ยินยอมและเข้าสู่ระบบแผนที่
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Notification -->
   <div class="toast-container" id="toast-bar">
     <i class="fa-solid fa-circle-check" style="color: var(--color-open);"></i>
