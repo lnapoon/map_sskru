@@ -1,13 +1,13 @@
 <?php
-require_once __DIR__ . '/config.php';
-$token = $_GET['token'] ?? '';
+// SSKRU Student Password Reset Verification Page
+require_once dirname(__DIR__) . '/config.php';
 ?>
 <!DOCTYPE html>
 <html lang="th">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>สร้างรหัสผ่านใหม่สำหรับบุคลากร — SSKRU Campus Map</title>
+  <title>ยืนยันสิทธิ์ & ตั้งรหัสผ่านใหม่ — SSKRU Campus Map</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -159,6 +159,24 @@ $token = $_GET['token'] ?? '';
       box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
     }
 
+    .verified-user-box {
+      padding: 14px 16px;
+      background: #f0fdf4;
+      border: 1.5px solid #bbf7d0;
+      border-radius: 14px;
+      margin-bottom: 20px;
+      font-size: 13px;
+    }
+    .verified-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      color: #10b981;
+      font-weight: 700;
+      font-size: 13.5px;
+      margin-bottom: 6px;
+    }
+
     .btn-primary {
       width: 100%;
       padding: 13px;
@@ -198,17 +216,18 @@ $token = $_GET['token'] ?? '';
       text-decoration: underline;
     }
 
-    .user-info-banner {
-      background: #eff6ff;
-      border: 1px solid #bfdbfe;
-      border-radius: 12px;
-      padding: 12px 16px;
-      margin-bottom: 18px;
-      font-size: 13px;
-      color: #1e40af;
-      display: flex;
-      align-items: center;
-      gap: 10px;
+    .error-box {
+      display: none;
+      padding: 16px;
+      background: #fef2f2;
+      border: 1.5px solid #fca5a5;
+      border-radius: 14px;
+      color: #dc2626;
+      font-size: 13.5px;
+      text-align: center;
+    }
+    .error-box.active {
+      display: block;
     }
   </style>
 </head>
@@ -225,144 +244,159 @@ $token = $_GET['token'] ?? '';
       <div class="university-badge">
         <i class="fa-solid fa-lock-open"></i>
       </div>
-      <h1>ตั้งรหัสผ่านใหม่ (บุคลากร)</h1>
-      <p>มหาวิทยาลัยราชภัฏศรีสะเกษ (SSKRU Faculty & Staff)</p>
+      <h1>ตั้งรหัสผ่านใหม่</h1>
+      <p>มหาวิทยาลัยราชภัฏศรีสะเกษ (SSKRU Set New Password)</p>
     </div>
 
     <div class="card-body">
-      <!-- Step A: Enter OTP / Token -->
-      <div id="section-verify-token">
-        <div class="intro-text" style="font-size: 13px; color: #64748b; margin-bottom: 16px; line-height: 1.5;">
-          กรุณากรอกรหัส <strong>OTP 6 หลัก</strong> ที่ได้รับในอีเมลของท่านเพื่อยืนยันสิทธิ์:
-        </div>
-
-        <form id="form-verify-otp" onsubmit="handleVerifyOtp(event)">
-          <div class="form-group">
-            <label class="form-label">รหัส OTP ยืนยันสิทธิ์ (6 หลัก)</label>
-            <div class="input-wrapper">
-              <i class="fa-solid fa-shield-halved input-icon"></i>
-              <input type="text" id="otp-input" class="form-input" placeholder="กรอกรหัส OTP เช่น 123456" maxlength="6" style="letter-spacing: 4px; font-weight: bold; font-size: 16px;" required />
-            </div>
-          </div>
-          <button type="submit" class="btn-primary" id="btn-verify-otp">
-            <i class="fa-solid fa-check"></i> ตรวจสอบรหัส OTP
-          </button>
-        </form>
+      <!-- Loading State -->
+      <div id="loading-state" style="text-align:center; padding:30px; font-size:14px; color:#64748b;">
+        <i class="fa-solid fa-spinner fa-spin" style="font-size:24px; color:#2563eb; margin-bottom:10px;"></i>
+        <p>กำลังตรวจสอบลิงก์ยืนยันตัวตน...</p>
       </div>
 
-      <!-- Step B: Set New Password Form -->
-      <div id="section-new-password" style="display: none;">
-        <div class="user-info-banner">
-          <i class="fa-solid fa-circle-user" style="font-size: 20px;"></i>
-          <div>
-            <div>บัญชีบุคลากร: <strong id="display-staff-name"></strong></div>
-            <div style="font-size: 11.5px; opacity: 0.85;" id="display-staff-email"></div>
+      <!-- Invalid Token State -->
+      <div class="error-box" id="error-state">
+        <p style="font-weight:700; font-size:15px; margin-bottom:6px;"><i class="fa-solid fa-triangle-exclamation"></i> ลิงก์ยืนยันตัวตนไม่ถูกต้องหรือหมดอายุ</p>
+        <p style="color:#64748b; font-size:12.5px; margin-bottom:12px;">กรุณาทำรายการขอรีเซ็ตรหัสผ่านใหม่อีกครั้ง</p>
+        <a href="/reset_password/student/" id="link-retry-reset" class="btn-primary" style="text-decoration:none;">
+          <i class="fa-solid fa-arrow-rotate-right"></i> ขอส่งลิงก์ยืนยันใหม่อีกครั้ง
+        </a>
+      </div>
+
+      <!-- Valid State: Form to Create Password -->
+      <div id="form-container" style="display:none;">
+        <div class="verified-user-box">
+          <div class="verified-badge">
+            <i class="fa-solid fa-circle-check"></i> ยืนยันสิทธิ์อีเมลมหาวิทยาลัยสำเร็จ
           </div>
+          <p><strong>ชื่อ-นามสกุล:</strong> <span id="display-name">-</span></p>
+          <p><strong>รหัสนักศึกษา:</strong> <span id="display-sid">-</span></p>
+          <p><strong>อีเมลที่ยืนยัน:</strong> <span id="display-email">-</span></p>
         </div>
 
-        <form id="form-set-new-password" onsubmit="handleSetNewPassword(event)">
+        <form id="form-confirm-password" onsubmit="handleConfirmNewPassword(event)">
           <div class="form-group">
-            <label class="form-label">รหัสผ่านใหม่ (New Password)</label>
+            <label class="form-label">กำหนดรหัสผ่านใหม่ (New Password)</label>
             <div class="input-wrapper">
               <i class="fa-solid fa-lock input-icon"></i>
-              <input type="password" id="new-password-input" class="form-input" placeholder="กำหนดรหัสผ่านใหม่" required minlength="4" />
+              <input type="password" id="new-pass" class="form-input" placeholder="กรอกรหัสผ่านใหม่" required />
             </div>
           </div>
 
           <div class="form-group">
-            <label class="form-label">ยืนยันรหัสผ่านใหม่ (Confirm Password)</label>
+            <label class="form-label">ยืนยันรหัสผ่านใหม่อีกครั้ง (Confirm Password)</label>
             <div class="input-wrapper">
               <i class="fa-solid fa-shield-halved input-icon"></i>
-              <input type="password" id="confirm-password-input" class="form-input" placeholder="กรอกรหัสผ่านใหม่อีกครั้ง" required minlength="4" />
+              <input type="password" id="confirm-pass" class="form-input" placeholder="กรอกรหัสผ่านใหม่อีกครั้ง" required />
             </div>
           </div>
 
-          <button type="submit" class="btn-primary" id="btn-submit-new-pass">
-            <i class="fa-solid fa-floppy-disk"></i> บันทึกและตั้งรหัสผ่านใหม่
+          <button type="submit" class="btn-primary" id="btn-save-pass">
+            <i class="fa-solid fa-floppy-disk"></i> บันทึกรหัสผ่านใหม่ & เข้าสู่ระบบ
           </button>
         </form>
       </div>
     </div>
 
     <div class="card-footer">
-      <a href="login.php" class="back-link" id="link-back-login">
+      <a href="/login/" class="back-link" id="link-back-login">
         <i class="fa-solid fa-arrow-left"></i> ย้อนกลับไปหน้าเข้าสู่ระบบ
       </a>
     </div>
   </div>
 
   <script>
-    let activeToken = "<?= htmlspecialchars($token, ENT_QUOTES, 'UTF-8') ?>";
-
-    // Auto verify if token is passed in URL query
-    if (activeToken) {
-      verifyToken(activeToken, '');
+    if (window.location.pathname.endsWith('.php')) {
+      document.getElementById('link-back-login').href = 'login.php';
+      document.getElementById('link-retry-reset').href = 'reset_password_student.php';
     }
 
-    async function handleVerifyOtp(e) {
-      e.preventDefault();
-      const otp = document.getElementById('otp-input').value.trim();
-      if (!otp) return;
-      verifyToken('', otp);
-    }
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token') || '';
 
-    async function verifyToken(token, otp) {
+    window.addEventListener('DOMContentLoaded', async () => {
+      if (!token) {
+        showError('ไม่พบ Token ยืนยันตัวตน');
+        return;
+      }
+
+      const apiEndpoint = window.location.pathname.endsWith('.php') 
+        ? '../api.php?action=student_verify_reset_token' 
+        : '/admin/api/auth/student_verify_reset_token/';
+
       try {
-        const res = await fetch('api.php?action=staff_verify_reset_token', {
+        const res = await fetch(apiEndpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: token, otp: otp })
+          body: JSON.stringify({ token: token })
         });
         const data = await res.json();
 
+        document.getElementById('loading-state').style.display = 'none';
+
         if (data.success) {
-          activeToken = data.token;
-          document.getElementById('section-verify-token').style.display = 'none';
-          document.getElementById('section-new-password').style.display = 'block';
-          document.getElementById('display-staff-name').textContent = data.username;
-          document.getElementById('display-staff-email').textContent = data.email;
+          document.getElementById('form-container').style.display = 'block';
+          document.getElementById('display-name').textContent = data.student_name || 'นักศึกษา';
+          document.getElementById('display-sid').textContent = data.student_id;
+          document.getElementById('display-email').textContent = data.email;
         } else {
-          if (otp) alert(data.message || 'รหัส OTP ไม่ถูกต้องหรือหมดอายุ');
+          showError(data.message);
         }
       } catch (err) {
-        if (otp) alert('เกิดข้อผิดพลาดในการตรวจสอบรหัส OTP');
+        document.getElementById('loading-state').style.display = 'none';
+        showError('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
+      }
+    });
+
+    function showError(msg) {
+      document.getElementById('loading-state').style.display = 'none';
+      document.getElementById('form-container').style.display = 'none';
+      const errBox = document.getElementById('error-state');
+      errBox.className = 'error-box active';
+      if (msg) {
+        errBox.querySelector('p').textContent = msg;
       }
     }
 
-    async function handleSetNewPassword(e) {
+    async function handleConfirmNewPassword(e) {
       e.preventDefault();
-      const pass1 = document.getElementById('new-password-input').value.trim();
-      const pass2 = document.getElementById('confirm-password-input').value.trim();
-      const btn = document.getElementById('btn-submit-new-pass');
+      const p1 = document.getElementById('new-pass').value.trim();
+      const p2 = document.getElementById('confirm-pass').value.trim();
 
-      if (pass1 !== pass2) {
+      if (p1 !== p2) {
         alert('รหัสผ่านทั้งสองช่องไม่ตรงกัน กรุณาตรวจสอบอีกครั้ง');
         return;
       }
 
+      const btn = document.getElementById('btn-save-pass');
       btn.disabled = true;
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึกรหัสผ่านใหม่...';
 
+      const apiEndpoint = window.location.pathname.endsWith('.php') 
+        ? '../api.php?action=student_confirm_new_password' 
+        : '/admin/api/auth/student_confirm_new_password/';
+
       try {
-        const res = await fetch('api.php?action=staff_confirm_new_password', {
+        const res = await fetch(apiEndpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: activeToken, new_password: pass1 })
+          body: JSON.stringify({ token: token, new_password: p1 })
         });
         const data = await res.json();
 
         if (data.success) {
-          alert('ตั้งรหัสผ่านใหม่สำหรับบุคลากรสำเร็จ! ท่านสามารถเข้าสู่ระบบด้วยรหัสผ่านใหม่ได้ทันที');
-          window.location.href = 'login.php';
+          alert('🎉 สร้างรหัสผ่านใหม่สำเร็จแล้ว! ท่านสามารถเข้าสู่ระบบด้วยรหัสผ่านใหม่ได้ทันที');
+          window.location.href = window.location.pathname.endsWith('.php') ? 'login.php' : '/login/';
         } else {
-          alert(data.message || 'ไม่สามารถตั้งรหัสผ่านใหม่ได้ กรุณาลองใหม่อีกครั้ง');
+          alert(data.message || 'เกิดข้อผิดพลาด');
           btn.disabled = false;
-          btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> บันทึกและตั้งรหัสผ่านใหม่';
+          btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> บันทึกรหัสผ่านใหม่ & เข้าสู่ระบบ';
         }
       } catch (err) {
-        alert('เกิดข้อผิดพลาดในการบันทึกรหัสผ่านใหม่');
+        alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
         btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> บันทึกและตั้งรหัสผ่านใหม่';
+        btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> บันทึกรหัสผ่านใหม่ & เข้าสู่ระบบ';
       }
     }
   </script>

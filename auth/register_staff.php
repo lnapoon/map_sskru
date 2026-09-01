@@ -1,12 +1,13 @@
 <?php
-require_once __DIR__ . '/config.php';
+// SSKRU Faculty & Staff Registration Page
+require_once dirname(__DIR__) . '/config.php';
 ?>
 <!DOCTYPE html>
 <html lang="th">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>รีเซ็ตรหัสผ่านบุคลากร — SSKRU Campus Map</title>
+  <title>สมัครสมาชิกบุคลากร — SSKRU Campus Map</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -196,37 +197,6 @@ require_once __DIR__ . '/config.php';
     .back-link:hover {
       text-decoration: underline;
     }
-
-    .success-result-box {
-      display: none;
-      background: #f0fdf4;
-      border: 1.5px solid #bbf7d0;
-      border-radius: 14px;
-      padding: 20px;
-      margin-top: 20px;
-      text-align: center;
-      animation: fadeIn 0.4s ease;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .success-icon {
-      font-size: 36px;
-      color: var(--success);
-      margin-bottom: 8px;
-    }
-    .success-title {
-      font-size: 16px;
-      font-weight: 700;
-      color: #166534;
-      margin-bottom: 6px;
-    }
-    .success-desc {
-      font-size: 13px;
-      color: #15803d;
-      line-height: 1.5;
-    }
   </style>
 </head>
 <body>
@@ -240,94 +210,84 @@ require_once __DIR__ . '/config.php';
   <div class="login-card">
     <div class="card-header">
       <div class="university-badge">
-        <i class="fa-solid fa-key"></i>
+        <i class="fa-solid fa-user-plus"></i>
       </div>
-      <h1>รีเซ็ตรหัสผ่านบุคลากร</h1>
-      <p>มหาวิทยาลัยราชภัฏศรีสะเกษ (SSKRU Faculty & Staff)</p>
+      <h1>สมัครสมาชิกบุคลากรใหม่</h1>
+      <p>มหาวิทยาลัยราชภัฏศรีสะเกษ (SSKRU Faculty & Staff Account)</p>
     </div>
 
     <div class="card-body">
-      <div class="intro-text" style="font-size: 13px; color: #64748b; margin-bottom: 18px; line-height: 1.5;">
-        กรุณากรอก <strong>Username</strong> หรือ <strong>Email</strong> ที่ท่านลงทะเบียนไว้ ระบบจะส่งลิงก์และรหัสยืนยันตัวตน (OTP) ไปยังอีเมลของท่าน
-      </div>
-
-      <form id="form-staff-request-reset" onsubmit="handleRequestReset(event)">
+      <form id="form-staff-reg" onsubmit="handleStaffRegister(event)">
         <div class="form-group">
-          <label class="form-label">Username หรือ Email ของบุคลากร</label>
+          <label class="form-label">อีเมล (Email)</label>
           <div class="input-wrapper">
-            <i class="fa-solid fa-at input-icon"></i>
-            <input type="text" id="staff-identifier-input" class="form-input" placeholder="กรอก Username หรือ Email" required />
+            <i class="fa-solid fa-envelope input-icon"></i>
+            <input type="email" id="reg-staff-email" class="form-input" placeholder="กรอกอีเมล" required />
           </div>
         </div>
-
-        <button type="submit" class="btn-primary" id="btn-submit-request">
-          <i class="fa-solid fa-paper-plane"></i> ส่งรหัสยืนยันสิทธิ์ไปยังอีเมล
+        <div class="form-group">
+          <label class="form-label">ชื่อผู้ใช้งาน (Username)</label>
+          <div class="input-wrapper">
+            <i class="fa-solid fa-user input-icon"></i>
+            <input type="text" id="reg-staff-username" class="form-input" placeholder="กำหนด Username" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">รหัสผ่าน (Password)</label>
+          <div class="input-wrapper">
+            <i class="fa-solid fa-key input-icon"></i>
+            <input type="password" id="reg-staff-pass" class="form-input" placeholder="กำหนดรหัสผ่าน" required minlength="4" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">ยืนยันรหัสผ่าน (Confirm Password)</label>
+          <div class="input-wrapper">
+            <i class="fa-solid fa-shield-halved input-icon"></i>
+            <input type="password" id="reg-staff-confirm-pass" class="form-input" placeholder="กรอกรหัสผ่านใหม่อีกครั้ง" required minlength="4" />
+          </div>
+        </div>
+        <button type="submit" class="btn-primary">
+          <i class="fa-solid fa-user-check"></i> สมัครสมาชิกบุคลากร
         </button>
       </form>
-
-      <!-- Clean Success Box (Shows Email Sent Only - Strictly via Email) -->
-      <div class="success-result-box" id="success-box">
-        <div class="success-icon"><i class="fa-solid fa-envelope-circle-check"></i></div>
-        <div class="success-title">ส่งอีเมลยืนยันสิทธิ์สำเร็จ!</div>
-        <div class="success-desc">
-          ระบบได้ส่งรหัส OTP และลิงก์สำหรับตั้งรหัสผ่านใหม่ไปยัง<br>
-          <strong id="res-email" style="color:#0f172a; font-size:14px; background:#e2e8f0; padding:2px 8px; border-radius:6px; display:inline-block; margin-top:6px;"></strong>
-        </div>
-        <div style="background:#ffffff; border:1px solid #bbf7d0; border-radius:12px; padding:12px; font-size:12.5px; color:#64748b; line-height:1.5; margin-top:14px; text-align:left;">
-          <i class="fa-solid fa-circle-info" style="color:#2563eb;"></i> กรุณาเปิดกล่องจดหมายอีเมล (Inbox / Spam) ของท่าน และคลิกลิงก์ยืนยันที่ได้รับในอีเมลเพื่อดำเนินการตั้งรหัสผ่านใหม่ (ลิงก์มีอายุ 15 นาที)
-        </div>
-      </div>
     </div>
 
     <div class="card-footer">
-      <a href="/login/" class="back-link" id="link-back-login">
+      <a href="../login.php" class="back-link" id="link-back-login">
         <i class="fa-solid fa-arrow-left"></i> ย้อนกลับไปหน้าเข้าสู่ระบบ
       </a>
     </div>
   </div>
 
   <script>
-    if (window.location.pathname.endsWith('.php')) {
-      document.getElementById('link-back-login').href = 'login.php';
-    }
-
-    async function handleRequestReset(e) {
+    async function handleStaffRegister(e) {
       e.preventDefault();
-      const identifier = document.getElementById('staff-identifier-input').value.trim();
-      const btn = document.getElementById('btn-submit-request');
+      const email = document.getElementById('reg-staff-email').value.trim();
+      const username = document.getElementById('reg-staff-username').value.trim();
+      const pass = document.getElementById('reg-staff-pass').value.trim();
+      const confirmPass = document.getElementById('reg-staff-confirm-pass').value.trim();
 
-      if (!identifier) {
-        alert('กรุณากรอก Username หรือ Email');
+      if (pass !== confirmPass) {
+        alert('รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน กรุณาตรวจสอบอีกครั้ง');
         return;
       }
-
-      btn.disabled = true;
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังส่งคำขอ...';
-
-      const isPhp = window.location.pathname.endsWith('.php');
-      const endpoint = isPhp ? 'api.php?action=staff_request_reset' : '/admin/api/auth/staff_request_reset/';
+      const apiEndpoint = window.location.pathname.endsWith('.php') ? '../api.php?action=staff_register' : '/admin/api/auth/staff_register/';
 
       try {
-        const res = await fetch(endpoint, {
+        const res = await fetch(apiEndpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ identifier: identifier })
+          body: JSON.stringify({ email: email, username: username, password: pass })
         });
         const data = await res.json();
-
         if (data.success) {
-          document.getElementById('form-staff-request-reset').style.display = 'none';
-          document.getElementById('res-email').textContent = data.email;
-          document.getElementById('success-box').style.display = 'block';
+          alert('สมัครสมาชิกบุคลากรสำเร็จ! ยินดีต้อนรับ คุณ ' + data.username);
+          window.location.href = window.location.pathname.endsWith('.php') ? 'index.php' : '/';
         } else {
-          alert(data.message || 'ไม่สามารถส่งรหัสยืนยันได้ กรุณาลองใหม่อีกครั้ง');
-          btn.disabled = false;
-          btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> ส่งรหัสยืนยันสิทธิ์ไปยังอีเมล';
+          alert(data.message || 'สมัครสมาชิกไม่สำเร็จ');
         }
-      } catch (err) {
-        alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> ส่งรหัสยืนยันสิทธิ์ไปยังอีเมล';
+      } catch (e) {
+        alert('เกิดข้อผิดพลาดในการสมัครสมาชิก');
       }
     }
   </script>

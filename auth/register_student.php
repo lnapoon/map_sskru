@@ -1,6 +1,6 @@
 <?php
 // SSKRU Student Registration Page
-require_once __DIR__ . '/config.php';
+require_once dirname(__DIR__) . '/config.php';
 ?>
 <!DOCTYPE html>
 <html lang="th">
@@ -291,7 +291,7 @@ require_once __DIR__ . '/config.php';
       resCard.className = 'verify-result-card active';
       resCard.innerHTML = '<div style="font-size:13px; color:#64748b;"><i class="fa-solid fa-spinner fa-spin"></i> กำลังตรวจสอบข้อมูลรหัสนักศึกษา...</div>';
 
-      const apiEndpoint = window.location.pathname.endsWith('.php') ? 'api.php?action=student_verify' : '/admin/api/auth/student_verify/';
+      const apiEndpoint = window.location.pathname.endsWith('.php') ? '../api.php?action=student_verify' : '/admin/api/auth/student_verify/';
 
       try {
         const res = await fetch(apiEndpoint, {
@@ -361,7 +361,7 @@ require_once __DIR__ . '/config.php';
         alert('รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน กรุณาตรวจสอบอีกครั้ง');
         return;
       }
-      const apiEndpoint = window.location.pathname.endsWith('.php') ? 'api.php?action=student_register' : '/admin/api/auth/student_register/';
+      const apiEndpoint = window.location.pathname.endsWith('.php') ? '../api.php?action=student_register' : '/admin/api/auth/student_register/';
       try {
         const res = await fetch(apiEndpoint, {
           method: 'POST',
