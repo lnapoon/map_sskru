@@ -321,31 +321,25 @@ require_once __DIR__ . '/config.php';
         const data = await res.json();
 
         if (data.success) {
-          const verifyPageUrl = window.location.pathname.endsWith('.php') 
-            ? `reset_password_verify.php?token=${data.token}`
-            : `/reset_password/student/verify/?token=${data.token}`;
-
           resCard.className = 'email-sent-card active';
           resCard.innerHTML = `
-            <div style="font-size:13px; color:#166534;">
-              <p style="font-weight:700; font-size:14.5px; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
-                <i class="fa-solid fa-circle-check" style="color:#10b981; font-size:17px;"></i> ส่งอีเมลยืนยันตัวตนสำเร็จแล้ว!
-              </p>
-              <p style="margin-bottom:8px; line-height:1.5;">ระบบได้ส่งลิงก์ยืนยันตัวตนไปยัง <strong>${data.email}</strong> เรียบร้อยแล้ว (ลิงก์มีอายุ 15 นาที)</p>
-              
-              <div style="background:#ffffff; border:1px solid #bbf7d0; border-radius:12px; padding:12px; margin:12px 0;">
-                <p style="font-size:12px; color:#64748b; margin-bottom:6px;">รหัส OTP ยืนยันสิทธิ์:</p>
-                <div style="font-size:22px; font-weight:800; letter-spacing:4px; color:#1a4fa0; text-align:center; font-family:'Outfit';">
-                  ${data.otp}
-                </div>
+            <div style="font-size:13.5px; color:#166534; text-align:center; padding:10px 4px;">
+              <div style="width:52px; height:52px; background:#dcfce7; color:#16a34a; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 12px; font-size:24px;">
+                <i class="fa-solid fa-envelope-circle-check"></i>
               </div>
-
-              <a href="${verifyPageUrl}" class="btn-primary" style="text-decoration:none; margin-top:8px; background:linear-gradient(135deg, #10b981, #059669);">
-                <i class="fa-solid fa-shield-check"></i> คลิกเปิดลิงก์ยืนยันสิทธิ์ & ตั้งรหัสผ่านใหม่
-              </a>
+              <p style="font-weight:700; font-size:15.5px; margin-bottom:8px; color:#15803d;">
+                ส่งอีเมลยืนยันตัวตนสำเร็จแล้ว!
+              </p>
+              <p style="margin-bottom:12px; line-height:1.6; color:#334155;">
+                ระบบได้ส่งรหัส OTP และลิงก์สำหรับตั้งรหัสผ่านใหม่ไปยัง<br>
+                <strong style="color:#0f172a; font-size:14px; background:#e2e8f0; padding:2px 8px; border-radius:6px; display:inline-block; margin-top:4px;">${data.email}</strong>
+              </p>
+              <div style="background:#ffffff; border:1px solid #bbf7d0; border-radius:12px; padding:12px; font-size:12.5px; color:#64748b; line-height:1.5;">
+                <i class="fa-solid fa-circle-info" style="color:#2563eb;"></i> กรุณาเปิดกล่องจดหมายอีเมลของคุณ และคลิกลิงก์ที่ได้รับในอีเมลเพื่อดำเนินการตั้งรหัสผ่านใหม่ (ลิงก์มีอายุ 15 นาที)
+              </div>
             </div>
           `;
-          btn.style.display = 'none';
+          document.getElementById('form-request-reset').style.display = 'none';
         } else {
           alert(data.message || 'เกิดข้อผิดพลาด');
           btn.disabled = false;
