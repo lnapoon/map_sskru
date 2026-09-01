@@ -16,5 +16,8 @@ urlpatterns = [
     # Auth APIs
     path('api/auth/status/',                      views.auth_status_api,             name='auth_status'),
     path('api/auth/student_login/',               views.student_login_api,           name='student_login_api'),
-
+    path('api/auth/student_verify/',              views.student_verify_api,          name='student_verify_api'),
+    path('api/auth/student_register/',            views.student_register_api,        name='student_register_api'),
+    path('api/auth/staff_register/',              views.staff_register_api,          name='staff_register_api'),
+    path('api/auth/staff_login/',                 views.staff_login_api,             name='staff_login_api'),
 ]

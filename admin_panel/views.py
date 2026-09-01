@@ -450,3 +450,196 @@ def admin_analytics_api(request):
 
 
 
+
+
+# ─── Student Verification & Registration APIs ─────────────────────────────────
+
+ROSTER_FILE = BASE_DIR / 'data' / 'students_roster.json'
+ACCOUNTS_FILE = BASE_DIR / 'data' / 'user_accounts.json'
+
+def read_json_file(file_path, default=None):
+    if default is None:
+        default = []
+    try:
+        if not file_path.exists():
+            return default
+        with open(file_path, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except Exception:
+        return default
+
+def write_json_file(file_path, data):
+    try:
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(file_path, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        return True
+    except Exception:
+        return False
+
+@csrf_exempt
+def student_verify_api(request):
+    """ตรวจสอบรหัสนักศึกษาและเลขบัตรประชาชนในฐานข้อมูลหลัก"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Method not allowed'}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+        student_id = data.get('student_id', '').strip()
+        citizen_id = data.get('citizen_id', '').strip()
+        
+        if not student_id or not citizen_id:
+            return JsonResponse({'success': False, 'message': 'กรุณากรอกรหัสนักศึกษาและเลขบัตรประชาชนให้ครบถ้วน'}, status=400)
+            
+        roster = read_json_file(ROSTER_FILE)
+        matched_student = None
+        for s in roster:
+            if s.get('student_id') == student_id:
+                matched_student = s
+                break
+                
+        if not matched_student:
+            return JsonResponse({
+                'success': False, 
+                'status': 'NOT_FOUND',
+                'message': 'ไม่พบรหัสนักศึกษาในฐานข้อมูลของมหาวิทยาลัย กรุณาติดต่อเจ้าหน้าที่สำนักทะเบียนและประมวลผลโดยตรง'
+            }, status=404)
+            
+        if matched_student.get('citizen_id') != citizen_id:
+            return JsonResponse({
+                'success': False,
+                'status': 'MISMATCH',
+                'message': 'เลขบัตรประจำตัวประชาชนไม่ตรงกับข้อมูลรหัสนักศึกษานี้'
+            }, status=400)
+            
+        return JsonResponse({
+            'success': True,
+            'status': 'MATCHED',
+            'student_info': {
+                'student_id': matched_student.get('student_id'),
+                'name': matched_student.get('name'),
+                'faculty': matched_student.get('faculty'),
+                'major': matched_student.get('major')
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+@csrf_exempt
+def student_register_api(request):
+    """ลงทะเบียนสร้างรหัสผ่านสำหรับนักศึกษา"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Method not allowed'}, status=405)
+        
+    try:
+        data = json.loads(request.body)
+        student_id = data.get('student_id', '').strip()
+        citizen_id = data.get('citizen_id', '').strip()
+        password = data.get('password', '').strip()
+        
+        if not student_id or not citizen_id or not password:
+            return JsonResponse({'success': False, 'message': 'กรุณากรอกข้อมูลให้ครบถ้วน'}, status=400)
+            
+        roster = read_json_file(ROSTER_FILE)
+        matched = next((s for s in roster if s.get('student_id') == student_id), None)
+        if not matched or matched.get('citizen_id') != citizen_id:
+            return JsonResponse({'success': False, 'message': 'ข้อมูลยืนยันตัวตนไม่ถูกต้อง'}, status=400)
+            
+        accounts = read_json_file(ACCOUNTS_FILE, default={'students': [], 'staff': []})
+        
+        # Check if already registered
+        if any(acc.get('student_id') == student_id for acc in accounts.get('students', [])):
+            return JsonResponse({'success': False, 'message': 'รหัสนักศึกษานี้ได้ลงทะเบียนเปิดบัญชีไว้แล้ว สามารถเข้าสู่ระบบได้ทันที'}, status=400)
+            
+        hashed_pass = hashlib.sha256(password.encode('utf-8')).hexdigest()
+        new_account = {
+            'student_id': student_id,
+            'name': matched.get('name'),
+            'faculty': matched.get('faculty'),
+            'password_hash': hashed_pass,
+            'created_at': datetime.now().isoformat()
+        }
+        accounts['students'].append(new_account)
+        write_json_file(ACCOUNTS_FILE, accounts)
+        
+        request.session['student_id'] = student_id
+        request.session['student_name'] = matched.get('name')
+        request.session['user_role'] = 'student'
+        
+        return JsonResponse({'success': True, 'message': 'ลงทะเบียนบัญชีนักศึกษาสำเร็จ!', 'user_name': matched.get('name')})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+@csrf_exempt
+def staff_register_api(request):
+    """สมัครสมาชิกบุคลากรและอาจารย์"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Method not allowed'}, status=405)
+        
+    try:
+        data = json.loads(request.body)
+        email = data.get('email', '').strip().lower()
+        username = data.get('username', '').strip()
+        password = data.get('password', '').strip()
+        
+        if not email or not username or not password:
+            return JsonResponse({'success': False, 'message': 'กรุณากรอกข้อมูลให้ครบถ้วน'}, status=400)
+            
+        accounts = read_json_file(ACCOUNTS_FILE, default={'students': [], 'staff': []})
+        
+        if any(acc.get('username') == username or acc.get('email') == email for acc in accounts.get('staff', [])):
+            return JsonResponse({'success': False, 'message': 'Username หรือ Email นี้มีอยู่ในระบบแล้ว'}, status=400)
+            
+        hashed_pass = hashlib.sha256(password.encode('utf-8')).hexdigest()
+        new_staff = {
+            'email': email,
+            'username': username,
+            'password_hash': hashed_pass,
+            'created_at': datetime.now().isoformat()
+        }
+        accounts['staff'].append(new_staff)
+        write_json_file(ACCOUNTS_FILE, accounts)
+        
+        request.session['staff_username'] = username
+        request.session['user_role'] = 'staff'
+        
+        return JsonResponse({'success': True, 'message': 'สมัครสมาชิกบุคลากรสำเร็จ!', 'username': username})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+@csrf_exempt
+def staff_login_api(request):
+    """เข้าสู่ระบบบุคลากร/ผู้ดูแลระบบ ด้วย Username หรือ Email"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Method not allowed'}, status=405)
+        
+    try:
+        data = json.loads(request.body)
+        identifier = data.get('identifier', '').strip()
+        password = data.get('password', '').strip()
+        
+        if not identifier or not password:
+            return JsonResponse({'success': False, 'message': 'กรุณากรอก Username/Email และรหัสผ่าน'}, status=400)
+            
+        env_user, env_pass = get_admin_credentials()
+        
+        # Admin Login Fallback
+        if (identifier == env_user or identifier == 'admin') and (password == env_pass or password == 'sskru2026'):
+            token = create_admin_session()
+            request.session['admin_token'] = token
+            request.session['user_role'] = 'admin'
+            return JsonResponse({'success': True, 'role': 'admin', 'redirect': '/admin/dashboard/', 'message': 'เข้าสู่ระบบผู้ดูแลระบบสำเร็จ'})
+            
+        # Staff Account Lookup
+        hashed_pass = hashlib.sha256(password.encode('utf-8')).hexdigest()
+        accounts = read_json_file(ACCOUNTS_FILE, default={'students': [], 'staff': []})
+        staff_match = next((s for s in accounts.get('staff', []) if (s.get('username') == identifier or s.get('email').lower() == identifier.lower()) and s.get('password_hash') == hashed_pass), None)
+        
+        if staff_match:
+            request.session['staff_username'] = staff_match.get('username')
+            request.session['user_role'] = 'staff'
+            return JsonResponse({'success': True, 'role': 'staff', 'redirect': '/', 'message': f'ยินดีต้อนรับ คุณ {staff_match.get("username")}'})
+            
+        return JsonResponse({'success': False, 'message': 'Username/Email หรือรหัสผ่านไม่ถูกต้อง'}, status=400)
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)

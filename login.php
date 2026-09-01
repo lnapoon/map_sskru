@@ -1,3 +1,7 @@
+<?php
+// SSKRU Native PHP Multi-Role Authentication Portal
+require_once __DIR__ . '/config.php';
+?>
 <!DOCTYPE html>
 <html lang="th">
 <head>
