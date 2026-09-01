@@ -242,7 +242,7 @@ require_once __DIR__ . '/config.php';
         <div class="form-group">
           <label class="form-label">ยืนยันรหัสผ่าน (Confirm Password)</label>
           <div class="input-wrapper">
-            <i class="fa-solid fa-lock-check input-icon"></i>
+            <i class="fa-solid fa-shield-halved input-icon"></i>
             <input type="password" id="reg-staff-confirm-pass" class="form-input" placeholder="กรอกรหัสผ่านใหม่อีกครั้ง" required minlength="4" />
           </div>
         </div>

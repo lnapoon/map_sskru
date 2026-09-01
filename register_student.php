@@ -311,10 +311,20 @@ require_once __DIR__ . '/config.php';
               <p><strong>รหัสนักศึกษา:</strong> ${info.student_id}</p>
               <p><strong>สังกัด:</strong> ${info.faculty} (${info.major})</p>
               <div style="margin-top:12px; border-top:1px solid #e2e8f0; padding-top:10px;">
-                <label class="form-label">กำหนดรหัสผ่านสำหรับบัญชีนักศึกษา:</label>
-                <input type="password" id="reg-student-password" class="form-input" placeholder="สร้างรหัสผ่าน" required minlength="4" style="margin-bottom:8px;" />
-                <label class="form-label">ยืนยันรหัสผ่าน (Confirm Password):</label>
-                <input type="password" id="reg-student-confirm-password" class="form-input" placeholder="กรอกรหัสผ่านใหม่อีกครั้ง" required minlength="4" style="margin-bottom:12px;" />
+                <div class="form-group" style="text-align: left; margin-bottom: 12px;">
+                  <label class="form-label">กำหนดรหัสผ่าน (Password):</label>
+                  <div class="input-wrapper">
+                    <i class="fa-solid fa-key input-icon"></i>
+                    <input type="password" id="reg-student-password" class="form-input" placeholder="สร้างรหัสผ่าน" required minlength="4" />
+                  </div>
+                </div>
+                <div class="form-group" style="text-align: left; margin-bottom: 16px;">
+                  <label class="form-label">ยืนยันรหัสผ่าน (Confirm Password):</label>
+                  <div class="input-wrapper">
+                    <i class="fa-solid fa-shield-halved input-icon"></i>
+                    <input type="password" id="reg-student-confirm-password" class="form-input" placeholder="กรอกรหัสผ่านใหม่อีกครั้ง" required minlength="4" />
+                  </div>
+                </div>
                 <button type="button" onclick="completeStudentRegister('${info.student_id}', '${citizenId}')" class="btn-primary">
                   <i class="fa-solid fa-user-plus"></i> สร้างบัญชีและเข้าสู่ระบบ
                 </button>

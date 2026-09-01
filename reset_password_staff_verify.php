@@ -272,7 +272,7 @@ $token = $_GET['token'] ?? '';
           <div class="form-group">
             <label class="form-label">ยืนยันรหัสผ่านใหม่ (Confirm Password)</label>
             <div class="input-wrapper">
-              <i class="fa-solid fa-lock-check input-icon"></i>
+              <i class="fa-solid fa-shield-halved input-icon"></i>
               <input type="password" id="confirm-password-input" class="form-input" placeholder="กรอกรหัสผ่านใหม่อีกครั้ง" required minlength="4" />
             </div>
           </div>
