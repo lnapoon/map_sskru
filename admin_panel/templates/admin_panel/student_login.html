@@ -404,7 +404,8 @@
       e.preventDefault();
       const sid = document.getElementById('login-student-id').value.trim();
       const pass = document.getElementById('login-student-pass').value.trim();
-      const apiEndpoint = window.location.pathname.endsWith('.php') ? 'api.php?action=student_login' : '/admin/api/auth/student_login/';
+      const isPhp = window.location.pathname.endsWith('.php');
+      const apiEndpoint = isPhp ? 'api.php?action=student_login' : '/admin/api/auth/student_login/';
       try {
         const res = await fetch(apiEndpoint, {
           method: 'POST',
@@ -413,7 +414,7 @@
         });
         const data = await res.json();
         if (data.success) {
-          window.location.href = window.location.pathname.endsWith('.php') ? 'index.php' : '/';
+          window.location.href = isPhp ? 'index.php' : '/';
         } else {
           alert(data.message || 'รหัสนักศึกษาหรือรหัสผ่านไม่ถูกต้อง');
         }
@@ -426,7 +427,8 @@
       e.preventDefault();
       const identifier = document.getElementById('staff-identifier').value.trim();
       const pass = document.getElementById('staff-password').value.trim();
-      const apiEndpoint = window.location.pathname.endsWith('.php') ? 'api.php?action=staff_login' : '/admin/api/auth/staff_login/';
+      const isPhp = window.location.pathname.endsWith('.php');
+      const apiEndpoint = isPhp ? 'api.php?action=staff_login' : '/admin/api/auth/staff_login/';
       try {
         const res = await fetch(apiEndpoint, {
           method: 'POST',
@@ -435,7 +437,11 @@
         });
         const data = await res.json();
         if (data.success) {
-          window.location.href = data.redirect || (window.location.pathname.endsWith('.php') ? 'index.php' : '/');
+          if (isPhp) {
+            window.location.href = data.role === 'admin' ? 'index.php?admin=1' : 'index.php';
+          } else {
+            window.location.href = data.role === 'admin' ? '/admin/dashboard/' : '/';
+          }
         } else {
           alert(data.message || 'Username/Email หรือรหัสผ่านไม่ถูกต้อง');
         }

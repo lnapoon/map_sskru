@@ -341,17 +341,23 @@ def track_event(request):
 
 @csrf_exempt
 def auth_status_api(request):
-    """API เช็กว่า User คนปัจจุบันเป็น Admin หรือ Student"""
+    """API เช็กว่า User คนปัจจุบันเป็น Admin, Staff หรือ Student"""
     is_admin = validate_admin_token(request)
     
     # check student session
     student_id = request.session.get('student_id')
     is_student = student_id is not None
     
+    # check staff session
+    is_staff = (request.session.get('user_role') == 'staff') or ('staff_username' in request.session)
+    staff_username = request.session.get('staff_username', '')
+    
     return JsonResponse({
         'success': True,
         'isAdmin': is_admin,
         'isStudent': is_student,
+        'isStaff': is_staff,
+        'staffUsername': staff_username,
         'studentId': student_id,
         'studentName': request.session.get('student_name', ''),
     })

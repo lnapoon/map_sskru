@@ -1160,7 +1160,7 @@ function toggleTheme() {
 }
 
 // Global User Info
-let currentUserInfo = { isAdmin: false, isStudent: false, studentId: '', studentName: '' };
+let currentUserInfo = { isAdmin: false, isStudent: false, isStaff: false, staffUsername: '', studentId: '', studentName: '' };
 
 function isUserAdmin() {
   return Boolean(isAdminMode || currentUserInfo.isAdmin || document.querySelector(".app-container")?.classList.contains("admin-active"));
@@ -1168,13 +1168,17 @@ function isUserAdmin() {
 
 async function fetchAuthStatus() {
   try {
-    const res = await fetch('/admin/api/auth/status/', { credentials: 'same-origin' });
+    const isPhp = window.location.pathname.endsWith('.php');
+    const endpoint = isPhp ? 'api.php?action=auth_status' : '/admin/api/auth/status/';
+    const res = await fetch(endpoint, { credentials: 'same-origin' });
     const data = await res.json();
     if (data.success) {
       isAdminMode = data.isAdmin;
       currentUserInfo = {
         isAdmin: data.isAdmin,
         isStudent: data.isStudent,
+        isStaff: data.isStaff,
+        staffUsername: data.staffUsername || '',
         studentId: data.studentId || '',
         studentName: data.studentName || '',
       };
@@ -1216,6 +1220,12 @@ function updateDrawerUserInfo() {
     avatarEl.innerHTML = '<i class="fa-solid fa-user-shield"></i>';
     if (btnDrawerDash) btnDrawerDash.style.display = 'flex';
     if (adminDivider) adminDivider.style.display = 'block';
+  } else if (currentUserInfo.isStaff && currentUserInfo.staffUsername) {
+    usernameEl.textContent = currentUserInfo.staffUsername;
+    subtitleEl.textContent = 'สิทธิ์: บุคลากร / อาจารย์';
+    avatarEl.innerHTML = '<i class="fa-solid fa-user-tie"></i>';
+    if (btnDrawerDash) btnDrawerDash.style.display = 'none';
+    if (adminDivider) adminDivider.style.display = 'none';
   } else if (currentUserInfo.isStudent && currentUserInfo.studentName) {
     usernameEl.textContent = currentUserInfo.studentName;
     subtitleEl.textContent = `รหัส: ${currentUserInfo.studentId}`;
@@ -1238,10 +1248,14 @@ function updateProfilePrivacyDisplay() {
   const toggleLabel = document.getElementById('privacy-toggle-label');
   const privacyIcon = document.getElementById('privacy-icon');
 
-  const rawName = currentUserInfo.isAdmin ? 'ผู้ดูแลระบบหลัก SSKRU' : (currentUserInfo.studentName || 'นักศึกษา');
-  const sid = currentUserInfo.isAdmin ? 'ADMIN' : (currentUserInfo.studentId || '—');
+  const rawName = currentUserInfo.isAdmin 
+    ? 'ผู้ดูแลระบบหลัก SSKRU' 
+    : (currentUserInfo.isStaff ? (currentUserInfo.staffUsername || 'บุคลากร') : (currentUserInfo.studentName || 'นักศึกษา'));
+  const sid = currentUserInfo.isAdmin ? 'ADMIN' : (currentUserInfo.isStaff ? 'STAFF' : (currentUserInfo.studentId || '—'));
   const cleanSid = sid.replace(/-/g, '').trim();
-  const rawEmail = currentUserInfo.isAdmin ? 'admin@sskru.ac.th' : `stu${cleanSid}@sskru.ac.th`;
+  const rawEmail = currentUserInfo.isAdmin 
+    ? 'admin@sskru.ac.th' 
+    : (currentUserInfo.isStaff ? 'staff@sskru.ac.th' : `stu${cleanSid}@sskru.ac.th`);
 
   if (isProfilePrivacyUnlocked) {
     if (fullnameLockedEl) {
@@ -1291,7 +1305,7 @@ function populateProfilePanel() {
   const nickInput = document.getElementById('profile-nickname-input');
   const bioCount = document.getElementById('bio-char-count');
 
-  const userKey = currentUserInfo.studentId || currentUserInfo.username || 'guest';
+  const userKey = currentUserInfo.studentId || currentUserInfo.staffUsername || currentUserInfo.username || 'guest';
 
   // Load Saved Bio & Nickname
   const savedBio = localStorage.getItem('sskru_bio_' + userKey) || '';
@@ -1314,6 +1328,18 @@ function populateProfilePanel() {
     if (avatarEl) {
       avatarEl.className = 'profile-avatar-large admin';
       avatarEl.innerHTML = '<i class="fa-solid fa-user-shield"></i>';
+    }
+  } else if (currentUserInfo.isStaff) {
+    const rawName = currentUserInfo.staffUsername || 'บุคลากร';
+    if (nameEl) nameEl.textContent = savedNick ? `${rawName} (${savedNick})` : rawName;
+    if (roleEl) {
+      roleEl.textContent = 'บุคลากร / อาจารย์';
+      roleEl.classList.remove('admin');
+    }
+    if (accessEl) accessEl.textContent = 'ดูแผนที่และค้นหาอาคาร';
+    if (avatarEl) {
+      avatarEl.className = 'profile-avatar-large';
+      avatarEl.innerHTML = '<i class="fa-solid fa-user-tie"></i>';
     }
   } else if (currentUserInfo.isStudent) {
     const rawName = currentUserInfo.studentName || 'นักศึกษา';

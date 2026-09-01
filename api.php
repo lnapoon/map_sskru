@@ -29,6 +29,24 @@ if ($action) {
         $roster = json_decode(file_get_contents($roster_file), true) ?: [];
     }
 
+    if ($action === 'auth_status') {
+        if (session_status() === PHP_SESSION_NONE) { session_start(); }
+        $is_admin = ($_SESSION['user_role'] ?? '') === 'admin' || isset($_SESSION['admin_token']);
+        $is_student = isset($_SESSION['student_id']);
+        $is_staff = ($_SESSION['user_role'] ?? '') === 'staff' || isset($_SESSION['staff_username']);
+
+        echo json_encode([
+            'success' => true,
+            'isAdmin' => $is_admin,
+            'isStudent' => $is_student,
+            'isStaff' => $is_staff,
+            'staffUsername' => $_SESSION['staff_username'] ?? '',
+            'studentId' => $_SESSION['student_id'] ?? '',
+            'studentName' => $_SESSION['student_name'] ?? '',
+        ]);
+        exit();
+    }
+
     if ($action === 'student_verify') {
         $sid = trim($input_data['student_id'] ?? '');
         $cid = trim($input_data['citizen_id'] ?? '');
