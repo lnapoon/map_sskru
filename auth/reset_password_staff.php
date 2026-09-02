@@ -297,7 +297,7 @@ require_once __DIR__ . '/config.php';
       const btn = document.getElementById('btn-submit-request');
 
       if (!identifier) {
-        alert('กรุณากรอก Username หรือ Email');
+        await showSskruAlert({ title: 'โปรดกรอกข้อมูล', message: 'กรุณากรอก Username หรือ Email ของท่าน', type: 'warning' });
         return;
       }
 
@@ -320,16 +320,17 @@ require_once __DIR__ . '/config.php';
           document.getElementById('res-email').textContent = data.email;
           document.getElementById('success-box').style.display = 'block';
         } else {
-          alert(data.message || 'ไม่สามารถส่งรหัสยืนยันได้ กรุณาลองใหม่อีกครั้ง');
+          await showSskruAlert({ title: 'ส่งรหัสไม่สำเร็จ', message: data.message || 'ไม่สามารถส่งรหัสยืนยันได้ กรุณาลองใหม่อีกครั้ง', type: 'error' });
           btn.disabled = false;
           btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> ส่งรหัสยืนยันสิทธิ์ไปยังอีเมล';
         }
       } catch (err) {
-        alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
+        await showSskruAlert({ title: 'เกิดข้อผิดพลาด', message: 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', type: 'error' });
         btn.disabled = false;
         btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> ส่งรหัสยืนยันสิทธิ์ไปยังอีเมล';
       }
     }
   </script>
+  <script src="/assets/js/dialog.js"></script>
 </body>
 </html>

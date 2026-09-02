@@ -496,5 +496,6 @@ require_once __DIR__ . '/config.php';
       }
     }
   </script>
+  <script src="/assets/js/dialog.js"></script>
 </body>
 </html>

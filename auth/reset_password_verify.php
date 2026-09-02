@@ -386,19 +386,25 @@ require_once __DIR__ . '/config.php';
         const data = await res.json();
 
         if (data.success) {
-          alert('🎉 สร้างรหัสผ่านใหม่สำเร็จแล้ว! ท่านสามารถเข้าสู่ระบบด้วยรหัสผ่านใหม่ได้ทันที');
+          await showSskruAlert({
+            title: '🎉 เปลี่ยนรหัสผ่านสำเร็จ!',
+            message: 'สร้างรหัสผ่านใหม่สำเร็จแล้ว ท่านสามารถเข้าสู่ระบบด้วยรหัสผ่านใหม่ได้ทันที',
+            type: 'success',
+            buttonText: 'เข้าสู่ระบบ'
+          });
           window.location.href = window.location.pathname.endsWith('.php') ? 'login.php' : '/login/';
         } else {
-          alert(data.message || 'เกิดข้อผิดพลาด');
+          await showSskruAlert({ title: 'เกิดข้อผิดพลาด', message: data.message || 'ไม่สามารถตั้งรหัสผ่านใหม่ได้', type: 'error' });
           btn.disabled = false;
           btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> บันทึกรหัสผ่านใหม่ & เข้าสู่ระบบ';
         }
       } catch (err) {
-        alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
+        await showSskruAlert({ title: 'เกิดข้อผิดพลาด', message: 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', type: 'error' });
         btn.disabled = false;
         btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> บันทึกรหัสผ่านใหม่ & เข้าสู่ระบบ';
       }
     }
   </script>
+  <script src="/assets/js/dialog.js"></script>
 </body>
 </html>

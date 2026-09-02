@@ -341,16 +341,17 @@ require_once __DIR__ . '/config.php';
           `;
           document.getElementById('form-request-reset').style.display = 'none';
         } else {
-          alert(data.message || 'เกิดข้อผิดพลาด');
+          await showSskruAlert({ title: 'ส่งรหัสไม่สำเร็จ', message: data.message || 'เกิดข้อผิดพลาดในการส่งรหัสยืนยัน', type: 'error' });
           btn.disabled = false;
           btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> ส่งลิงก์ยืนยันสิทธิ์ไปยังอีเมลมหาวิทยาลัย';
         }
       } catch (err) {
-        alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
+        await showSskruAlert({ title: 'เกิดข้อผิดพลาด', message: 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', type: 'error' });
         btn.disabled = false;
         btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> ส่งลิงก์ยืนยันสิทธิ์ไปยังอีเมลมหาวิทยาลัย';
       }
     }
   </script>
+  <script src="/assets/js/dialog.js"></script>
 </body>
 </html>

@@ -440,10 +440,10 @@
         if (data.success) {
           window.location.href = isPhp ? 'index.php' : '/';
         } else {
-          alert(data.message || 'รหัสนักศึกษาหรือรหัสผ่านไม่ถูกต้อง');
+          await showSskruAlert({ title: 'เข้าสู่ระบบไม่สำเร็จ', message: data.message || 'รหัสนักศึกษาหรือรหัสผ่านไม่ถูกต้อง', type: 'error' });
         }
       } catch (e) {
-        alert('เกิดข้อผิดพลาดในการเข้าสู่ระบบ');
+        await showSskruAlert({ title: 'เกิดข้อผิดพลาด', message: 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', type: 'error' });
       }
     }
 
@@ -467,10 +467,10 @@
             window.location.href = data.role === 'admin' ? '/admin/dashboard/' : '/';
           }
         } else {
-          alert(data.message || 'Username/Email หรือรหัสผ่านไม่ถูกต้อง');
+          await showSskruAlert({ title: 'เข้าสู่ระบบไม่สำเร็จ', message: data.message || 'Username/Email หรือรหัสผ่านไม่ถูกต้อง', type: 'error' });
         }
       } catch (e) {
-        alert('เกิดข้อผิดพลาดในการเข้าสู่ระบบ');
+        await showSskruAlert({ title: 'เกิดข้อผิดพลาด', message: 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', type: 'error' });
       }
     }
     function togglePasswordVisibility(inputId, btn) {
@@ -492,5 +492,6 @@
       }
     }
   </script>
+  <script src="/assets/js/dialog.js"></script>
 </body>
 </html>

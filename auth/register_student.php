@@ -370,15 +370,21 @@ require_once __DIR__ . '/config.php';
         });
         const data = await res.json();
         if (data.success) {
-          alert('ลงทะเบียนสำเร็จ! เข้าสู่ระบบในนาม ' + data.user_name);
+          await showSskruAlert({
+            title: '🎉 ลงทะเบียนสำเร็จ!',
+            message: 'ยินดีต้อนรับ เข้าสู่ระบบในนาม ' + data.user_name,
+            type: 'success',
+            buttonText: 'เข้าสู่ระบบแผนที่'
+          });
           window.location.href = window.location.pathname.endsWith('.php') ? 'index.php' : '/';
         } else {
-          alert(data.message || 'ลงทะเบียนไม่สำเร็จ');
+          await showSskruAlert({ title: 'ลงทะเบียนไม่สำเร็จ', message: data.message || 'ไม่สามารถลงทะเบียนได้', type: 'error' });
         }
       } catch (e) {
-        alert('เกิดข้อผิดพลาดในการลงทะเบียน');
+        await showSskruAlert({ title: 'เกิดข้อผิดพลาด', message: 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', type: 'error' });
       }
     }
   </script>
+  <script src="/assets/js/dialog.js"></script>
 </body>
 </html>

@@ -268,7 +268,7 @@ require_once __DIR__ . '/config.php';
       const confirmPass = document.getElementById('reg-staff-confirm-pass').value.trim();
 
       if (pass !== confirmPass) {
-        alert('รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน กรุณาตรวจสอบอีกครั้ง');
+        await showSskruAlert({ title: 'รหัสผ่านไม่ตรงกัน', message: 'รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน กรุณาตรวจสอบอีกครั้ง', type: 'warning' });
         return;
       }
       const apiEndpoint = window.location.pathname.endsWith('.php') ? 'api.php?action=staff_register' : '/admin/api/auth/staff_register/';
@@ -281,15 +281,21 @@ require_once __DIR__ . '/config.php';
         });
         const data = await res.json();
         if (data.success) {
-          alert('สมัครสมาชิกบุคลากรสำเร็จ! ยินดีต้อนรับ คุณ ' + data.username);
+          await showSskruAlert({
+            title: '🎉 สมัครสมาชิกสำเร็จ!',
+            message: 'ยินดีต้อนรับ คุณ ' + data.username + ' เข้าสู่ระบบเรียบร้อยแล้ว',
+            type: 'success',
+            buttonText: 'เข้าสู่หน้าหลัก'
+          });
           window.location.href = window.location.pathname.endsWith('.php') ? 'index.php' : '/';
         } else {
-          alert(data.message || 'สมัครสมาชิกไม่สำเร็จ');
+          await showSskruAlert({ title: 'สมัครสมาชิกไม่สำเร็จ', message: data.message || 'ไม่สามารถสมัครสมาชิกได้', type: 'error' });
         }
       } catch (e) {
-        alert('เกิดข้อผิดพลาดในการสมัครสมาชิก');
+        await showSskruAlert({ title: 'เกิดข้อผิดพลาด', message: 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', type: 'error' });
       }
     }
   </script>
+  <script src="/assets/js/dialog.js"></script>
 </body>
 </html>
