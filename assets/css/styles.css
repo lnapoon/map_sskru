@@ -3864,3 +3864,156 @@ body.dark-theme .toast-container {
   background: #e2e8f0 !important;
   color: #334155 !important;
 }
+
+/* ==========================================================================
+   SSKRU Custom Beautiful Modal & Confirmation Dialog
+   ========================================================================== */
+.sskru-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sskru-dialog-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.sskru-dialog-modal {
+  background: #ffffff;
+  border-radius: 22px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 25px 60px -12px rgba(13, 44, 94, 0.35), 0 0 0 1px rgba(226, 232, 240, 0.8);
+  overflow: hidden;
+  text-align: center;
+  padding: 28px 24px 22px;
+  transform: scale(0.92) translateY(12px);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.sskru-dialog-backdrop.open .sskru-dialog-modal {
+  transform: scale(1) translateY(0);
+}
+
+.sskru-dialog-icon-wrapper {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  font-size: 28px;
+  transition: all 0.3s ease;
+}
+
+.sskru-dialog-icon-wrapper.danger {
+  background: linear-gradient(135deg, #fee2e2, #fecaca);
+  color: #dc2626;
+  border: 2px solid #fca5a5;
+  box-shadow: 0 8px 20px rgba(220, 38, 38, 0.18);
+}
+
+.sskru-dialog-icon-wrapper.warning {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  color: #d97706;
+  border: 2px solid #fcd34d;
+  box-shadow: 0 8px 20px rgba(217, 119, 6, 0.18);
+}
+
+.sskru-dialog-icon-wrapper.success {
+  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+  color: #16a34a;
+  border: 2px solid #86efac;
+  box-shadow: 0 8px 20px rgba(22, 163, 74, 0.18);
+}
+
+.sskru-dialog-icon-wrapper.info, .sskru-dialog-icon-wrapper.primary {
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  color: #2563eb;
+  border: 2px solid #bfdbfe;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.18);
+}
+
+.sskru-dialog-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 8px;
+  line-height: 1.4;
+  font-family: 'Sarabun', sans-serif;
+}
+
+.sskru-dialog-message {
+  font-size: 13.5px;
+  color: #475569;
+  line-height: 1.55;
+  margin: 0 0 22px;
+  font-family: 'Sarabun', sans-serif;
+}
+
+.sskru-dialog-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.sskru-dialog-btn {
+  flex: 1;
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  font-family: 'Sarabun', sans-serif;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.sskru-dialog-btn-cancel {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1.5px solid #cbd5e1;
+}
+
+.sskru-dialog-btn-cancel:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.sskru-dialog-btn-confirm {
+  background: linear-gradient(135deg, #1a4fa0, #2563eb);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+}
+
+.sskru-dialog-btn-confirm:hover {
+  background: linear-gradient(135deg, #0d2c5e, #1d4ed8);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.45);
+}
+
+.sskru-dialog-btn-confirm.danger {
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35) !important;
+}
+
+.sskru-dialog-btn-confirm.danger:hover {
+  background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+  box-shadow: 0 6px 18px rgba(220, 38, 38, 0.5) !important;
+}

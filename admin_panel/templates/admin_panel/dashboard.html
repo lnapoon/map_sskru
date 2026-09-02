@@ -549,6 +549,54 @@
     .empty-state-card span {
       font-size: 12px; color: var(--text-muted);
     }
+
+    /* SSKRU Custom Premium Confirmation Dialog */
+    .sskru-dialog-backdrop {
+      position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      z-index: 99999; display: flex; align-items: center; justify-content: center;
+      padding: 16px; opacity: 0; pointer-events: none;
+      transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .sskru-dialog-backdrop.open { opacity: 1; pointer-events: auto; }
+    .sskru-dialog-modal {
+      background: #ffffff; border-radius: 22px; width: 100%; max-width: 400px;
+      box-shadow: 0 25px 60px -12px rgba(13, 44, 94, 0.35), 0 0 0 1px rgba(226, 232, 240, 0.8);
+      overflow: hidden; text-align: center; padding: 28px 24px 22px;
+      transform: scale(0.92) translateY(12px); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    body.dark-theme .sskru-dialog-modal {
+      background: #1e293b; color: #f8fafc;
+      box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(51, 65, 85, 0.8);
+    }
+    .sskru-dialog-backdrop.open .sskru-dialog-modal { transform: scale(1) translateY(0); }
+    .sskru-dialog-icon-wrapper {
+      width: 64px; height: 64px; border-radius: 50%; display: flex;
+      align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 28px;
+    }
+    .sskru-dialog-icon-wrapper.danger {
+      background: linear-gradient(135deg, #fee2e2, #fecaca); color: #dc2626; border: 2px solid #fca5a5;
+    }
+    .sskru-dialog-icon-wrapper.warning {
+      background: linear-gradient(135deg, #fef3c7, #fde68a); color: #d97706; border: 2px solid #fcd34d;
+    }
+    .sskru-dialog-icon-wrapper.primary {
+      background: linear-gradient(135deg, #eff6ff, #dbeafe); color: #2563eb; border: 2px solid #bfdbfe;
+    }
+    .sskru-dialog-title { font-size: 17px; font-weight: 700; color: #0f172a; margin: 0 0 8px; font-family: 'Sarabun', sans-serif; }
+    body.dark-theme .sskru-dialog-title { color: #f8fafc; }
+    .sskru-dialog-message { font-size: 13.5px; color: #475569; line-height: 1.55; margin: 0 0 22px; font-family: 'Sarabun', sans-serif; }
+    body.dark-theme .sskru-dialog-message { color: #94a3b8; }
+    .sskru-dialog-actions { display: flex; gap: 10px; }
+    .sskru-dialog-btn {
+      flex: 1; padding: 12px 18px; border-radius: 12px; font-size: 14px; font-weight: 600;
+      cursor: pointer; border: none; font-family: 'Sarabun', sans-serif;
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s ease;
+    }
+    .sskru-dialog-btn-cancel { background: #f1f5f9; color: #475569; border: 1.5px solid #cbd5e1; }
+    body.dark-theme .sskru-dialog-btn-cancel { background: #334155; color: #cbd5e1; border-color: #475569; }
+    .sskru-dialog-btn-confirm { background: linear-gradient(135deg, #1a4fa0, #2563eb); color: #ffffff; }
+    .sskru-dialog-btn-confirm.danger { background: linear-gradient(135deg, #ef4444, #dc2626) !important; color: #ffffff; }
     body.dark-theme .empty-state-card p { color: #ffffff; }
   </style>
 </head>
@@ -1421,7 +1469,16 @@ async function saveBuilding() {
 }
 
 async function deleteBuilding(id, name) {
-  if (!confirm(`ยืนยันลบอาคาร "${name}"?`)) return;
+  const ok = await showSskruConfirm({
+    title: 'ยืนยันการลบอาคาร',
+    message: `คุณต้องการลบอาคาร "${name}" ออกจากระบบใช่หรือไม่?`,
+    icon: 'fa-trash-can',
+    type: 'danger',
+    confirmText: 'ยืนยันลบ',
+    cancelText: 'ยกเลิก'
+  });
+  if (!ok) return;
+
   const res = await fetch(`/admin/api/buildings/${id}/`, { 
     method: 'DELETE',
     credentials: 'same-origin'
@@ -1565,7 +1622,16 @@ async function saveStudent() {
 }
 
 async function deleteStudent(id, name) {
-  if (!confirm(`ยืนยันลบสิทธิ์นักศึกษา ${name}?`)) return;
+  const ok = await showSskruConfirm({
+    title: 'ยืนยันการลบสิทธิ์นักศึกษา',
+    message: `คุณต้องการลบข้อมูลสิทธิ์นักศึกษา "${name}" ใช่หรือไม่?`,
+    icon: 'fa-user-xmark',
+    type: 'danger',
+    confirmText: 'ยืนยันลบ',
+    cancelText: 'ยกเลิก'
+  });
+  if (!ok) return;
+
   const res = await fetch('/admin/api/students/', {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json' },
@@ -1580,6 +1646,76 @@ async function deleteStudent(id, name) {
     showToast(data.message || 'เกิดข้อผิดพลาด', 'error');
   }
 }
+
+// ── SSKRU Custom Confirmation Dialog Engine for Dashboard ──
+window.showSskruConfirm = function({
+  title = "ยืนยันการทำรายการ",
+  message = "ต้องการดำเนินการต่อใช่หรือไม่?",
+  icon = "fa-circle-question",
+  type = "primary",
+  confirmText = "ตกลง",
+  cancelText = "ยกเลิก"
+} = {}) {
+  return new Promise((resolve) => {
+    let backdrop = document.getElementById('sskru-custom-dialog-backdrop');
+    if (!backdrop) {
+      backdrop = document.createElement('div');
+      backdrop.id = 'sskru-custom-dialog-backdrop';
+      backdrop.className = 'sskru-dialog-backdrop';
+      backdrop.innerHTML = `
+        <div class="sskru-dialog-modal">
+          <div class="sskru-dialog-icon-wrapper" id="sskru-dialog-icon-wrap">
+            <i id="sskru-dialog-icon" class="fa-solid fa-circle-question"></i>
+          </div>
+          <h3 class="sskru-dialog-title" id="sskru-dialog-title"></h3>
+          <p class="sskru-dialog-message" id="sskru-dialog-message"></p>
+          <div class="sskru-dialog-actions">
+            <button type="button" class="sskru-dialog-btn sskru-dialog-btn-cancel" id="sskru-dialog-btn-cancel">ยกเลิก</button>
+            <button type="button" class="sskru-dialog-btn sskru-dialog-btn-confirm" id="sskru-dialog-btn-confirm">ตกลง</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(backdrop);
+    }
+
+    const iconWrap = backdrop.querySelector('#sskru-dialog-icon-wrap');
+    const iconEl = backdrop.querySelector('#sskru-dialog-icon');
+    const titleEl = backdrop.querySelector('#sskru-dialog-title');
+    const msgEl = backdrop.querySelector('#sskru-dialog-message');
+    const cancelBtn = backdrop.querySelector('#sskru-dialog-btn-cancel');
+    const confirmBtn = backdrop.querySelector('#sskru-dialog-btn-confirm');
+
+    iconWrap.className = `sskru-dialog-icon-wrapper ${type}`;
+    iconEl.className = `fa-solid ${icon}`;
+    titleEl.textContent = title;
+    msgEl.textContent = message;
+    cancelBtn.textContent = cancelText;
+    confirmBtn.textContent = confirmText;
+
+    if (type === 'danger') {
+      confirmBtn.className = 'sskru-dialog-btn sskru-dialog-btn-confirm danger';
+    } else {
+      confirmBtn.className = 'sskru-dialog-btn sskru-dialog-btn-confirm';
+    }
+
+    backdrop.style.display = 'flex';
+    requestAnimationFrame(() => backdrop.classList.add('open'));
+
+    const closeDialog = (result) => {
+      backdrop.classList.remove('open');
+      setTimeout(() => {
+        backdrop.style.display = 'none';
+        resolve(result);
+      }, 250);
+    };
+
+    cancelBtn.onclick = () => closeDialog(false);
+    confirmBtn.onclick = () => closeDialog(true);
+    backdrop.onclick = (e) => {
+      if (e.target === backdrop) closeDialog(false);
+    };
+  });
+};
 
 // Admin Theme Toggle System
 function initAdminTheme() {

@@ -1528,6 +1528,144 @@ function initProfileGlobalListeners() {
   }
 }
 
+// ── SSKRU Custom Premium Confirmation Dialog & Alert Engine ──
+window.showSskruConfirm = function({
+  title = "ยืนยันการทำรายการ",
+  message = "ต้องการดำเนินการต่อใช่หรือไม่?",
+  icon = "fa-circle-question",
+  type = "primary", // primary, danger, warning, success
+  confirmText = "ตกลง",
+  cancelText = "ยกเลิก"
+} = {}) {
+  return new Promise((resolve) => {
+    let backdrop = document.getElementById('sskru-custom-dialog-backdrop');
+    if (!backdrop) {
+      backdrop = document.createElement('div');
+      backdrop.id = 'sskru-custom-dialog-backdrop';
+      backdrop.className = 'sskru-dialog-backdrop';
+      backdrop.innerHTML = `
+        <div class="sskru-dialog-modal">
+          <div class="sskru-dialog-icon-wrapper" id="sskru-dialog-icon-wrap">
+            <i id="sskru-dialog-icon" class="fa-solid fa-circle-question"></i>
+          </div>
+          <h3 class="sskru-dialog-title" id="sskru-dialog-title"></h3>
+          <p class="sskru-dialog-message" id="sskru-dialog-message"></p>
+          <div class="sskru-dialog-actions" id="sskru-dialog-actions">
+            <button type="button" class="sskru-dialog-btn sskru-dialog-btn-cancel" id="sskru-dialog-btn-cancel">ยกเลิก</button>
+            <button type="button" class="sskru-dialog-btn sskru-dialog-btn-confirm" id="sskru-dialog-btn-confirm">ตกลง</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(backdrop);
+    }
+
+    const iconWrap = backdrop.querySelector('#sskru-dialog-icon-wrap');
+    const iconEl = backdrop.querySelector('#sskru-dialog-icon');
+    const titleEl = backdrop.querySelector('#sskru-dialog-title');
+    const msgEl = backdrop.querySelector('#sskru-dialog-message');
+    const cancelBtn = backdrop.querySelector('#sskru-dialog-btn-cancel');
+    const confirmBtn = backdrop.querySelector('#sskru-dialog-btn-confirm');
+
+    iconWrap.className = `sskru-dialog-icon-wrapper ${type}`;
+    iconEl.className = `fa-solid ${icon}`;
+    titleEl.textContent = title;
+    msgEl.textContent = message;
+    cancelBtn.textContent = cancelText;
+    confirmBtn.textContent = confirmText;
+
+    if (type === 'danger') {
+      confirmBtn.className = 'sskru-dialog-btn sskru-dialog-btn-confirm danger';
+    } else {
+      confirmBtn.className = 'sskru-dialog-btn sskru-dialog-btn-confirm';
+    }
+
+    backdrop.style.display = 'flex';
+    requestAnimationFrame(() => {
+      backdrop.classList.add('open');
+    });
+
+    const closeDialog = (result) => {
+      backdrop.classList.remove('open');
+      setTimeout(() => {
+        backdrop.style.display = 'none';
+        resolve(result);
+      }, 250);
+    };
+
+    cancelBtn.onclick = () => closeDialog(false);
+    confirmBtn.onclick = () => closeDialog(true);
+    backdrop.onclick = (e) => {
+      if (e.target === backdrop) closeDialog(false);
+    };
+  });
+};
+
+window.showSskruAlert = function({
+  title = "แจ้งเตือน",
+  message = "",
+  icon = "fa-circle-info",
+  type = "primary", // primary, danger, warning, success
+  buttonText = "เข้าใจแล้ว"
+} = {}) {
+  return new Promise((resolve) => {
+    let backdrop = document.getElementById('sskru-custom-alert-backdrop');
+    if (!backdrop) {
+      backdrop = document.createElement('div');
+      backdrop.id = 'sskru-custom-alert-backdrop';
+      backdrop.className = 'sskru-dialog-backdrop';
+      backdrop.innerHTML = `
+        <div class="sskru-dialog-modal">
+          <div class="sskru-dialog-icon-wrapper" id="sskru-alert-icon-wrap">
+            <i id="sskru-alert-icon" class="fa-solid fa-circle-info"></i>
+          </div>
+          <h3 class="sskru-dialog-title" id="sskru-alert-title"></h3>
+          <p class="sskru-dialog-message" id="sskru-alert-message"></p>
+          <div class="sskru-dialog-actions">
+            <button type="button" class="sskru-dialog-btn sskru-dialog-btn-confirm" id="sskru-alert-btn-ok" style="width:100%;">เข้าใจแล้ว</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(backdrop);
+    }
+
+    const iconWrap = backdrop.querySelector('#sskru-alert-icon-wrap');
+    const iconEl = backdrop.querySelector('#sskru-alert-icon');
+    const titleEl = backdrop.querySelector('#sskru-alert-title');
+    const msgEl = backdrop.querySelector('#sskru-alert-message');
+    const okBtn = backdrop.querySelector('#sskru-alert-btn-ok');
+
+    iconWrap.className = `sskru-dialog-icon-wrapper ${type}`;
+    iconEl.className = `fa-solid ${icon}`;
+    titleEl.textContent = title;
+    msgEl.textContent = message;
+    okBtn.textContent = buttonText;
+
+    if (type === 'danger') {
+      okBtn.className = 'sskru-dialog-btn sskru-dialog-btn-confirm danger';
+    } else {
+      okBtn.className = 'sskru-dialog-btn sskru-dialog-btn-confirm';
+    }
+
+    backdrop.style.display = 'flex';
+    requestAnimationFrame(() => {
+      backdrop.classList.add('open');
+    });
+
+    const closeAlert = () => {
+      backdrop.classList.remove('open');
+      setTimeout(() => {
+        backdrop.style.display = 'none';
+        resolve(true);
+      }, 250);
+    };
+
+    okBtn.onclick = closeAlert;
+    backdrop.onclick = (e) => {
+      if (e.target === backdrop) closeAlert();
+    };
+  });
+};
+
 // ── Profile Panel Open/Close ──
 function openProfilePanel() {
   populateProfilePanel();
@@ -1542,7 +1680,16 @@ function closeProfilePanel() {
 }
 
 async function handleLogout() {
-  if (confirm('ต้องการออกจากระบบใช่หรือไม่?')) {
+  const ok = await showSskruConfirm({
+    title: 'ต้องการออกจากระบบใช่หรือไม่?',
+    message: 'เมื่อออกจากระบบ ท่านจะต้องเข้าสู่ระบบใหม่เพื่อเข้าถึงข้อมูลส่วนตัวและสิทธิ์การใช้งาน',
+    icon: 'fa-arrow-right-from-bracket',
+    type: 'danger',
+    confirmText: 'ออกจากระบบ',
+    cancelText: 'ยกเลิก'
+  });
+
+  if (ok) {
     const isPhp = window.location.pathname.endsWith('.php');
     if (isPhp) {
       try {
@@ -3090,13 +3237,20 @@ function handleBuildingFormSubmit(e) {
   document.getElementById("building-form-overlay").classList.remove("active");
 }
 
-function handleBuildingDelete() {
+async function handleBuildingDelete() {
   const idVal = document.getElementById("edit-building-id").value;
   if (idVal === "NEW") return;
 
   const targetId = Number(idVal);
   const targetBuilding = adminBuildings.find(b => b.id === targetId);
-  const confirmDel = confirm("คุณต้องการลบตึกนี้ออกจากแผนที่ใช่หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้");
+  const confirmDel = await showSskruConfirm({
+    title: "ยืนยันการลบอาคาร",
+    message: "คุณต้องการลบตึกนี้ออกจากแผนที่ใช่หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้",
+    icon: "fa-trash-can",
+    type: "danger",
+    confirmText: "ยืนยันลบ",
+    cancelText: "ยกเลิก"
+  });
   if (!confirmDel) return;
 
   adminBuildings = adminBuildings.filter(b => b.id !== targetId);
@@ -3169,8 +3323,16 @@ function renderAdminDashboardTable() {
     `;
 
     tr.querySelector(".table-btn.edit").onclick = () => openEditBuildingForm(b);
-    tr.querySelector(".table-btn.delete").onclick = () => {
-      if (confirm(`คุณต้องการลบอาคาร "${b.name}" ใช่หรือไม่?`)) {
+    tr.querySelector(".table-btn.delete").onclick = async () => {
+      const confirmDel = await showSskruConfirm({
+        title: "ยืนยันการลบอาคาร",
+        message: `คุณต้องการลบอาคาร "${b.name}" ออกจากระบบใช่หรือไม่?`,
+        icon: "fa-trash-can",
+        type: "danger",
+        confirmText: "ยืนยันลบ",
+        cancelText: "ยกเลิก"
+      });
+      if (confirmDel) {
         adminBuildings = adminBuildings.filter(item => item.id !== b.id);
         saveBuildingsToStorage('DELETE', b);
         renderMarkers();
