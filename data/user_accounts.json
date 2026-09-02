@@ -47,6 +47,14 @@
       "password_hash": "a5ad7e6d5225ad00c5f05ddb6bb3b1597a843cc92f6cf188490ffcb88a1ef4ef",
       "password_plain": "5555555555",
       "created_at": "2026-09-02T12:55:06.762196"
+    },
+    {
+      "student_id": "6812732113",
+      "name": "นาย ปุนยเทพ อารีย์รัตน์กุล",
+      "faculty": "มหาวิทยาลัยราชภัฏศรีสะเกษ",
+      "password_hash": "e516ec3e2077f60cd857582120d2a230277c124f2db1abacf5db8525b5dcca77",
+      "password_plain": "113333555555",
+      "created_at": "2026-09-02T14:06:52.082437"
     }
   ],
   "staff": [
