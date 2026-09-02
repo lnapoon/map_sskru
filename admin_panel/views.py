@@ -1390,7 +1390,7 @@ RESETS_FILE = BASE_DIR / "data" / "password_resets.json"
 
 @csrf_exempt
 def student_request_reset_api(request):
-    """ขั้นตอนที่ 1: ส่งคำขอรีเซ็ตรหัสผ่านและสร้างรหัสยืนยัน (Token/OTP) ไปยังอีเมลนักศึกษา"""
+    """ขั้นตอนที่ 1: ส่งคำขอรีเซ็ตรหัสผ่านและสร้างรหัสยืนยัน (Token/OTP) บันทึกลง PostgreSQL Database"""
     if request.method != "POST":
         return JsonResponse(
             {"success": False, "message": "Method not allowed"}, status=405
@@ -1398,53 +1398,67 @@ def student_request_reset_api(request):
 
     try:
         data = json.loads(request.body)
-        student_id = data.get("student_id", "").strip()
+        raw_student_id = data.get("student_id", "").strip()
         email = data.get("email", "").strip().lower()
 
-        if not student_id or not email:
+        if not raw_student_id or not email:
             return JsonResponse(
-                {"success": False, "message": "กรุณากรอกรหัสนักศึกษาและอีเมลมหาวิทยาลัย"},
+                {"success": False, "message": "กรุณากรอกรหัสนักศึกษาและอีเมล"},
                 status=400,
             )
 
-        clean_sid = student_id.replace("-", "").strip()
-        expected_prefix = f"stu{clean_sid}"
+        clean_sid = re.sub(r"[^0-9a-zA-Z]", "", raw_student_id)
 
-        is_uni_email = expected_prefix in email and "sskru.ac.th" in email
-        is_valid_email = "@" in email and "." in email
-
-        if not is_uni_email and not is_valid_email:
-            return JsonResponse(
-                {
-                    "success": False,
-                    "message": f"อีเมลยืนยันตัวตนไม่ถูกต้อง ต้องใช้อีเมลรูปแบบ {expected_prefix}@sskru.ac.th หรืออีเมลของคุณ",
-                },
-                status=400,
-            )
-
-        student_db = Student.objects.filter(student_id=student_id).first()
-        roster = read_json_file(ROSTER_FILE)
-        matched_roster = next(
-            (s for s in roster if s.get("student_id") == student_id), None
+        # Smart ID Match from Database or Roster
+        student_db = (
+            Student.objects.filter(student_id=raw_student_id).first()
+            or Student.objects.filter(student_id__iexact=raw_student_id).first()
         )
+        if not student_db and clean_sid:
+            for s in Student.objects.all():
+                if re.sub(r"[^0-9a-zA-Z]", "", s.student_id) == clean_sid:
+                    student_db = s
+                    break
 
-        if not student_db and not matched_roster:
+        student_name = student_db.name if student_db else None
+        student_id = student_db.student_id if student_db else raw_student_id
+
+        if not student_name:
+            roster = read_json_file(ROSTER_FILE)
+            for r in roster:
+                r_sid = r.get("student_id", "")
+                if r_sid == raw_student_id or (clean_sid and re.sub(r"[^0-9a-zA-Z]", "", r_sid) == clean_sid):
+                    student_name = r.get("name")
+                    student_id = r_sid
+                    break
+
+        if not student_name:
             return JsonResponse(
                 {"success": False, "message": "ไม่พบรหัสนักศึกษานี้ในระบบมหาวิทยาลัย"},
                 status=404,
             )
 
-        student_name = student_db.name if student_db else matched_roster.get("name")
-
         # Generate Secure Token & OTP
         token = secrets.token_hex(24)
         otp = str(secrets.randbelow(900000) + 100000)
+        expires_at_dt = timezone.now() + timedelta(minutes=15)
         expires_at = (datetime.now() + timedelta(minutes=15)).isoformat()
 
-        resets = read_json_file(RESETS_FILE, default=[])
-        # Clear previous active resets for this student
-        resets = [r for r in resets if r.get("student_id") != student_id]
+        # 1. Save to PostgreSQL Database
+        PasswordResetToken.objects.filter(identifier=student_id, used=False).delete()
+        PasswordResetToken.objects.create(
+            user_type="student",
+            identifier=student_id,
+            email=email,
+            token=token,
+            otp=otp,
+            expires_at=expires_at_dt,
+            used=False,
+        )
 
+        # 2. Save to JSON file as local backup
+        resets = read_json_file(RESETS_FILE, default=[])
+        resets = [r for r in resets if r.get("student_id") != student_id]
         reset_entry = {
             "student_id": student_id,
             "student_name": student_name,
@@ -1469,7 +1483,7 @@ def student_request_reset_api(request):
 
             subject = "🔒 ยืนยันสิทธิ์รีเซ็ตรหัสผ่าน — SSKRU Campus Map"
             from_email = getattr(
-                settings, "DEFAULT_FROM_EMAIL", "SSKRU Campus Map <noreply@sskru.ac.th>"
+                settings, "DEFAULT_FROM_EMAIL", "SSKRU Campus Map <mpoontv1234@gmail.com>"
             )
             to_email = [email]
 
@@ -1524,7 +1538,7 @@ def student_request_reset_api(request):
 
             msg = EmailMultiAlternatives(subject, text_content, from_email, to_email)
             msg.attach_alternative(html_content, "text/html")
-            msg.send(fail_silently=True)
+            msg.send(fail_silently=False)
             email_sent = True
         except Exception as mail_err:
             print(f"Mail send notice: {mail_err}")
@@ -1536,6 +1550,8 @@ def student_request_reset_api(request):
                 "email": email,
                 "token": token,
                 "otp": otp,
+                "student_name": student_name,
+                "student_id": student_id,
                 "email_sent": email_sent,
                 "verify_url": verify_url,
             }
@@ -1546,7 +1562,7 @@ def student_request_reset_api(request):
 
 @csrf_exempt
 def student_verify_reset_token_api(request):
-    """ขั้นตอนที่ 2: ตรวจสอบความถูกต้องของ Token หรือ OTP ยืนยันสิทธิ์"""
+    """ขั้นตอนที่ 2: ตรวจสอบความถูกต้องของ Token หรือ OTP ยืนยันสิทธิ์ (Database First)"""
     if request.method != "POST":
         return JsonResponse(
             {"success": False, "message": "Method not allowed"}, status=405
@@ -1561,8 +1577,42 @@ def student_verify_reset_token_api(request):
         token = str(data.get("token") or "").strip()
         otp = str(data.get("otp") or "").strip()
 
-        resets = read_json_file(RESETS_FILE, default=[])
         matched = None
+        # 1. Look up in PostgreSQL
+        if token:
+            db_reset = PasswordResetToken.objects.filter(token=token, used=False).first()
+        elif otp:
+            db_reset = PasswordResetToken.objects.filter(otp=otp, used=False).first()
+        else:
+            db_reset = None
+
+        if db_reset:
+            if timezone.now() > db_reset.expires_at:
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "message": "ลิงก์ยืนยันตัวตนหมดอายุแล้ว กรุณาทำรายการใหม่อีกครั้ง",
+                    },
+                    status=400,
+                )
+            st_name = ""
+            st_obj = Student.objects.filter(student_id=db_reset.identifier).first()
+            if st_obj:
+                st_name = st_obj.name
+
+            reset_failed_attempts(request, action="verify_otp")
+            return JsonResponse(
+                {
+                    "success": True,
+                    "token": db_reset.token,
+                    "student_id": db_reset.identifier,
+                    "student_name": st_name,
+                    "email": db_reset.email,
+                }
+            )
+
+        # 2. Look up in JSON file as fallback
+        resets = read_json_file(RESETS_FILE, default=[])
         for r in resets:
             if not r.get("used"):
                 if (token and r.get("token") == token) or (otp and r.get("otp") == otp):
@@ -1605,7 +1655,7 @@ def student_verify_reset_token_api(request):
 
 @csrf_exempt
 def student_confirm_new_password_api(request):
-    """ขั้นตอนที่ 3: บันทึกรหัสผ่านใหม่หลังจากยืนยันสิทธิ์อีเมลมหาวิทยาลัยสำเร็จ"""
+    """ขั้นตอนที่ 3: บันทึกรหัสผ่านใหม่หลังจากยืนยันสิทธิ์สำเร็จ (บันทึกลง PostgreSQL Database)"""
     if request.method != "POST":
         return JsonResponse(
             {"success": False, "message": "Method not allowed"}, status=405
@@ -1621,61 +1671,94 @@ def student_confirm_new_password_api(request):
                 {"success": False, "message": "ข้อมูลไม่ครบถ้วน"}, status=400
             )
 
-        resets = read_json_file(RESETS_FILE, default=[])
-        matched = next(
-            (r for r in resets if r.get("token") == token and not r.get("used")), None
-        )
+        student_id = None
+        student_name = None
 
-        if not matched:
-            return JsonResponse(
-                {"success": False, "message": "Token ยืนยันสิทธิ์ไม่ถูกต้องหรือหมดอายุ"},
-                status=400,
+        # 1. Find in PostgreSQL
+        db_token = PasswordResetToken.objects.filter(token=token, used=False).first()
+        if db_token:
+            if timezone.now() > db_token.expires_at:
+                return JsonResponse(
+                    {"success": False, "message": "Token หมดอายุแล้ว กรุณาทำรายการใหม่อีกครั้ง"},
+                    status=400,
+                )
+            student_id = db_token.identifier
+            db_token.used = True
+            db_token.save()
+
+        # 2. Find in JSON as fallback
+        if not student_id:
+            resets = read_json_file(RESETS_FILE, default=[])
+            matched = next(
+                (r for r in resets if r.get("token") == token and not r.get("used")), None
             )
+            if not matched:
+                return JsonResponse(
+                    {"success": False, "message": "Token ยืนยันสิทธิ์ไม่ถูกต้องหรือหมดอายุ"},
+                    status=400,
+                )
+            exp = datetime.fromisoformat(matched.get("expires_at"))
+            if datetime.now() > exp:
+                return JsonResponse(
+                    {"success": False, "message": "Token หมดอายุแล้ว กรุณาทำรายการใหม่อีกครั้ง"},
+                    status=400,
+                )
+            student_id = matched.get("student_id")
+            student_name = matched.get("student_name")
+            matched["used"] = True
+            write_json_file(RESETS_FILE, resets)
 
-        exp = datetime.fromisoformat(matched.get("expires_at"))
-        if datetime.now() > exp:
-            return JsonResponse(
-                {"success": False, "message": "Token หมดอายุแล้ว กรุณาทำรายการใหม่อีกครั้ง"},
-                status=400,
-            )
-
-        student_id = matched.get("student_id")
-        student_name = matched.get("student_name")
-
-        # Update Accounts DB
-        accounts = read_json_file(ACCOUNTS_FILE, default={"students": [], "staff": []})
         hashed_pass = hashlib.sha256(new_password.encode("utf-8")).hexdigest()
 
-        student_acc = next(
+        # 3. Update Student in PostgreSQL
+        clean_sid = re.sub(r"[^0-9a-zA-Z]", "", student_id)
+        st_obj = (
+            Student.objects.filter(student_id=student_id).first()
+            or Student.objects.filter(student_id__iexact=student_id).first()
+        )
+        if not st_obj and clean_sid:
+            for s in Student.objects.all():
+                if re.sub(r"[^0-9a-zA-Z]", "", s.student_id) == clean_sid:
+                    st_obj = s
+                    break
+
+        if st_obj:
+            st_obj.password_hash = hashed_pass
+            st_obj.password_plain = new_password
+            st_obj.save()
+            student_name = st_obj.name
+
+        # 4. Update JSON accounts
+        accounts = read_json_file(ACCOUNTS_FILE, default={"students": [], "staff": []})
+        st_acc = next(
             (
-                acc
-                for acc in accounts.get("students", [])
-                if acc.get("student_id") == student_id
+                s
+                for s in accounts.get("students", [])
+                if s.get("student_id") == student_id
+                or (clean_sid and re.sub(r"[^0-9a-zA-Z]", "", s.get("student_id", "")) == clean_sid)
             ),
             None,
         )
-        if student_acc:
-            student_acc["password_hash"] = hashed_pass
+        if st_acc:
+            st_acc["password_hash"] = hashed_pass
+            st_acc["password_plain"] = new_password
         else:
             accounts["students"].append(
                 {
                     "student_id": student_id,
-                    "name": student_name,
-                    "faculty": "มหาวิทยาลัยราชภัฏศรีสะเกษ",
+                    "name": student_name or f"นักศึกษา {student_id}",
                     "password_hash": hashed_pass,
+                    "password_plain": new_password,
                     "created_at": datetime.now().isoformat(),
                 }
             )
         write_json_file(ACCOUNTS_FILE, accounts)
 
-        # Mark token used
-        matched["used"] = True
-        write_json_file(RESETS_FILE, resets)
-
         return JsonResponse(
             {
                 "success": True,
-                "message": "สร้างและตั้งรหัสผ่านใหม่สำเร็จ! ท่านสามารถเข้าสู่ระบบด้วยรหัสผ่านใหม่ได้ทันที",
+                "message": "รีเซ็ตรหัสผ่านสำเร็จ! ท่านสามารถเข้าสู่ระบบด้วยรหัสผ่านใหม่ได้ทันที",
+                "student_name": student_name,
             }
         )
     except Exception as e:
