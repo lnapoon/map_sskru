@@ -592,7 +592,7 @@ def student_login_page(request):
 
 @csrf_exempt
 def student_login_api(request):
-    """API สำหรับตรวจสอบรหัสนักศึกษา"""
+    """API สำหรับเข้าสู่ระบบนักศึกษา (รองรับค้นหาทั้งแบบมีขีด/ไม่มีขีด และตรวจรหัสผ่าน)"""
     if request.method != "POST":
         return JsonResponse(
             {"success": False, "message": "Method not allowed"}, status=405
@@ -600,33 +600,99 @@ def student_login_api(request):
 
     try:
         data = json.loads(request.body)
-        student_id = data.get("student_id", "").strip()
+        raw_student_id = data.get("student_id", "").strip()
+        password = data.get("password", "").strip()
 
-        if not student_id:
+        if not raw_student_id:
             return JsonResponse(
                 {"success": False, "message": "กรุณาระบุรหัสนักศึกษา"}, status=400
             )
 
+        clean_id = re.sub(r"[^0-9a-zA-Z]", "", raw_student_id)
         from .models import Student
 
-        student = Student.objects.filter(student_id=student_id, is_active=True).first()
+        # 1. Search in Django Student DB (exact, iexact, or clean ID match)
+        student = (
+            Student.objects.filter(student_id=raw_student_id, is_active=True).first()
+            or Student.objects.filter(student_id__iexact=raw_student_id, is_active=True).first()
+        )
+        if not student and clean_id:
+            for s in Student.objects.filter(is_active=True):
+                if re.sub(r"[^0-9a-zA-Z]", "", s.student_id) == clean_id:
+                    student = s
+                    break
 
-        if student:
-            request.session["student_id"] = student.student_id
-            request.session["student_name"] = student.name
-            log_user_activity(
-                student.student_id,
-                student.name,
-                "student",
-                email=f"stu{student.student_id}@sskru.ac.th",
-                request=request,
-            )
-            return JsonResponse({"success": True, "message": "เข้าสู่ระบบสำเร็จ"})
-        else:
+        # 2. Search in ROSTER_FILE as fallback
+        matched_name = student.name if student else None
+        matched_sid = student.student_id if student else raw_student_id
+
+        if not student:
+            roster = read_json_file(ROSTER_FILE)
+            for r in roster:
+                r_sid = r.get("student_id", "")
+                if r_sid == raw_student_id or (clean_id and re.sub(r"[^0-9a-zA-Z]", "", r_sid) == clean_id):
+                    matched_name = r.get("name")
+                    matched_sid = r_sid
+                    break
+
+        # 3. Search in ACCOUNTS_FILE as fallback
+        accounts = read_json_file(ACCOUNTS_FILE, default={"students": [], "staff": []})
+        acc_match = None
+        for acc in accounts.get("students", []):
+            a_sid = acc.get("student_id", "")
+            if a_sid == raw_student_id or (clean_id and re.sub(r"[^0-9a-zA-Z]", "", a_sid) == clean_id):
+                acc_match = acc
+                if not matched_name:
+                    matched_name = acc.get("name")
+                    matched_sid = a_sid
+                break
+
+        if not matched_name and not student and not acc_match:
             return JsonResponse(
-                {"success": False, "message": "รหัสนักศึกษาไม่ถูกต้อง หรือไม่ได้รับสิทธิ์"},
+                {
+                    "success": False,
+                    "message": "ไม่พบรหัสนักศึกษานี้ในระบบ กรุณาตรวจสอบรหัสหรือติดต่อผู้ดูแลระบบ",
+                },
                 status=401,
             )
+
+        # If account has registered password, verify password
+        if acc_match and password:
+            hashed_pass = hashlib.sha256(password.encode("utf-8")).hexdigest()
+            saved_hash = acc_match.get("password_hash")
+            saved_plain = acc_match.get("password") or acc_match.get("password_plain")
+            if saved_hash and saved_hash != hashed_pass and saved_plain != password:
+                # Password doesn't match registered password
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "message": "รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง หรือกู้คืนรหัสผ่าน",
+                    },
+                    status=401,
+                )
+
+        final_sid = matched_sid
+        final_name = matched_name or f"นักศึกษา {final_sid}"
+
+        request.session["student_id"] = final_sid
+        request.session["student_name"] = final_name
+        request.session["user_role"] = "student"
+
+        log_user_activity(
+            final_sid,
+            final_name,
+            "student",
+            email=f"stu{re.sub(r'[^0-9a-zA-Z]', '', final_sid)}@sskru.ac.th",
+            request=request,
+        )
+        return JsonResponse(
+            {
+                "success": True,
+                "message": f"เข้าสู่ระบบสำเร็จ ยินดีต้อนรับคุณ {final_name}",
+                "user_name": final_name,
+                "student_id": final_sid,
+            }
+        )
 
     except Exception as e:
         return JsonResponse({"success": False, "message": str(e)}, status=400)
@@ -783,10 +849,10 @@ def student_verify_api(request):
 
     try:
         data = json.loads(request.body)
-        student_id = data.get("student_id", "").strip()
-        citizen_id = data.get("citizen_id", "").strip()
+        raw_student_id = data.get("student_id", "").strip()
+        raw_citizen_id = data.get("citizen_id", "").strip()
 
-        if not student_id or not citizen_id:
+        if not raw_student_id or not raw_citizen_id:
             return JsonResponse(
                 {
                     "success": False,
@@ -795,9 +861,19 @@ def student_verify_api(request):
                 status=400,
             )
 
-        # 1. Search in Django Student Model first
-        student_db = Student.objects.filter(student_id=student_id).first()
+        clean_id = re.sub(r"[^0-9a-zA-Z]", "", raw_student_id)
         matched_student = None
+
+        # 1. Search in Django Student Model first
+        student_db = (
+            Student.objects.filter(student_id=raw_student_id).first()
+            or Student.objects.filter(student_id__iexact=raw_student_id).first()
+        )
+        if not student_db and clean_id:
+            for s in Student.objects.all():
+                if re.sub(r"[^0-9a-zA-Z]", "", s.student_id) == clean_id:
+                    student_db = s
+                    break
 
         if student_db:
             matched_student = {
@@ -810,7 +886,8 @@ def student_verify_api(request):
             # 2. Search in ROSTER_FILE json
             roster = read_json_file(ROSTER_FILE)
             for s in roster:
-                if s.get("student_id") == student_id:
+                r_sid = s.get("student_id", "")
+                if r_sid == raw_student_id or (clean_id and re.sub(r"[^0-9a-zA-Z]", "", r_sid) == clean_id):
                     matched_student = s
                     break
 
@@ -851,22 +928,34 @@ def student_register_api(request):
 
     try:
         data = json.loads(request.body)
-        student_id = data.get("student_id", "").strip()
+        raw_student_id = data.get("student_id", "").strip()
         citizen_id = data.get("citizen_id", "").strip()
         password = data.get("password", "").strip()
 
-        student_db = Student.objects.filter(student_id=student_id).first()
+        clean_id = re.sub(r"[^0-9a-zA-Z]", "", raw_student_id)
+        student_db = (
+            Student.objects.filter(student_id=raw_student_id).first()
+            or Student.objects.filter(student_id__iexact=raw_student_id).first()
+        )
+        if not student_db and clean_id:
+            for s in Student.objects.all():
+                if re.sub(r"[^0-9a-zA-Z]", "", s.student_id) == clean_id:
+                    student_db = s
+                    break
+
         matched_name = student_db.name if student_db else None
         matched_faculty = "มหาวิทยาลัยราชภัฏศรีสะเกษ"
+        student_id = student_db.student_id if student_db else raw_student_id
 
         if not matched_name:
             roster = read_json_file(ROSTER_FILE)
-            matched = next(
-                (s for s in roster if s.get("student_id") == student_id), None
-            )
-            if matched:
-                matched_name = matched.get("name")
-                matched_faculty = matched.get("faculty", "มหาวิทยาลัยราชภัฏศรีสะเกษ")
+            for s in roster:
+                r_sid = s.get("student_id", "")
+                if r_sid == raw_student_id or (clean_id and re.sub(r"[^0-9a-zA-Z]", "", r_sid) == clean_id):
+                    matched_name = s.get("name")
+                    matched_faculty = s.get("faculty", "มหาวิทยาลัยราชภัฏศรีสะเกษ")
+                    student_id = r_sid
+                    break
 
         if not matched_name:
             return JsonResponse(
@@ -878,14 +967,25 @@ def student_register_api(request):
 
         # Check if already registered
         if any(
-            acc.get("student_id") == student_id for acc in accounts.get("students", [])
+            acc.get("student_id") == student_id or (clean_id and re.sub(r"[^0-9a-zA-Z]", "", acc.get("student_id", "")) == clean_id)
+            for acc in accounts.get("students", [])
         ):
+            # Update password for existing account
+            for acc in accounts.get("students", []):
+                if acc.get("student_id") == student_id or (clean_id and re.sub(r"[^0-9a-zA-Z]", "", acc.get("student_id", "")) == clean_id):
+                    acc["password_hash"] = hashlib.sha256(password.encode("utf-8")).hexdigest()
+                    acc["password_plain"] = password
+                    break
+            write_json_file(ACCOUNTS_FILE, accounts)
+            request.session["student_id"] = student_id
+            request.session["student_name"] = matched_name
+            request.session["user_role"] = "student"
             return JsonResponse(
                 {
-                    "success": False,
-                    "message": "รหัสนักศึกษานี้ได้ลงทะเบียนเปิดบัญชีไว้แล้ว สามารถเข้าสู่ระบบได้ทันที",
-                },
-                status=400,
+                    "success": True,
+                    "message": "อัปเดตรหัสผ่านและเข้าสู่ระบบสำเร็จ!",
+                    "user_name": matched_name,
+                }
             )
 
         hashed_pass = hashlib.sha256(password.encode("utf-8")).hexdigest()
@@ -894,6 +994,7 @@ def student_register_api(request):
             "name": matched_name,
             "faculty": matched_faculty,
             "password_hash": hashed_pass,
+            "password_plain": password,
             "created_at": datetime.now().isoformat(),
         }
         accounts["students"].append(new_account)
@@ -1061,7 +1162,7 @@ def staff_login_api(request):
 
 @csrf_exempt
 def verify_current_user_password_api(request):
-    """ตรวจสอบรหัสผ่านเพื่อปลดล็อคการแสดงผลข้อมูลระบุตัวตน (Privacy Shield)"""
+    """ตรวจสอบรหัสผ่านของ User คนปัจจุบันที่ล็อกอินอยู่เท่านั้น (ป้องกันการใช้รหัสผู้อื่นปลดล็อค)"""
     if request.method != "POST":
         return JsonResponse(
             {"success": False, "message": "Method not allowed"}, status=405
@@ -1074,10 +1175,15 @@ def verify_current_user_password_api(request):
     try:
         data = json.loads(request.body)
         password = data.get("password", "").strip()
-        student_id = data.get("student_id", "").strip() or request.session.get(
-            "student_id", ""
-        )
-        clean_sid = student_id.replace("-", "").strip()
+        
+        # Get user identity from active session or request payload
+        session_role = request.session.get("user_role", "")
+        session_sid = request.session.get("student_id", "")
+        session_staff = request.session.get("staff_username", "")
+        req_sid = data.get("student_id", "").strip()
+
+        target_sid = session_sid or req_sid
+        clean_sid = re.sub(r"[^0-9a-zA-Z]", "", target_sid)
 
         if not password:
             return JsonResponse(
@@ -1085,24 +1191,46 @@ def verify_current_user_password_api(request):
             )
 
         env_user, env_pass = get_admin_credentials()
-
-        # 1. Check Admin password (Only poon300450)
-        if password == env_pass:
-            reset_failed_attempts(request, action="verify_pwd")
-            return JsonResponse({"success": True, "message": "ยืนยันรหัสผ่านสำเร็จ (Admin)"})
-
-        # 2. Check Student password from ACCOUNTS_FILE
         accounts = read_json_file(ACCOUNTS_FILE, default={"students": [], "staff": []})
         hashed_pass = hashlib.sha256(password.encode("utf-8")).hexdigest()
 
-        # Match by specific student_id
-        if student_id or clean_sid:
+        # 1. Admin Verification: Only if user is currently Admin
+        is_admin_session = validate_admin_token(request) or session_role == "admin"
+        if is_admin_session:
+            if password == env_pass:
+                reset_failed_attempts(request, action="verify_pwd")
+                return JsonResponse({"success": True, "message": "ยืนยันรหัสผ่านผู้ดูแลระบบสำเร็จ"})
+            else:
+                record_failed_attempt(request, action="verify_pwd", max_attempts=5, lock_minutes=5)
+                return JsonResponse({"success": False, "message": "รหัสผ่านผู้ดูแลระบบไม่ถูกต้อง"}, status=401)
+
+        # 2. Staff Verification: Only for this specific staff user
+        if session_role == "staff" or session_staff:
+            staff_acc = next(
+                (
+                    st
+                    for st in accounts.get("staff", [])
+                    if st.get("username", "").lower() == session_staff.lower()
+                    or st.get("email", "").lower() == session_staff.lower()
+                ),
+                None,
+            )
+            if staff_acc:
+                if staff_acc.get("password_hash") == hashed_pass or staff_acc.get("password") == password:
+                    reset_failed_attempts(request, action="verify_pwd")
+                    return JsonResponse({"success": True, "message": "ยืนยันรหัสผ่านสำเร็จ"})
+                else:
+                    record_failed_attempt(request, action="verify_pwd", max_attempts=5, lock_minutes=5)
+                    return JsonResponse({"success": False, "message": "รหัสผ่านของบัญชีคุณไม่ถูกต้อง"}, status=401)
+
+        # 3. Student Verification: Strictly check this specific student's registered password
+        if target_sid or clean_sid:
             student_acc = next(
                 (
                     s
                     for s in accounts.get("students", [])
-                    if s.get("student_id") == student_id
-                    or s.get("student_id") == clean_sid
+                    if s.get("student_id") == target_sid
+                    or (clean_sid and re.sub(r"[^0-9a-zA-Z]", "", s.get("student_id", "")) == clean_sid)
                 ),
                 None,
             )
@@ -1110,34 +1238,34 @@ def verify_current_user_password_api(request):
                 if (
                     student_acc.get("password_hash") == hashed_pass
                     or student_acc.get("password") == password
+                    or student_acc.get("password_plain") == password
                 ):
                     reset_failed_attempts(request, action="verify_pwd")
                     return JsonResponse({"success": True, "message": "ยืนยันรหัสผ่านสำเร็จ"})
-
-        # Match across any registered student or staff account
-        matched_any = any(
-            s.get("password_hash") == hashed_pass or s.get("password") == password
-            for s in accounts.get("students", [])
-        ) or any(
-            st.get("password_hash") == hashed_pass or st.get("password") == password
-            for st in accounts.get("staff", [])
-        )
-
-        if matched_any:
-            reset_failed_attempts(request, action="verify_pwd")
-            return JsonResponse({"success": True, "message": "ยืนยันรหัสผ่านสำเร็จ"})
-
-        # Fallback: Check if password matches student ID or citizen ID
-        if password == student_id or password == clean_sid:
-            reset_failed_attempts(request, action="verify_pwd")
-            return JsonResponse({"success": True, "message": "ยืนยันรหัสผ่านสำเร็จ"})
+                else:
+                    record_failed_attempt(request, action="verify_pwd", max_attempts=5, lock_minutes=5)
+                    return JsonResponse(
+                        {"success": False, "message": "รหัสผ่านของรหัสนักศึกษานี้ไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง"},
+                        status=401,
+                    )
+            else:
+                # Student exists in roster / DB but has not set a custom password via /register/student/
+                # Allow unlocking with their student ID or citizen ID as initial password
+                if password == target_sid or password == clean_sid:
+                    reset_failed_attempts(request, action="verify_pwd")
+                    return JsonResponse({"success": True, "message": "ยืนยันรหัสผ่านสำเร็จ"})
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "message": "ยังไม่ได้ตั้งรหัสผ่านสำหรับรหัสนี้ หรือรหัสผ่านไม่ถูกต้อง (หากยังไม่เคยลงทะเบียน กรุณาลงทะเบียนตั้งรหัสผ่านก่อน)",
+                    },
+                    status=401,
+                )
 
         record_failed_attempt(request, action="verify_pwd", max_attempts=5, lock_minutes=5)
         return JsonResponse(
-            {"success": False, "message": "รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง"}, status=401
+            {"success": False, "message": "ไม่พบข้อมูลบัญชีผู้ใช้ของคุณ กรุณาลองใหม่อีกครั้ง"}, status=401
         )
-    except Exception as e:
-        return JsonResponse({"success": False, "message": str(e)}, status=500)
     except Exception as e:
         return JsonResponse({"success": False, "message": str(e)}, status=500)
 

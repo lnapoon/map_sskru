@@ -64,9 +64,11 @@ if ($action) {
             exit();
         }
         
+        $clean_sid = preg_replace('/[^0-9a-zA-Z]/', '', $sid);
         $matched = null;
         foreach ($roster as $s) {
-            if ($s['student_id'] === $sid) {
+            $r_sid = $s['student_id'] ?? '';
+            if ($r_sid === $sid || ($clean_sid && preg_replace('/[^0-9a-zA-Z]/', '', $r_sid) === $clean_sid)) {
                 $matched = $s;
                 break;
             }
@@ -461,7 +463,7 @@ if ($action) {
 
     if ($action === 'verify_password') {
         $pass = trim($input_data['password'] ?? '');
-        $sid = trim($input_data['student_id'] ?? '');
+        $sid = trim($input_data['student_id'] ?? ($_SESSION['student_id'] ?? ''));
 
         if (!$pass) {
             http_response_code(400);
@@ -469,47 +471,62 @@ if ($action) {
             exit();
         }
 
-        // Admin password check (Only poon300450)
-        if ($pass === 'poon300450') {
-            echo json_encode(['success' => true, 'message' => 'ยืนยันรหัสผ่านสำเร็จ (Admin)']);
-            exit();
-        }
 
-        // Student password check
-        $hashed = hash('sha256', $pass);
-        $matched = false;
-        $clean_sid = str_replace('-', '', $sid);
-
-        if ($sid || $clean_sid) {
-            foreach ($accounts['students'] as $st) {
-                if (($st['student_id'] === $sid || $st['student_id'] === $clean_sid) && 
-                    (($st['password_hash'] ?? '') === $hashed || ($st['password'] ?? '') === $pass)) {
-                    $matched = true;
-                    break;
-                }
+        // 1. Admin password check
+        $is_admin = (!empty($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true);
+        if ($is_admin) {
+            if ($pass === 'poon300450') {
+                echo json_encode(['success' => true, 'message' => 'ยืนยันรหัสผ่านสำเร็จ (Admin)']);
+                exit();
+            } else {
+                http_response_code(401);
+                echo json_encode(['success' => false, 'message' => 'รหัสผ่านผู้ดูแลระบบไม่ถูกต้อง']);
+                exit();
             }
         }
-        
-        if (!$matched) {
-            foreach ($accounts['students'] as $st) {
-                if (($st['password_hash'] ?? '') === $hashed || ($st['password'] ?? '') === $pass) {
-                    $matched = true;
-                    break;
-                }
-            }
-            if (!$matched) {
-                foreach ($accounts['staff'] as $sf) {
-                    if (($sf['password_hash'] ?? '') === $hashed || ($sf['password'] ?? '') === $pass) {
-                        $matched = true;
-                        break;
+
+        // 2. Staff password check
+        if (!empty($_SESSION['staff_username'])) {
+            $staff_un = strtolower($_SESSION['staff_username']);
+            $hashed = hash('sha256', $pass);
+            foreach ($accounts['staff'] as $st) {
+                if (strtolower($st['username'] ?? '') === $staff_un || strtolower($st['email'] ?? '') === $staff_un) {
+                    if (($st['password_hash'] ?? '') === $hashed || ($st['password'] ?? '') === $pass) {
+                        echo json_encode(['success' => true, 'message' => 'ยืนยันรหัสผ่านสำเร็จ']);
+                        exit();
                     }
                 }
             }
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'รหัสผ่านบัญชีบุคลากรไม่ถูกต้อง']);
+            exit();
         }
 
-        if ($matched || ($sid && $pass === $sid) || ($clean_sid && $pass === $clean_sid)) {
-            echo json_encode(['success' => true, 'message' => 'ยืนยันรหัสผ่านสำเร็จ']);
-            exit();
+        // 3. Student password check: Strictly verify this specific student
+        $hashed = hash('sha256', $pass);
+        $clean_sid = preg_replace('/[^0-9a-zA-Z]/', '', $sid);
+
+        if ($sid || $clean_sid) {
+            foreach ($accounts['students'] as $st) {
+                $st_sid = $st['student_id'] ?? '';
+                $st_clean = preg_replace('/[^0-9a-zA-Z]/', '', $st_sid);
+                if ($st_sid === $sid || ($clean_sid && $st_clean === $clean_sid)) {
+                    if (($st['password_hash'] ?? '') === $hashed || ($st['password'] ?? '') === $pass || ($st['password_plain'] ?? '') === $pass) {
+                        echo json_encode(['success' => true, 'message' => 'ยืนยันรหัสผ่านสำเร็จ']);
+                        exit();
+                    } else {
+                        http_response_code(401);
+                        echo json_encode(['success' => false, 'message' => 'รหัสผ่านของรหัสนักศึกษานี้ไม่ถูกต้อง']);
+                        exit();
+                    }
+                }
+            }
+
+            // Fallback for unregistered student (ID match)
+            if ($pass === $sid || $pass === $clean_sid) {
+                echo json_encode(['success' => true, 'message' => 'ยืนยันรหัสผ่านสำเร็จ']);
+                exit();
+            }
         }
 
         http_response_code(401);
@@ -614,19 +631,36 @@ if ($action) {
     if ($action === 'student_login') {
         $sid = trim($input_data['student_id'] ?? '');
         $pass = trim($input_data['password'] ?? '');
+        $clean_sid = preg_replace('/[^0-9a-zA-Z]/', '', $sid);
         $hashed = hash('sha256', $pass);
         
         foreach ($accounts['students'] as $st) {
-            if ($st['student_id'] === $sid && $st['password_hash'] === $hashed) {
+            $st_sid = $st['student_id'] ?? '';
+            $st_clean = preg_replace('/[^0-9a-zA-Z]/', '', $st_sid);
+            if (($st_sid === $sid || ($clean_sid && $st_clean === $clean_sid)) && ($st['password_hash'] === $hashed || ($st['password_plain'] ?? '') === $pass)) {
                 $_SESSION['student_id'] = $st['student_id'];
                 $_SESSION['student_name'] = $st['name'];
-                log_user_activity_php($st['student_id'], $st['name'], 'student', "stu{$st['student_id']}@sskru.ac.th");
+                log_user_activity_php($st['student_id'], $st['name'], 'student', "stu{$st_clean}@sskru.ac.th");
                 echo json_encode(['success' => true, 'role' => 'student', 'redirect' => 'index.php', 'user_name' => $st['name']]);
                 exit();
             }
         }
+        
+        // Check roster if not registered yet
+        foreach ($roster as $r) {
+            $r_sid = $r['student_id'] ?? '';
+            $r_clean = preg_replace('/[^0-9a-zA-Z]/', '', $r_sid);
+            if ($r_sid === $sid || ($clean_sid && $r_clean === $clean_sid)) {
+                $_SESSION['student_id'] = $r['student_id'];
+                $_SESSION['student_name'] = $r['name'];
+                log_user_activity_php($r['student_id'], $r['name'], 'student', "stu{$r_clean}@sskru.ac.th");
+                echo json_encode(['success' => true, 'role' => 'student', 'redirect' => 'index.php', 'user_name' => $r['name']]);
+                exit();
+            }
+        }
+        
         http_response_code(401);
-        echo json_encode(['success' => false, 'message' => 'รหัสนักศึกษาหรือรหัสผ่านไม่ถูกต้อง หรือยังไม่ได้ลงทะเบียน']);
+        echo json_encode(['success' => false, 'message' => 'รหัสนักศึกษาหรือรหัสผ่านไม่ถูกต้อง']);
         exit();
     }
 }
