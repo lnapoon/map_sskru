@@ -559,28 +559,39 @@ def track_event(request):
 
 @csrf_exempt
 def auth_status_api(request):
-    """API เช็กว่า User คนปัจจุบันเป็น Admin, Staff หรือ Student"""
+    """API เช็กว่า User คนปัจจุบันเป็น Admin, Staff หรือ Student อย่างถูกต้อง แยก Session ชัดเจน"""
     is_admin = validate_admin_token(request)
+    user_role = request.session.get("user_role", "")
 
-    # check student session
-    student_id = request.session.get("student_id")
-    is_student = student_id is not None
+    is_student = False
+    student_id = ""
+    student_name = ""
 
-    # check staff session
-    is_staff = (request.session.get("user_role") == "staff") or (
-        "staff_username" in request.session
-    )
-    staff_username = request.session.get("staff_username", "")
+    is_staff = False
+    staff_username = ""
+
+    if is_admin:
+        user_role = "admin"
+    elif user_role == "staff" or ("staff_username" in request.session and not request.session.get("student_id")):
+        is_staff = True
+        user_role = "staff"
+        staff_username = request.session.get("staff_username", "")
+    elif user_role == "student" or "student_id" in request.session:
+        is_student = True
+        user_role = "student"
+        student_id = request.session.get("student_id", "")
+        student_name = request.session.get("student_name", "")
 
     return JsonResponse(
         {
             "success": True,
+            "role": user_role,
             "isAdmin": is_admin,
             "isStudent": is_student,
             "isStaff": is_staff,
             "staffUsername": staff_username,
             "studentId": student_id,
-            "studentName": request.session.get("student_name", ""),
+            "studentName": student_name,
         }
     )
 
@@ -673,6 +684,11 @@ def student_login_api(request):
 
         final_sid = matched_sid
         final_name = matched_name or f"นักศึกษา {final_sid}"
+
+        # Clear staff and admin session tokens to prevent role bleeding
+        request.session.pop("staff_username", None)
+        request.session.pop("staff_email", None)
+        request.session.pop("admin_token", None)
 
         request.session["student_id"] = final_sid
         request.session["student_name"] = final_name
@@ -1050,6 +1066,7 @@ def staff_register_api(request):
             "email": email,
             "username": username,
             "password_hash": hashed_pass,
+            "password_plain": password,
             "created_at": datetime.now().isoformat(),
         }
         accounts["staff"].append(new_staff)
@@ -1134,7 +1151,12 @@ def staff_login_api(request):
         if staff_match:
             reset_failed_attempts(request, action="staff_login")
             if hasattr(request, "session"):
+                # Clear student and admin session tokens to prevent role bleeding
+                request.session.pop("student_id", None)
+                request.session.pop("student_name", None)
+                request.session.pop("admin_token", None)
                 request.session["staff_username"] = staff_match.get("username")
+                request.session["staff_email"] = staff_match.get("email", "")
                 request.session["user_role"] = "staff"
             log_user_activity(
                 staff_match.get("username"),
@@ -1175,15 +1197,16 @@ def verify_current_user_password_api(request):
     try:
         data = json.loads(request.body)
         password = data.get("password", "").strip()
-        
-        # Get user identity from active session or request payload
-        session_role = request.session.get("user_role", "")
-        session_sid = request.session.get("student_id", "")
-        session_staff = request.session.get("staff_username", "")
+        req_role = data.get("role", "").strip()
+        req_username = data.get("username", "").strip()
         req_sid = data.get("student_id", "").strip()
 
-        target_sid = session_sid or req_sid
-        clean_sid = re.sub(r"[^0-9a-zA-Z]", "", target_sid)
+        sess = getattr(request, "session", {})
+        session_role = sess.get("user_role", "") if hasattr(sess, "get") else ""
+        session_staff = sess.get("staff_username", "") if hasattr(sess, "get") else ""
+        session_sid = sess.get("student_id", "") if hasattr(sess, "get") else ""
+
+        active_role = req_role or session_role
 
         if not password:
             return JsonResponse(
@@ -1194,9 +1217,8 @@ def verify_current_user_password_api(request):
         accounts = read_json_file(ACCOUNTS_FILE, default={"students": [], "staff": []})
         hashed_pass = hashlib.sha256(password.encode("utf-8")).hexdigest()
 
-        # 1. Admin Verification: Only if user is currently Admin
-        is_admin_session = validate_admin_token(request) or session_role == "admin"
-        if is_admin_session:
+        # 1. Admin Verification
+        if active_role == "admin" or validate_admin_token(request):
             if password == env_pass:
                 reset_failed_attempts(request, action="verify_pwd")
                 return JsonResponse({"success": True, "message": "ยืนยันรหัสผ่านผู้ดูแลระบบสำเร็จ"})
@@ -1204,27 +1226,34 @@ def verify_current_user_password_api(request):
                 record_failed_attempt(request, action="verify_pwd", max_attempts=5, lock_minutes=5)
                 return JsonResponse({"success": False, "message": "รหัสผ่านผู้ดูแลระบบไม่ถูกต้อง"}, status=401)
 
-        # 2. Staff Verification: Only for this specific staff user
-        if session_role == "staff" or session_staff:
+        # 2. Staff Verification: Check ONLY this staff member's registered password
+        target_staff = req_username or session_staff
+        if active_role == "staff" or target_staff:
             staff_acc = next(
                 (
                     st
                     for st in accounts.get("staff", [])
-                    if st.get("username", "").lower() == session_staff.lower()
-                    or st.get("email", "").lower() == session_staff.lower()
+                    if st.get("username", "").lower() == target_staff.lower()
+                    or st.get("email", "").lower() == target_staff.lower()
                 ),
                 None,
             )
             if staff_acc:
                 if staff_acc.get("password_hash") == hashed_pass or staff_acc.get("password") == password:
                     reset_failed_attempts(request, action="verify_pwd")
-                    return JsonResponse({"success": True, "message": "ยืนยันรหัสผ่านสำเร็จ"})
+                    return JsonResponse({"success": True, "message": "ยืนยันรหัสผ่านบุคลากรสำเร็จ"})
                 else:
                     record_failed_attempt(request, action="verify_pwd", max_attempts=5, lock_minutes=5)
-                    return JsonResponse({"success": False, "message": "รหัสผ่านของบัญชีคุณไม่ถูกต้อง"}, status=401)
+                    return JsonResponse({"success": False, "message": "รหัสผ่านบัญชีบุคลากรไม่ถูกต้อง"}, status=401)
+            else:
+                record_failed_attempt(request, action="verify_pwd", max_attempts=5, lock_minutes=5)
+                return JsonResponse({"success": False, "message": "ไม่พบบัญชีบุคลากรนี้ในระบบ"}, status=401)
 
-        # 3. Student Verification: Strictly check this specific student's registered password
-        if target_sid or clean_sid:
+        # 3. Student Verification: Check ONLY this specific student's registered password
+        target_sid = req_sid or session_sid
+        clean_sid = re.sub(r"[^0-9a-zA-Z]", "", target_sid)
+
+        if active_role == "student" or target_sid or clean_sid:
             student_acc = next(
                 (
                     s
@@ -1250,7 +1279,6 @@ def verify_current_user_password_api(request):
                     )
             else:
                 # Student exists in roster / DB but has not set a custom password via /register/student/
-                # Allow unlocking with their student ID or citizen ID as initial password
                 if password == target_sid or password == clean_sid:
                     reset_failed_attempts(request, action="verify_pwd")
                     return JsonResponse({"success": True, "message": "ยืนยันรหัสผ่านสำเร็จ"})
@@ -1855,12 +1883,14 @@ def staff_confirm_new_password_api(request):
         )
         if staff_acc:
             staff_acc["password_hash"] = hashed_pass
+            staff_acc["password_plain"] = new_password
         else:
             accounts["staff"].append(
                 {
                     "username": username,
                     "email": email,
                     "password_hash": hashed_pass,
+                    "password_plain": new_password,
                     "created_at": datetime.now().isoformat(),
                 }
             )

@@ -1431,11 +1431,19 @@ function initProfileGlobalListeners() {
         ? 'auth/api.php?action=verify_password'
         : '/admin/api/auth/verify_password/';
 
+      const roleStr = currentUserInfo.isAdmin ? 'admin' : (currentUserInfo.isStaff ? 'staff' : (currentUserInfo.isStudent ? 'student' : ''));
+      const verifyPayload = {
+        password: pass,
+        role: roleStr,
+        username: currentUserInfo.staffUsername || '',
+        student_id: currentUserInfo.studentId || ''
+      };
+
       try {
         const res = await fetch(apiEndpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ password: pass, student_id: currentUserInfo.studentId || '' })
+          body: JSON.stringify(verifyPayload)
         });
         const data = await res.json();
 
