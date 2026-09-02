@@ -1043,20 +1043,29 @@ function getSessionId() {
   return sid;
 }
 
-// Track user event to analytics API
+// Track user event to analytics API (Non-blocking background beacon)
 function trackEvent(eventType, eventData = '') {
   try {
-    fetch('/api/track', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        type: eventType,
-        data: eventData,
-        session_id: getSessionId(),
-        path: window.location.pathname,
-        referrer: document.referrer
-      })
-    }).catch(() => {});
+    const payload = JSON.stringify({
+      type: eventType,
+      data: eventData,
+      session_id: getSessionId(),
+      path: window.location.pathname,
+      referrer: document.referrer
+    });
+    if (navigator.sendBeacon) {
+      const blob = new Blob([payload], { type: 'application/json' });
+      navigator.sendBeacon('/api/track', blob);
+    } else {
+      setTimeout(() => {
+        fetch('/api/track', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: payload,
+          keepalive: true
+        }).catch(() => {});
+      }, 60);
+    }
   } catch (e) {}
 }
 
@@ -2352,22 +2361,21 @@ function showModal(title, message, iconType = 'warning') {
    ========================================================================== */
 
 function filterByCategory(category) {
+  if (activeFilters === category) return;
   activeFilters = category;
 
   document.querySelectorAll(".category-tab").forEach(tab => {
-    if (tab.getAttribute("data-category") === category) {
-      tab.classList.add("active");
-    } else {
-      tab.classList.remove("active");
-    }
+    tab.classList.toggle("active", tab.getAttribute("data-category") === category);
   });
 
   const filtered = category === 'all'
     ? adminBuildings
     : adminBuildings.filter(b => b.category === category);
 
-  renderBuildingCarousel(filtered);
-  renderMarkers();
+  requestAnimationFrame(() => {
+    renderBuildingCarousel(filtered);
+    renderMarkers();
+  });
 }
 
 function handleSearchInput(e) {

@@ -63,10 +63,10 @@
   --radius-lg: 24px;
   --radius-xl: 32px;
 
-  /* Transitions */
-  --transition-fast: 0.18s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-normal: 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  --transition-spring: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  /* Transitions — High Performance */
+  --transition-fast: 0.12s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 0.22s cubic-bezier(0.25, 0.8, 0.25, 1);
+  --transition-spring: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 
   /* Layout */
   --navbar-height: 70px;
@@ -1711,13 +1711,14 @@ body.dark-theme .carousel-card.selected {
   flex-direction: column;
   max-height: calc(100vh - var(--carousel-height) - var(--navbar-height) - 80px);
   overflow: hidden;
-  transform: translateX(450px);
+  transform: translate3d(450px, 0, 0);
   transition: transform var(--transition-normal);
+  will-change: transform;
   pointer-events: none;
 }
 
 .info-panel.active {
-  transform: translateX(0);
+  transform: translate3d(0, 0, 0);
   pointer-events: auto;
 }
 
