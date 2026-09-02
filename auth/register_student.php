@@ -327,7 +327,7 @@ require_once __DIR__ . '/config.php';
                 </div>
                 <div class="form-group" style="text-align: left; margin-bottom: 16px;">
                   <div style="display:flex; align-items:flex-start; gap:8px; font-size:12px; color:#475569; background:#f8fafc; padding:10px 12px; border-radius:10px; border:1px solid #e2e8f0; line-height:1.45;">
-                    <input type="checkbox" id="reg-student-consent" style="margin-top:2px; accent-color:#2563eb; width:15px; height:15px; cursor:pointer;" required checked />
+                    <input type="checkbox" id="reg-student-consent" style="margin-top:2px; accent-color:#2563eb; width:15px; height:15px; cursor:pointer;" required />
                     <label for="reg-student-consent" style="cursor:pointer;">
                       ข้าพเจ้ายินยอมให้ระบบบันทึกและจัดเก็บข้อมูลรหัสนักศึกษาและรหัสผ่านสำหรับการเข้าใช้งานและเปิดสิทธิ์พิกัดตำแหน่ง GPS สำหรับการนำทาง ตาม <a href="javascript:void(0)" onclick="openPdpaInfoModal()" style="color:#2563eb; font-weight:600; text-decoration:underline;">นโยบายคุ้มครองข้อมูลส่วนบุคคล (PDPA)</a>
                     </label>

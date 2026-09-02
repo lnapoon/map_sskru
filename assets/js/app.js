@@ -1110,13 +1110,6 @@ function initPDPAConsent() {
   const isConsentGiven = localStorage.getItem("sskru_pdpa_consent") === "granted" || localStorage.getItem("sskru_data_consent") === "granted";
   if (!isConsentGiven) {
     openPDPAModal();
-  } else {
-    // Automatically attempt silent live GPS positioning
-    setTimeout(() => {
-      if (typeof trackUserLocation === 'function') {
-        trackUserLocation(true);
-      }
-    }, 800);
   }
 
   if (acceptBtn) {
@@ -1125,13 +1118,8 @@ function initPDPAConsent() {
       localStorage.setItem("sskru_data_consent", "granted");
       closePDPAModal();
       if (typeof showToast === 'function') {
-        showToast("ยินยอมรับสิทธิ์ตำแหน่งและคุ้มครองข้อมูลส่วนบุคคล (PDPA) เรียบร้อยแล้ว");
+        showToast("ยินยอมรับสิทธิ์ตำแหน่งและคุ้มครองข้อมูลส่วนบุคคล (PDPA) เรียบร้อยแล้ว สามารถกดปุ่มค้นหาตำแหน่งได้");
       }
-      setTimeout(() => {
-        if (typeof trackUserLocation === 'function') {
-          trackUserLocation(true);
-        }
-      }, 300);
     };
   }
 
@@ -3036,31 +3024,8 @@ function calculateWalkingRoute() {
   trackEvent('navigate', targetBuildingName);
 }
 
-async function getFreshLiveGpsCoords() {
-  if (currentUserRealCoords && Array.isArray(currentUserRealCoords) && currentUserRealCoords.length === 2) {
-    return currentUserRealCoords;
-  }
-
-  if (!navigator.geolocation) return null;
-
-  return new Promise((resolve) => {
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        currentUserRealCoords = [pos.coords.latitude, pos.coords.longitude];
-        updateLocationPosition(pos);
-        resolve(currentUserRealCoords);
-      },
-      (err) => {
-        console.warn("Could not retrieve real-time GPS:", err);
-        resolve(null);
-      },
-      { enableHighAccuracy: true, timeout: 6000, maximumAge: 0 }
-    );
-  });
-}
-
 // ─── Real Google Maps Navigation Trigger ─────────────────────────────
-async function startActiveTurnByTurnNav() {
+function startActiveTurnByTurnNav() {
   const srcVal = document.getElementById("select-nav-source").value;
   const destVal = document.getElementById("select-nav-dest").value;
 
@@ -3070,7 +3035,7 @@ async function startActiveTurnByTurnNav() {
   }
 
   const destBuilding = adminBuildings.find(b => b.id === Number(destVal));
-  if (!destBuilding || !destBuilding.realCoords) {
+  if (!destBuilding || !destBuilding.realCoords || destBuilding.realCoords.length < 2) {
     showToast("ไม่พบพิกัดจุดหมายปลายทาง");
     return;
   }
@@ -3085,17 +3050,14 @@ async function startActiveTurnByTurnNav() {
   let gmapsUrl = '';
 
   if (srcVal === "my_location") {
-    showToast("📍 กำลังตรวจหาพิกัด GPS ตำแหน่งจริงของคุณ...");
-    const coords = await getFreshLiveGpsCoords();
-    if (coords) {
-      gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${coords[0]},${coords[1]}&destination=${destBuilding.realCoords[0]},${destBuilding.realCoords[1]}&travelmode=${gmode}`;
+    if (currentUserRealCoords && Array.isArray(currentUserRealCoords) && currentUserRealCoords.length === 2) {
+      gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${currentUserRealCoords[0]},${currentUserRealCoords[1]}&destination=${destBuilding.realCoords[0]},${destBuilding.realCoords[1]}&travelmode=${gmode}`;
     } else {
-      // Omit origin so Google Maps uses device's real hardware GPS instead of IP
       gmapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${destBuilding.realCoords[0]},${destBuilding.realCoords[1]}&travelmode=${gmode}`;
     }
   } else {
     const srcBuilding = adminBuildings.find(b => b.id === Number(srcVal));
-    if (srcBuilding && srcBuilding.realCoords) {
+    if (srcBuilding && srcBuilding.realCoords && srcBuilding.realCoords.length >= 2) {
       gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${srcBuilding.realCoords[0]},${srcBuilding.realCoords[1]}&destination=${destBuilding.realCoords[0]},${destBuilding.realCoords[1]}&travelmode=${gmode}`;
     } else {
       gmapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${destBuilding.realCoords[0]},${destBuilding.realCoords[1]}&travelmode=${gmode}`;
@@ -3774,7 +3736,11 @@ function closeSideDrawer() {
  * Smart Navigation: Opens in-app route for desktop,
  * or external maps app for mobile (Android → Google Maps, iOS → Apple Maps)
  */
-async function openSmartNavigation(b) {
+function openSmartNavigation(b) {
+  if (!b || !b.realCoords || b.realCoords.length < 2) {
+    showToast("ไม่พบพิกัดจุดหมายปลายทาง");
+    return;
+  }
   const destLat = b.realCoords[0];
   const destLng = b.realCoords[1];
 
@@ -3786,14 +3752,11 @@ async function openSmartNavigation(b) {
   };
   const gmode = travelModeMap[activeTravelMode] || 'walking';
 
-  showToast("📍 กำลังดึงพิกัด GPS ตำแหน่งจริงของคุณ...");
-  const coords = await getFreshLiveGpsCoords();
-
   let gmapsUrl = '';
-  if (coords) {
-    gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${coords[0]},${coords[1]}&destination=${destLat},${destLng}&travelmode=${gmode}`;
+  if (currentUserRealCoords && Array.isArray(currentUserRealCoords) && currentUserRealCoords.length === 2) {
+    gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${currentUserRealCoords[0]},${currentUserRealCoords[1]}&destination=${destLat},${destLng}&travelmode=${gmode}`;
   } else {
-    // When no origin coordinate is passed, Google Maps natively triggers device GPS hardware
+    // When no origin is specified, Google Maps natively requests live GPS from device
     gmapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}&travelmode=${gmode}`;
   }
 

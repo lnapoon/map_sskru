@@ -355,24 +355,16 @@ require_once __DIR__ . '/config.php';
               </button>
             </div>
           </div>
-          <div class="form-group" style="margin-bottom: 14px;">
-            <div style="display:flex; align-items:flex-start; gap:8px; font-size:12px; color:#475569; background:#f8fafc; padding:10px 12px; border-radius:10px; border:1px solid #e2e8f0; line-height:1.45;">
-              <input type="checkbox" id="student-consent-check" style="margin-top:2px; accent-color:#2563eb; width:15px; height:15px; cursor:pointer;" required checked />
-              <label for="student-consent-check" style="cursor:pointer;">
-                ข้าพเจ้ายินยอมให้ระบบบันทึกข้อมูลการใช้งาน และเปิดสิทธิ์พิกัดตำแหน่ง GPS สำหรับการนำทาง ตาม <a href="javascript:void(0)" onclick="openPdpaInfoModal()" style="color:#2563eb; font-weight:600; text-decoration:underline;">นโยบายคุ้มครองข้อมูลส่วนบุคคล (PDPA)</a>
-              </label>
-            </div>
-          </div>
           <button type="submit" class="btn-primary">
             <i class="fa-solid fa-right-to-bracket"></i> เข้าสู่ระบบนักศึกษา
           </button>
         </form>
 
         <div class="sub-link-container" style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; gap: 8px; font-size: 13px;">
-          <a href="/register/student/" class="sub-link" id="link-reg-student" style="font-weight: 600; color: #2563eb;">
+          <a href="register_student.php" class="sub-link" id="link-reg-student" style="font-weight: 600; color: #2563eb;">
             <i class="fa-solid fa-user-plus"></i> ลงทะเบียนครั้งแรก
           </a>
-          <a href="/reset_password/student/" class="sub-link" id="link-reset-student" style="color: #64748b;">
+          <a href="reset_password_student.php" class="sub-link" id="link-reset-student" style="color: #64748b;">
             <i class="fa-solid fa-key"></i> ลืมรหัสผ่าน?
           </a>
         </div>
@@ -396,14 +388,6 @@ require_once __DIR__ . '/config.php';
               <button type="button" class="btn-toggle-pw" onclick="togglePasswordVisibility('staff-password', this)" title="แสดง/ซ่อนรหัสผ่าน">
                 <i class="fa-solid fa-eye"></i>
               </button>
-            </div>
-          </div>
-          <div class="form-group" style="margin-bottom: 14px;">
-            <div style="display:flex; align-items:flex-start; gap:8px; font-size:12px; color:#475569; background:#f8fafc; padding:10px 12px; border-radius:10px; border:1px solid #e2e8f0; line-height:1.45;">
-              <input type="checkbox" id="staff-consent-check" style="margin-top:2px; accent-color:#2563eb; width:15px; height:15px; cursor:pointer;" required checked />
-              <label for="staff-consent-check" style="cursor:pointer;">
-                ข้าพเจ้ายินยอมให้จัดเก็บข้อมูลบัญชี ประวัติการเข้าสู่ระบบ และการระบุตำแหน่ง GPS ตาม <a href="javascript:void(0)" onclick="openPdpaInfoModal()" style="color:#2563eb; font-weight:600; text-decoration:underline;">นโยบาย PDPA</a>
-              </label>
             </div>
           </div>
           <button type="submit" class="btn-primary">
@@ -435,15 +419,6 @@ require_once __DIR__ . '/config.php';
       }
     }
 
-    function openPdpaInfoModal() {
-      showSskruAlert({
-        title: '🔒 นโยบายคุ้มครองข้อมูลส่วนบุคคล (PDPA)',
-        message: 'ระบบแผนที่ มหาวิทยาลัยราชภัฏศรีสะเกษ (SSKRU Campus Map) ขออนุญาตจัดเก็บข้อมูลที่จำเป็น ได้แก่:\n\n1. ข้อมูลบัญชีผู้ใช้และประวัติการเข้าสู่ระบบ เพื่อยืนยันสิทธิ์การใช้งาน\n2. ข้อมูลพิกัดตำแหน่ง GPS แบบเรียลไทม์ เพื่อใช้คำนวณระยะทางและบอกทิศทางการเดินทางไปยังอาคารต่างๆ\n3. ข้อมูลประเภทอุปกรณ์และ IP Address เพื่อการรักษาความปลอดภัยตามมาตรฐานสากล\n\nข้อมูลของท่านจะได้รับการเก็บรักษาเป็นความลับและใช้งานเฉพาะเพื่อประโยชน์การนำทางในมหาวิทยาลัยเท่านั้น',
-        type: 'info',
-        buttonText: 'เข้าใจแล้ว'
-      });
-    }
-
     function switchRole(role) {
       document.querySelectorAll('.role-btn').forEach(btn => btn.classList.remove('active'));
       document.querySelectorAll('.panel-content').forEach(panel => panel.classList.remove('active'));
@@ -454,16 +429,6 @@ require_once __DIR__ . '/config.php';
 
     async function handleStudentLogin(e) {
       e.preventDefault();
-      const consentCheck = document.getElementById('student-consent-check');
-      if (consentCheck && !consentCheck.checked) {
-        await showSskruAlert({
-          title: 'โปรดยินยอมเงื่อนไขการใช้งาน',
-          message: 'กรุณาทำเครื่องหมายยินยอมให้ระบบเก็บข้อมูลและพิกัดตำแหน่งเพื่อความถูกต้องในการเข้าสู่ระบบและการนำทาง',
-          type: 'warning'
-        });
-        return;
-      }
-
       const sid = document.getElementById('login-student-id').value.trim();
       const pass = document.getElementById('login-student-pass').value.trim();
       const isPhp = window.location.pathname.endsWith('.php');
@@ -476,8 +441,6 @@ require_once __DIR__ . '/config.php';
         });
         const data = await res.json();
         if (data.success) {
-          localStorage.setItem('sskru_data_consent', 'granted');
-          localStorage.setItem('sskru_pdpa_consent', 'granted');
           window.location.href = isPhp ? 'index.php' : '/';
         } else {
           await showSskruAlert({ title: 'เข้าสู่ระบบไม่สำเร็จ', message: data.message || 'รหัสนักศึกษาหรือรหัสผ่านไม่ถูกต้อง', type: 'error' });
@@ -489,16 +452,6 @@ require_once __DIR__ . '/config.php';
 
     async function handleStaffLogin(e) {
       e.preventDefault();
-      const consentCheck = document.getElementById('staff-consent-check');
-      if (consentCheck && !consentCheck.checked) {
-        await showSskruAlert({
-          title: 'โปรดยินยอมเงื่อนไขการใช้งาน',
-          message: 'กรุณาทำเครื่องหมายยินยอมให้ระบบเก็บข้อมูลและพิกัดตำแหน่งเพื่อความถูกต้องในการเข้าสู่ระบบและการนำทาง',
-          type: 'warning'
-        });
-        return;
-      }
-
       const identifier = document.getElementById('staff-identifier').value.trim();
       const pass = document.getElementById('staff-password').value.trim();
       const isPhp = window.location.pathname.endsWith('.php');
