@@ -246,6 +246,14 @@ require_once __DIR__ . '/config.php';
             <input type="password" id="reg-staff-confirm-pass" class="form-input" placeholder="กรอกรหัสผ่านใหม่อีกครั้ง" required minlength="4" />
           </div>
         </div>
+        <div class="form-group" style="margin-bottom: 16px;">
+          <div style="display:flex; align-items:flex-start; gap:8px; font-size:12.5px; color:#475569; background:#f8fafc; padding:10px 12px; border-radius:10px; border:1px solid #e2e8f0; line-height:1.45;">
+            <input type="checkbox" id="reg-staff-consent" style="margin-top:2px; accent-color:#2563eb; width:15px; height:15px; cursor:pointer;" required />
+            <label for="reg-staff-consent" style="cursor:pointer;">
+              ข้าพเจ้ายินยอมให้ระบบบันทึกและจัดเก็บข้อมูลบัญชีผู้ใช้ อีเมล และพิกัดตำแหน่งสำหรับการยืนยันตัวตนและการนำทาง ตาม <a href="javascript:void(0)" onclick="openPdpaInfoModal()" style="color:#2563eb; font-weight:600; text-decoration:underline;">นโยบายคุ้มครองข้อมูลส่วนบุคคล (PDPA)</a>
+            </label>
+          </div>
+        </div>
         <button type="submit" class="btn-primary">
           <i class="fa-solid fa-user-check"></i> สมัครสมาชิกบุคลากร
         </button>
@@ -260,8 +268,26 @@ require_once __DIR__ . '/config.php';
   </div>
 
   <script>
+    function openPdpaInfoModal() {
+      showSskruAlert({
+        title: '🔒 นโยบายคุ้มครองข้อมูลส่วนบุคคล (PDPA)',
+        message: 'ระบบแผนที่ มหาวิทยาลัยราชภัฏศรีสะเกษ ขออนุญาตจัดเก็บข้อมูลที่จำเป็น ได้แก่:\n\n1. ข้อมูลอีเมล Username และรหัสผ่านสำหรับการสร้างบัญชีบุคลากรและการขออนุมัติสิทธิ์\n2. ข้อมูลพิกัดตำแหน่ง GPS แบบเรียลไทม์เพื่อใช้ในการนำทางสู่อาคารต่างๆ\n3. ข้อมูลประวัติการใช้งานและประเภทอุปกรณ์เพื่อความปลอดภัยตามมาตรฐาน PDPA',
+        type: 'info',
+        buttonText: 'เข้าใจแล้ว'
+      });
+    }
+
     async function handleStaffRegister(e) {
       e.preventDefault();
+      const consent = document.getElementById('reg-staff-consent');
+      if (consent && !consent.checked) {
+        await showSskruAlert({
+          title: 'โปรดยินยอมเงื่อนไขการสมัคร',
+          message: 'กรุณาทำเครื่องหมาย "ฉันยินยอม" เพื่ออนุญาตให้ระบบบันทึกและจัดเก็บข้อมูลสำหรับการสมัครสมาชิกและการใช้งาน',
+          type: 'warning'
+        });
+        return;
+      }
       const email = document.getElementById('reg-staff-email').value.trim();
       const username = document.getElementById('reg-staff-username').value.trim();
       const pass = document.getElementById('reg-staff-pass').value.trim();

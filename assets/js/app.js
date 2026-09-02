@@ -1107,18 +1107,31 @@ function initPDPAConsent() {
   const declineBtn = document.getElementById("btn-pdpa-decline");
   if (!overlay) return;
 
-  const isConsentGiven = localStorage.getItem("sskru_pdpa_consent") === "granted";
+  const isConsentGiven = localStorage.getItem("sskru_pdpa_consent") === "granted" || localStorage.getItem("sskru_data_consent") === "granted";
   if (!isConsentGiven) {
     openPDPAModal();
+  } else {
+    // Automatically start live GPS positioning
+    setTimeout(() => {
+      if (typeof trackUserLocation === 'function') {
+        trackUserLocation();
+      }
+    }, 800);
   }
 
   if (acceptBtn) {
     acceptBtn.onclick = () => {
       localStorage.setItem("sskru_pdpa_consent", "granted");
+      localStorage.setItem("sskru_data_consent", "granted");
       closePDPAModal();
       if (typeof showToast === 'function') {
         showToast("ยินยอมรับสิทธิ์ตำแหน่งและคุ้มครองข้อมูลส่วนบุคคล (PDPA) เรียบร้อยแล้ว");
       }
+      setTimeout(() => {
+        if (typeof trackUserLocation === 'function') {
+          trackUserLocation();
+        }
+      }, 300);
     };
   }
 
@@ -2459,34 +2472,84 @@ function updateLocationPosition(pos) {
   const lng = pos.coords.longitude;
   currentUserRealCoords = [lat, lng];
 
-  if (lat >= GEOFENCE.latMin && lat <= GEOFENCE.latMax &&
-      lng >= GEOFENCE.lngMin && lng <= GEOFENCE.lngMax) {
+  const isInsideCampus = (lat >= GEOFENCE.latMin && lat <= GEOFENCE.latMax &&
+                          lng >= GEOFENCE.lngMin && lng <= GEOFENCE.lngMax);
 
+  const distToCampusMeters = calculateHaversineDistance(lat, lng, 15.1186, 104.3605);
+  const distFormatted = distToCampusMeters >= 1000
+    ? (distToCampusMeters / 1000).toFixed(1) + " กม."
+    : distToCampusMeters + " เมตร";
+
+  // Campus gates for entry routing from anywhere outside
+  const campusGates = [
+    { name: "ประตู 1 (หน้ามหาวิทยาลัย - ถนนศรีสะเกษ-ขุขันธ์)", lat: 15.1205, lng: 104.3585, mapCoords: [610, 600] },
+    { name: "ประตู 2 (ฝั่งศูนย์กีฬา/โรงยิม)", lat: 15.1165, lng: 104.3635, mapCoords: [850, 1070] },
+    { name: "ประตู 3 (ฝั่งหอพัก/ประตูหลัง)", lat: 15.1130, lng: 104.3600, mapCoords: [940, 720] }
+  ];
+
+  if (isInsideCampus) {
     userPixelCoords = gpsToMap(lat, lng);
-
-    if (userMarker) {
-      userMarker.setLatLng(userPixelCoords);
-    } else {
-      const userIcon = L.divIcon({
-        html: '<div class="user-location-marker"></div>',
-        className: 'custom-leaflet-marker',
-        iconSize: [18, 18],
-        iconAnchor: [9, 9]
-      });
-      userMarker = L.marker(userPixelCoords, { icon: userIcon }).addTo(map);
-      userMarker.bindTooltip("📍 ตำแหน่งปัจจุบันของคุณ (กำลังจับสัญญาณ GPS สด)");
-    }
-
-    map.setView(userPixelCoords, 1, { animate: true });
-    showToast("📍 จับสัญญาณ GPS สดภายใน มรภ.ศรีสะเกษ เรียบร้อยแล้ว");
+    // Boundary clamp with safe padding
+    userPixelCoords[0] = Math.max(20, Math.min(1004, userPixelCoords[0]));
+    userPixelCoords[1] = Math.max(20, Math.min(1516, userPixelCoords[1]));
   } else {
-    // User is outside campus
-    userPixelCoords = null;
-    if (userMarker) {
-      map.removeLayer(userMarker);
-      userMarker = null;
+    // Find closest campus gate to user's real GPS position
+    let closestGate = campusGates[0];
+    let minGateDist = Infinity;
+    campusGates.forEach(g => {
+      const d = calculateHaversineDistance(lat, lng, g.lat, g.lng);
+      if (d < minGateDist) {
+        minGateDist = d;
+        closestGate = g;
+      }
+    });
+    userPixelCoords = closestGate.mapCoords;
+  }
+
+  // Create or update glowing live radar marker
+  const userIcon = L.divIcon({
+    html: `
+      <div class="user-live-gps-wrapper" title="พิกัดปัจจุบัน: ${lat.toFixed(5)}, ${lng.toFixed(5)}">
+        <div class="user-live-gps-radar"></div>
+        <div class="user-live-gps-dot"></div>
+      </div>
+    `,
+    className: 'custom-leaflet-marker',
+    iconSize: [28, 28],
+    iconAnchor: [14, 14]
+  });
+
+  if (userMarker) {
+    userMarker.setLatLng(userPixelCoords);
+    userMarker.setIcon(userIcon);
+  } else {
+    userMarker = L.marker(userPixelCoords, { icon: userIcon, zIndexOffset: 1000 }).addTo(map);
+  }
+
+  const tooltipText = isInsideCampus
+    ? `📍 ตำแหน่งของคุณ (GPS สด ภายใน มรภ.ศรีสะเกษ)`
+    : `📍 ตำแหน่งของคุณ (อยู่นอกวิทยาเขต: ${lat.toFixed(4)}, ${lng.toFixed(4)} ห่าง ${distFormatted})`;
+
+  userMarker.unbindTooltip();
+  userMarker.bindTooltip(tooltipText, { permanent: false, direction: 'top' });
+
+  // Update navigation source dropdown option
+  const navSourceSelect = document.getElementById("select-nav-source");
+  if (navSourceSelect) {
+    let opt = navSourceSelect.querySelector('option[value="my_location"]');
+    if (!opt) {
+      opt = document.createElement("option");
+      opt.value = "my_location";
+      navSourceSelect.prepend(opt);
     }
-    showToast(`📍 ตำแหน่งของคุณอยู่ที่ (${lat.toFixed(4)}, ${lng.toFixed(4)}) พร้อมนำทางตรงสู่วิทยาเขตผ่าน Google Maps`);
+    opt.textContent = isInsideCampus ? "📍 ตำแหน่งปัจจุบันของฉัน (GPS สด)" : `📍 ตำแหน่งของฉัน (${distFormatted} จาก ม.)`;
+  }
+
+  if (isInsideCampus) {
+    map.setView(userPixelCoords, 1, { animate: true });
+    showToast("📍 เชื่อมต่อสัญญาณ GPS สดภายใน มรภ.ศรีสะเกษ เรียบร้อยแล้ว");
+  } else {
+    showToast(`📍 จับตำแหน่ง GPS สด: ${lat.toFixed(4)}, ${lng.toFixed(4)} (ห่างจากมหาวิทยาลัย ${distFormatted})`);
   }
 }
 
@@ -2497,11 +2560,12 @@ function trackUserLocation() {
   }
 
   // Check PDPA and Location Permission status
-  const isGranted = localStorage.getItem("sskru_pdpa_consent") === "granted";
+  const isGranted = localStorage.getItem("sskru_pdpa_consent") === "granted" || localStorage.getItem("sskru_data_consent") === "granted";
   if (!isGranted) {
     const overlay = document.getElementById("pdpa-modal-overlay");
     if (overlay) {
       overlay.classList.add("active");
+      overlay.style.display = "flex";
       showToast("กรุณากดยินยอมเปิดสิทธิ์การเข้าถึงตำแหน่งพิกัด GPS บนป๊อปอัปก่อนใช้งาน");
       return;
     }
@@ -2512,7 +2576,7 @@ function trackUserLocation() {
     navigator.geolocation.clearWatch(watchPositionId);
   }
 
-  showToast("กำลังค้นหาพิกัดตำแหน่ง GPS ของคุณ...");
+  showToast("กำลังค้นหาพิกัดตำแหน่ง GPS สดของคุณ...");
 
   // Get initial position immediately
   navigator.geolocation.getCurrentPosition(
@@ -2527,15 +2591,13 @@ function trackUserLocation() {
       );
     },
     (err) => {
-      userPixelCoords = null;
-      currentUserRealCoords = null;
       let errMsg = "ไม่สามารถเข้าถึงสิทธิ์ตำแหน่ง GPS ได้ กรุณาเปิดบริการตำแหน่งที่ตั้งบนเบราว์เซอร์";
       if (err.code === err.PERMISSION_DENIED) {
         errMsg = "สิทธิ์การเข้าถึงตำแหน่ง GPS ถูกปฏิเสธ กรุณาอนุญาตเข้าสิทธิ์พิกัดบนเบราว์เซอร์ (กดปุ่มสัญลักษณ์แม่กุญแจตรงแถบ URL)";
       }
       showModal("ระบุตำแหน่งพิกัดผิดพลาด", errMsg, "warning");
     },
-    { enableHighAccuracy: true, timeout: 8000 }
+    { enableHighAccuracy: true, timeout: 10000 }
   );
 }
 
@@ -2890,25 +2952,47 @@ function calculateWalkingRoute() {
     totalDistancePixels += customGPSLeg.distance;
   }
 
-  const totalDistanceMeters = Math.round(totalDistancePixels * 0.65);
+  let totalDistanceMeters = Math.round(totalDistancePixels * 0.65);
+  let isOutsideCampus = false;
+
+  if (srcVal === "my_location" && currentUserRealCoords && endBuilding && endBuilding.realCoords && endBuilding.realCoords.length >= 2) {
+    const realGpsDist = calculateHaversineDistance(
+      currentUserRealCoords[0], currentUserRealCoords[1],
+      endBuilding.realCoords[0], endBuilding.realCoords[1]
+    );
+    if (realGpsDist > totalDistanceMeters) {
+      totalDistanceMeters = realGpsDist;
+      isOutsideCampus = true;
+    }
+  }
+
   const modeInfo = TRAVEL_MODES[activeTravelMode] || TRAVEL_MODES.walk;
   const totalSeconds = totalDistanceMeters / modeInfo.mps;
   const totalMinutes = Math.max(1, Math.round(totalSeconds / 60));
 
-  document.getElementById("nav-summary-distance").textContent = `${totalDistanceMeters} เมตร`;
+  const formattedDist = totalDistanceMeters >= 1000
+    ? `${(totalDistanceMeters / 1000).toFixed(1)} กม.`
+    : `${totalDistanceMeters} เมตร`;
+
+  document.getElementById("nav-summary-distance").textContent = formattedDist;
   document.getElementById("nav-summary-time").textContent = `${totalMinutes} นาที (${modeInfo.label})`;
 
   stepsContainer.innerHTML = "";
 
   if (customGPSLeg) {
     const startB = adminBuildings.find(b => b.id === startNodeId);
-    const startBNum = (startB.code || startB.id);
+    const startBNum = startB ? (startB.code || startB.id) : "";
+    const startBName = startB ? startB.name : "อาคารหลัก";
     const stepCard = document.createElement("div");
     stepCard.className = "nav-step-item";
+    const distText = isOutsideCampus
+      ? `คุณอยู่นอกวิทยาเขต (ห่าง ${formattedDist}) นำทางตรงเข้าสู่มหาวิทยาลัยทาง <strong>${startBName}</strong>`
+      : `เดินจากจุดที่คุณยืนอยู่ตรงเข้าสู่ <strong>ตึก ${startBNum}. ${startBName}</strong> (${Math.round(customGPSLeg.distance * 0.65)} ม.)`;
+
     stepCard.innerHTML = `
       <div class="nav-step-icon start"><i class="fa-solid fa-location-arrow" style="color:#fff; font-size:10px;"></i></div>
       <div class="nav-step-text">
-        เริ่มต้นจาก <strong>ตำแหน่งปัจจุบันของคุณ (GPS)</strong> เดินไปยัง <strong>ตึก ${startBNum}. ${startB.name}</strong> (${Math.round(customGPSLeg.distance * 0.65)} ม.)
+        เริ่มต้นจาก <strong>ตำแหน่งปัจจุบันของคุณ (GPS สด)</strong> — ${distText}
       </div>
     `;
     stepsContainer.appendChild(stepCard);

@@ -325,6 +325,14 @@ require_once __DIR__ . '/config.php';
                     <input type="password" id="reg-student-confirm-password" class="form-input" placeholder="กรอกรหัสผ่านใหม่อีกครั้ง" required minlength="4" />
                   </div>
                 </div>
+                <div class="form-group" style="text-align: left; margin-bottom: 16px;">
+                  <div style="display:flex; align-items:flex-start; gap:8px; font-size:12px; color:#475569; background:#f8fafc; padding:10px 12px; border-radius:10px; border:1px solid #e2e8f0; line-height:1.45;">
+                    <input type="checkbox" id="reg-student-consent" style="margin-top:2px; accent-color:#2563eb; width:15px; height:15px; cursor:pointer;" required checked />
+                    <label for="reg-student-consent" style="cursor:pointer;">
+                      ข้าพเจ้ายินยอมให้ระบบบันทึกและจัดเก็บข้อมูลรหัสนักศึกษาและรหัสผ่านสำหรับการเข้าใช้งานและเปิดสิทธิ์พิกัดตำแหน่ง GPS สำหรับการนำทาง ตาม <a href="javascript:void(0)" onclick="openPdpaInfoModal()" style="color:#2563eb; font-weight:600; text-decoration:underline;">นโยบายคุ้มครองข้อมูลส่วนบุคคล (PDPA)</a>
+                    </label>
+                  </div>
+                </div>
                 <button type="button" onclick="completeStudentRegister('${info.student_id}', '${citizenId}')" class="btn-primary">
                   <i class="fa-solid fa-user-plus"></i> สร้างบัญชีและเข้าสู่ระบบ
                 </button>
@@ -349,16 +357,35 @@ require_once __DIR__ . '/config.php';
       }
     }
 
+    function openPdpaInfoModal() {
+      showSskruAlert({
+        title: '🔒 นโยบายคุ้มครองข้อมูลส่วนบุคคล (PDPA)',
+        message: 'ระบบแผนที่ มหาวิทยาลัยราชภัฏศรีสะเกษ ขออนุญาตจัดเก็บข้อมูลที่จำเป็น ได้แก่:\n\n1. ข้อมูลรหัสนักศึกษาและรหัสผ่านสำหรับการยืนยันตัวตนและการเข้าสู่ระบบ\n2. ข้อมูลพิกัดตำแหน่ง GPS แบบเรียลไทม์เพื่อใช้ในการนำทางสู่อาคารต่างๆ ในมหาวิทยาลัย\n3. ข้อมูลประวัติการใช้งานและประเภทอุปกรณ์เพื่อความปลอดภัยตามมาตรฐาน PDPA',
+        type: 'info',
+        buttonText: 'เข้าใจแล้ว'
+      });
+    }
+
     async function completeStudentRegister(studentId, citizenId) {
+      const consent = document.getElementById('reg-student-consent');
+      if (consent && !consent.checked) {
+        await showSskruAlert({
+          title: 'โปรดยินยอมเงื่อนไขการลงทะเบียน',
+          message: 'กรุณาทำเครื่องหมาย "ฉันยินยอม" เพื่ออนุญาตให้ระบบบันทึกและจัดเก็บข้อมูลสำหรับการลงทะเบียนและการใช้งาน',
+          type: 'warning'
+        });
+        return;
+      }
+
       const password = document.getElementById('reg-student-password').value.trim();
       const confirmPassword = document.getElementById('reg-student-confirm-password').value.trim();
 
       if (!password) {
-        alert('กรุณากรอกรหัสผ่านที่ต้องการสร้าง');
+        await showSskruAlert({ title: 'โปรดกรอกรหัสผ่าน', message: 'กรุณากรอกรหัสผ่านที่ต้องการสร้าง', type: 'warning' });
         return;
       }
       if (password !== confirmPassword) {
-        alert('รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน กรุณาตรวจสอบอีกครั้ง');
+        await showSskruAlert({ title: 'รหัสผ่านไม่ตรงกัน', message: 'รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน กรุณาตรวจสอบอีกครั้ง', type: 'warning' });
         return;
       }
       const apiEndpoint = window.location.pathname.endsWith('.php') ? 'api.php?action=student_register' : '/admin/api/auth/student_register/';

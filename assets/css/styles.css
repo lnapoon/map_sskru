@@ -2100,7 +2100,7 @@ body.dark-theme .carousel-card.selected {
 .marker-library .marker-number { color: var(--color-library); }
 .marker-other .marker-number { color: var(--color-other); }
 
-/* GPS User Location Marker */
+/* GPS User Location Marker & Live Radar */
 .user-location-marker {
   width: 18px;
   height: 18px;
@@ -2109,6 +2109,42 @@ body.dark-theme .carousel-card.selected {
   border: 3px solid var(--text-light);
   box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5);
   animation: gps-pulse 2s infinite;
+}
+
+.user-live-gps-wrapper {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+
+.user-live-gps-radar {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(37, 99, 235, 0.25);
+  border: 1.5px solid rgba(37, 99, 235, 0.6);
+  animation: live-gps-radar 2s ease-out infinite;
+}
+
+.user-live-gps-dot {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  border: 2.5px solid #ffffff;
+  box-shadow: 0 0 12px rgba(37, 99, 235, 0.8), 0 2px 6px rgba(0,0,0,0.3);
+  z-index: 2;
+}
+
+@keyframes live-gps-radar {
+  0% { transform: scale(0.5); opacity: 1; }
+  100% { transform: scale(2.4); opacity: 0; }
 }
 
 @keyframes gps-pulse {
