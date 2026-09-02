@@ -644,7 +644,7 @@ def admin_students_api(request):
     if request.method == "GET":
         students = list(
             Student.objects.values(
-                "id", "student_id", "name", "is_active", "created_at"
+                "id", "student_id", "name", "year_level", "is_active", "created_at"
             )
         )
         return JsonResponse({"success": True, "data": students})
@@ -654,6 +654,7 @@ def admin_students_api(request):
             data = json.loads(request.body)
             student_id = data.get("student_id", "").strip()
             name = data.get("name", "").strip()
+            year_level = data.get("year_level", 2)
 
             if not student_id or not name:
                 return JsonResponse(
@@ -666,7 +667,9 @@ def admin_students_api(request):
                 )
 
             student = Student.objects.create(
-                student_id=student_id, name=name, is_active=data.get("is_active", True)
+                student_id=student_id, name=name,
+                year_level=year_level,
+                is_active=data.get("is_active", True)
             )
             return JsonResponse({"success": True, "message": "เพิ่มนักศึกษาสำเร็จ"})
         except IntegrityError:
@@ -676,6 +679,42 @@ def admin_students_api(request):
         except Exception as e:
             return JsonResponse(
                 {"success": False, "message": "เกิดข้อผิดพลาดในการบันทึกข้อมูล"}, status=400
+            )
+
+    elif request.method == "PUT":
+        try:
+            data = json.loads(request.body)
+            sid = data.get("id")
+            student = Student.objects.filter(id=sid).first()
+            if not student:
+                return JsonResponse(
+                    {"success": False, "message": "ไม่พบข้อมูลนักศึกษา"}, status=404
+                )
+
+            new_student_id = data.get("student_id", "").strip()
+            new_name = data.get("name", "").strip()
+            new_year_level = data.get("year_level")
+
+            if not new_student_id or not new_name:
+                return JsonResponse(
+                    {"success": False, "message": "กรุณากรอกข้อมูลให้ครบถ้วน"}, status=400
+                )
+
+            # Check for duplicate student_id (excluding current record)
+            if Student.objects.filter(student_id=new_student_id).exclude(id=sid).exists():
+                return JsonResponse(
+                    {"success": False, "message": "รหัสนักศึกษานี้มีอยู่ในระบบแล้ว"}, status=400
+                )
+
+            student.student_id = new_student_id
+            student.name = new_name
+            if new_year_level is not None:
+                student.year_level = new_year_level
+            student.save()
+            return JsonResponse({"success": True, "message": "แก้ไขข้อมูลสำเร็จ"})
+        except Exception as e:
+            return JsonResponse(
+                {"success": False, "message": f"เกิดข้อผิดพลาด: {str(e)}"}, status=400
             )
 
     elif request.method == "DELETE":

@@ -825,6 +825,7 @@
               <tr>
                 <th>รหัสนักศึกษา</th>
                 <th>ชื่อ-นามสกุล</th>
+                <th>ชั้นปี</th>
                 <th>สถานะ</th>
                 <th>วันที่เพิ่ม</th>
                 <th style="text-align:center;">จัดการ</th>
@@ -1079,6 +1080,7 @@
       <button class="modal-close" onclick="closeStudentModal()"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <div class="modal-body">
+      <input type="hidden" id="form-student-edit-id">
       <div class="form-group">
         <label class="form-label">รหัสนักศึกษา</label>
         <input type="text" class="form-control" id="form-student-id" placeholder="กรุณาป้อนรหัสนักศึกษา">
@@ -1086,6 +1088,16 @@
       <div class="form-group">
         <label class="form-label">ชื่อ-นามสกุล</label>
         <input type="text" class="form-control" id="form-student-name" placeholder="เช่น นายภูพิรัฐ แซ่โค้ว">
+      </div>
+      <div class="form-group">
+        <label class="form-label">ชั้นปี</label>
+        <select class="form-control" id="form-student-year">
+          <option value="1">ปี 1</option>
+          <option value="2" selected>ปี 2</option>
+          <option value="3">ปี 3</option>
+          <option value="4">ปี 4</option>
+          <option value="5">ปี 5</option>
+        </select>
       </div>
     </div>
     <div class="modal-footer">
@@ -1444,13 +1456,30 @@ function showToast(msg, type='success') {
 
 // ─── Student Management ───────────────────────────────────────────────────
 
-function openStudentModal() {
+let editingStudentId = null;
+
+function openStudentModal(editData) {
+  editingStudentId = null;
+  document.getElementById('form-student-edit-id').value = '';
   document.getElementById('form-student-id').value = '';
   document.getElementById('form-student-name').value = '';
+  document.getElementById('form-student-year').value = '2';
+
+  if (editData) {
+    editingStudentId = editData.id;
+    document.getElementById('form-student-edit-id').value = editData.id;
+    document.getElementById('form-student-id').value = editData.student_id;
+    document.getElementById('form-student-name').value = editData.name;
+    document.getElementById('form-student-year').value = editData.year_level || 2;
+    document.getElementById('student-modal-title').innerHTML = '<i class="fa-solid fa-pen-to-square"></i> แก้ไขข้อมูลนักศึกษา';
+  } else {
+    document.getElementById('student-modal-title').innerHTML = '<i class="fa-solid fa-user-plus"></i> เพิ่มนักศึกษา';
+  }
   document.getElementById('student-modal').classList.add('open');
 }
 
 function closeStudentModal() {
+  editingStudentId = null;
   document.getElementById('student-modal').classList.remove('open');
 }
 
@@ -1462,16 +1491,24 @@ async function loadStudents() {
     tbody.innerHTML = '';
     data.data.forEach(s => {
       const date = new Date(s.created_at).toLocaleDateString('th-TH');
+      const yearLevel = s.year_level || '-';
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${s.student_id}</td>
         <td>${s.name}</td>
+        <td><span class="cat-badge cat-academic" style="font-size:12px;">ปี ${yearLevel}</span></td>
         <td><span class="status-pill status-active">อนุญาต</span></td>
         <td>${date}</td>
         <td style="text-align:center;">
-          <button class="action-btn action-del" onclick="deleteStudent(${s.id}, '${s.name}')" title="ลบข้อมูล">
-            <i class="fa-solid fa-trash"></i>
-          </button>
+          <div class="action-btn-group">
+            <button class="action-btn edit" onclick='editStudent(${JSON.stringify(s).replace(/'/g, "&#39;")})' title="แก้ไขข้อมูล">
+              <i class="fa-solid fa-pen-to-square"></i>
+            </button>
+            <button class="action-btn del" onclick="deleteStudent(${s.id}, '${s.name.replace(/'/g, "\\'")}')"
+              title="ลบข้อมูล">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
         </td>
       `;
       tbody.appendChild(tr);
@@ -1479,26 +1516,51 @@ async function loadStudents() {
   }
 }
 
+function editStudent(studentData) {
+  openStudentModal(studentData);
+}
+
 async function saveStudent() {
-  const id = document.getElementById('form-student-id').value.trim();
+  const studentId = document.getElementById('form-student-id').value.trim();
   const name = document.getElementById('form-student-name').value.trim();
-  if (!id || !name) {
+  const yearLevel = parseInt(document.getElementById('form-student-year').value);
+  if (!studentId || !name) {
     showToast('กรุณากรอกข้อมูลให้ครบถ้วน', 'error');
     return;
   }
-  const res = await fetch('/admin/api/students/', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'same-origin',
-    body: JSON.stringify({ student_id: id, name: name })
-  });
-  const data = await res.json();
-  if (data.success) {
-    showToast('เพิ่มนักศึกษาสำเร็จ', 'success');
-    closeStudentModal();
-    loadStudents();
+
+  if (editingStudentId) {
+    // Edit mode (PUT)
+    const res = await fetch('/admin/api/students/', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ id: editingStudentId, student_id: studentId, name: name, year_level: yearLevel })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('แก้ไขข้อมูลสำเร็จ', 'success');
+      closeStudentModal();
+      loadStudents();
+    } else {
+      showToast(data.message || 'เกิดข้อผิดพลาด', 'error');
+    }
   } else {
-    showToast(data.message || 'เกิดข้อผิดพลาด', 'error');
+    // Add mode (POST)
+    const res = await fetch('/admin/api/students/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ student_id: studentId, name: name, year_level: yearLevel })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('เพิ่มนักศึกษาสำเร็จ', 'success');
+      closeStudentModal();
+      loadStudents();
+    } else {
+      showToast(data.message || 'เกิดข้อผิดพลาด', 'error');
+    }
   }
 }
 

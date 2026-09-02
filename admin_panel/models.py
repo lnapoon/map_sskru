@@ -58,6 +58,7 @@ class Student(models.Model):
     """ข้อมูลนักศึกษาสำหรับเข้าสู่ระบบแผนที่"""
     student_id = models.CharField(max_length=20, unique=True, verbose_name="รหัสนักศึกษา")
     name = models.CharField(max_length=255, verbose_name="ชื่อ-นามสกุล")
+    year_level = models.PositiveIntegerField(default=2, verbose_name="ชั้นปี")
     is_active = models.BooleanField(default=True, verbose_name="สถานะใช้งาน")
     created_at = models.DateTimeField(auto_now_add=True)
 
