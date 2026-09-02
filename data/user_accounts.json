@@ -7,6 +7,14 @@
       "password_hash": "7366a7af4adc9a58ae6a4f9efe78cef46b07daa49b2b8e81290d8a2244568e34",
       "password_plain": "0620401150",
       "created_at": "2026-09-01T23:42:05.051060"
+    },
+    {
+      "student_id": "6812732127",
+      "name": "นายอภิวัฒน์ อบอุ่น",
+      "faculty": "มหาวิทยาลัยราชภัฏศรีสะเกษ",
+      "password_hash": "bd94dcda26fccb4e68d6a31f9b5aac0b571ae266d822620e901ef7ebe3a11d4f",
+      "password_plain": "pass1234",
+      "created_at": "2026-09-02T10:28:31.776765"
     }
   ],
   "staff": [

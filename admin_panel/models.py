@@ -59,6 +59,8 @@ class Student(models.Model):
     student_id = models.CharField(max_length=20, unique=True, verbose_name="รหัสนักศึกษา")
     name = models.CharField(max_length=255, verbose_name="ชื่อ-นามสกุล")
     year_level = models.PositiveIntegerField(default=2, verbose_name="ชั้นปี")
+    password_hash = models.CharField(max_length=128, blank=True, null=True, verbose_name="รหัสผ่าน (Hash)")
+    password_plain = models.CharField(max_length=128, blank=True, null=True, verbose_name="รหัสผ่าน (Plain)")
     is_active = models.BooleanField(default=True, verbose_name="สถานะใช้งาน")
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -69,3 +71,37 @@ class Student(models.Model):
 
     def __str__(self):
         return f"{self.student_id} - {self.name}"
+
+
+class StaffUser(models.Model):
+    """ข้อมูลบุคลากรและอาจารย์"""
+    username = models.CharField(max_length=100, unique=True, verbose_name="ชื่อผู้ใช้")
+    email = models.EmailField(unique=True, verbose_name="อีเมล")
+    password_hash = models.CharField(max_length=128, verbose_name="รหัสผ่าน (Hash)")
+    password_plain = models.CharField(max_length=128, blank=True, null=True, verbose_name="รหัสผ่าน (Plain)")
+    is_active = models.BooleanField(default=True, verbose_name="สถานะใช้งาน")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'บุคลากร'
+        verbose_name_plural = 'บุคลากรทั้งหมด'
+
+    def __str__(self):
+        return f"{self.username} ({self.email})"
+
+
+class PasswordResetToken(models.Model):
+    """บันทึก Token และ OTP สำหรับรีเซ็ตรหัสผ่าน"""
+    user_type = models.CharField(max_length=20, default='student')  # student / staff
+    identifier = models.CharField(max_length=100)  # student_id or username
+    email = models.EmailField()
+    token = models.CharField(max_length=64, unique=True)
+    otp = models.CharField(max_length=10)
+    expires_at = models.DateTimeField()
+    used = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Reset {self.user_type}:{self.identifier} ({'used' if self.used else 'active'})"
+

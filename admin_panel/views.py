@@ -14,7 +14,7 @@ from django.utils import timezone
 from django.db.models import Count
 from django.db.models.functions import TruncDate
 
-from .models import VisitorLog, UserEvent, AdminSession, Student
+from .models import VisitorLog, UserEvent, AdminSession, Student, StaffUser, PasswordResetToken
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_FILE = BASE_DIR / "data" / "buildings.json"
@@ -667,20 +667,32 @@ def student_login_api(request):
                 status=401,
             )
 
-        # If account has registered password, verify password
-        if acc_match and password:
-            hashed_pass = hashlib.sha256(password.encode("utf-8")).hexdigest()
+        # If account has registered password, verify password (from DB or JSON)
+        hashed_pass = hashlib.sha256(password.encode("utf-8")).hexdigest()
+        has_reg_pass = False
+        pass_matches = False
+
+        if student and (student.password_hash or student.password_plain):
+            has_reg_pass = True
+            if student.password_hash == hashed_pass or student.password_plain == password:
+                pass_matches = True
+
+        if not has_reg_pass and acc_match:
             saved_hash = acc_match.get("password_hash")
             saved_plain = acc_match.get("password") or acc_match.get("password_plain")
-            if saved_hash and saved_hash != hashed_pass and saved_plain != password:
-                # Password doesn't match registered password
-                return JsonResponse(
-                    {
-                        "success": False,
-                        "message": "รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง หรือกู้คืนรหัสผ่าน",
-                    },
-                    status=401,
-                )
+            if saved_hash or saved_plain:
+                has_reg_pass = True
+                if saved_hash == hashed_pass or saved_plain == password:
+                    pass_matches = True
+
+        if has_reg_pass and password and not pass_matches:
+            return JsonResponse(
+                {
+                    "success": False,
+                    "message": "รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง หรือกู้คืนรหัสผ่าน",
+                },
+                status=401,
+            )
 
         final_sid = matched_sid
         final_name = matched_name or f"นักศึกษา {final_sid}"
@@ -979,41 +991,48 @@ def student_register_api(request):
                 status=400,
             )
 
-        accounts = read_json_file(ACCOUNTS_FILE, default={"students": [], "staff": []})
+        hashed_pass = hashlib.sha256(password.encode("utf-8")).hexdigest()
 
-        # Check if already registered
-        if any(
-            acc.get("student_id") == student_id or (clean_id and re.sub(r"[^0-9a-zA-Z]", "", acc.get("student_id", "")) == clean_id)
-            for acc in accounts.get("students", [])
-        ):
-            # Update password for existing account
-            for acc in accounts.get("students", []):
-                if acc.get("student_id") == student_id or (clean_id and re.sub(r"[^0-9a-zA-Z]", "", acc.get("student_id", "")) == clean_id):
-                    acc["password_hash"] = hashlib.sha256(password.encode("utf-8")).hexdigest()
-                    acc["password_plain"] = password
-                    break
-            write_json_file(ACCOUNTS_FILE, accounts)
-            request.session["student_id"] = student_id
-            request.session["student_name"] = matched_name
-            request.session["user_role"] = "student"
-            return JsonResponse(
-                {
-                    "success": True,
-                    "message": "อัปเดตรหัสผ่านและเข้าสู่ระบบสำเร็จ!",
-                    "user_name": matched_name,
-                }
+        # 1. Update Student model in PostgreSQL (Permanent Database Persistence)
+        if student_db:
+            student_db.password_hash = hashed_pass
+            student_db.password_plain = password
+            student_db.save()
+        else:
+            student_db = Student.objects.create(
+                student_id=student_id,
+                name=matched_name,
+                year_level=2,
+                password_hash=hashed_pass,
+                password_plain=password,
+                is_active=True,
             )
 
-        hashed_pass = hashlib.sha256(password.encode("utf-8")).hexdigest()
-        new_account = {
-            "student_id": student_id,
-            "name": matched_name,
-            "faculty": matched_faculty,
-            "password_hash": hashed_pass,
-            "password_plain": password,
-            "created_at": datetime.now().isoformat(),
-        }
-        accounts["students"].append(new_account)
+        # 2. Update JSON accounts as backup
+        accounts = read_json_file(ACCOUNTS_FILE, default={"students": [], "staff": []})
+        existing_acc = next(
+            (
+                acc
+                for acc in accounts.get("students", [])
+                if acc.get("student_id") == student_id
+                or (clean_id and re.sub(r"[^0-9a-zA-Z]", "", acc.get("student_id", "")) == clean_id)
+            ),
+            None,
+        )
+        if existing_acc:
+            existing_acc["password_hash"] = hashed_pass
+            existing_acc["password_plain"] = password
+        else:
+            accounts["students"].append(
+                {
+                    "student_id": student_id,
+                    "name": matched_name,
+                    "faculty": matched_faculty,
+                    "password_hash": hashed_pass,
+                    "password_plain": password,
+                    "created_at": datetime.now().isoformat(),
+                }
+            )
         write_json_file(ACCOUNTS_FILE, accounts)
 
         request.session["student_id"] = student_id
@@ -1033,7 +1052,7 @@ def student_register_api(request):
 
 @csrf_exempt
 def staff_register_api(request):
-    """สมัครสมาชิกบุคลากรและอาจารย์"""
+    """สมัครสมาชิกบุคลากรและอาจารย์ (บันทึกตรงลง PostgreSQL Database)"""
     if request.method != "POST":
         return JsonResponse(
             {"success": False, "message": "Method not allowed"}, status=405
@@ -1050,18 +1069,26 @@ def staff_register_api(request):
                 {"success": False, "message": "กรุณากรอกข้อมูลให้ครบถ้วน"}, status=400
             )
 
-        accounts = read_json_file(ACCOUNTS_FILE, default={"students": [], "staff": []})
-
-        if any(
-            acc.get("username") == username or acc.get("email") == email
-            for acc in accounts.get("staff", [])
-        ):
+        # Check in StaffUser DB
+        if StaffUser.objects.filter(username__iexact=username).exists() or StaffUser.objects.filter(email__iexact=email).exists():
             return JsonResponse(
                 {"success": False, "message": "Username หรือ Email นี้มีอยู่ในระบบแล้ว"},
                 status=400,
             )
 
         hashed_pass = hashlib.sha256(password.encode("utf-8")).hexdigest()
+
+        # 1. Save to PostgreSQL
+        StaffUser.objects.create(
+            username=username,
+            email=email,
+            password_hash=hashed_pass,
+            password_plain=password,
+            is_active=True,
+        )
+
+        # 2. Save to JSON backup
+        accounts = read_json_file(ACCOUNTS_FILE, default={"students": [], "staff": []})
         new_staff = {
             "email": email,
             "username": username,
@@ -1132,37 +1159,54 @@ def staff_login_api(request):
                 }
             )
 
-        # Staff Account Lookup
+        # Staff Account Lookup (Database first, JSON fallback)
         hashed_pass = hashlib.sha256(password.encode("utf-8")).hexdigest()
-        accounts = read_json_file(ACCOUNTS_FILE, default={"students": [], "staff": []})
-        staff_match = next(
-            (
-                s
-                for s in accounts.get("staff", [])
-                if (
-                    s.get("username", "").lower() == identifier.lower()
-                    or s.get("email", "").lower() == identifier.lower()
-                )
-                and s.get("password_hash") == hashed_pass
-            ),
-            None,
+        staff_match_db = (
+            StaffUser.objects.filter(username__iexact=identifier, is_active=True).first()
+            or StaffUser.objects.filter(email__iexact=identifier, is_active=True).first()
         )
+        staff_found = False
+        staff_username = ""
+        staff_email = ""
 
-        if staff_match:
+        if staff_match_db and (staff_match_db.password_hash == hashed_pass or staff_match_db.password_plain == password):
+            staff_found = True
+            staff_username = staff_match_db.username
+            staff_email = staff_match_db.email
+        else:
+            accounts = read_json_file(ACCOUNTS_FILE, default={"students": [], "staff": []})
+            staff_match_json = next(
+                (
+                    s
+                    for s in accounts.get("staff", [])
+                    if (
+                        s.get("username", "").lower() == identifier.lower()
+                        or s.get("email", "").lower() == identifier.lower()
+                    )
+                    and (s.get("password_hash") == hashed_pass or s.get("password_plain") == password)
+                ),
+                None,
+            )
+            if staff_match_json:
+                staff_found = True
+                staff_username = staff_match_json.get("username")
+                staff_email = staff_match_json.get("email", "")
+
+        if staff_found:
             reset_failed_attempts(request, action="staff_login")
             if hasattr(request, "session"):
                 # Clear student and admin session tokens to prevent role bleeding
                 request.session.pop("student_id", None)
                 request.session.pop("student_name", None)
                 request.session.pop("admin_token", None)
-                request.session["staff_username"] = staff_match.get("username")
-                request.session["staff_email"] = staff_match.get("email", "")
+                request.session["staff_username"] = staff_username
+                request.session["staff_email"] = staff_email
                 request.session["user_role"] = "staff"
             log_user_activity(
-                staff_match.get("username"),
-                staff_match.get("username"),
+                staff_username,
+                staff_username,
                 "staff",
-                email=staff_match.get("email", ""),
+                email=staff_email,
                 request=request,
             )
             return JsonResponse(
@@ -1170,7 +1214,7 @@ def staff_login_api(request):
                     "success": True,
                     "role": "staff",
                     "redirect": "/",
-                    "message": f'ยินดีต้อนรับ คุณ {staff_match.get("username")}',
+                    "message": f'ยินดีต้อนรับ คุณ {staff_username}',
                 }
             )
 
@@ -1184,7 +1228,7 @@ def staff_login_api(request):
 
 @csrf_exempt
 def verify_current_user_password_api(request):
-    """ตรวจสอบรหัสผ่านของ User คนปัจจุบันที่ล็อกอินอยู่เท่านั้น (ป้องกันการใช้รหัสผู้อื่นปลดล็อค)"""
+    """ตรวจสอบรหัสผ่านของ User คนปัจจุบันที่ล็อกอินอยู่เท่านั้น (อิงข้อมูลตรงจาก PostgreSQL Database)"""
     if request.method != "POST":
         return JsonResponse(
             {"success": False, "message": "Method not allowed"}, status=405
@@ -1229,23 +1273,35 @@ def verify_current_user_password_api(request):
         # 2. Staff Verification: Check ONLY this staff member's registered password
         target_staff = req_username or session_staff
         if active_role == "staff" or target_staff:
-            staff_acc = next(
-                (
-                    st
-                    for st in accounts.get("staff", [])
-                    if st.get("username", "").lower() == target_staff.lower()
-                    or st.get("email", "").lower() == target_staff.lower()
-                ),
-                None,
+            staff_db = (
+                StaffUser.objects.filter(username__iexact=target_staff, is_active=True).first()
+                or StaffUser.objects.filter(email__iexact=target_staff, is_active=True).first()
             )
-            if staff_acc:
-                if staff_acc.get("password_hash") == hashed_pass or staff_acc.get("password") == password:
+            if staff_db:
+                if staff_db.password_hash == hashed_pass or staff_db.password_plain == password:
                     reset_failed_attempts(request, action="verify_pwd")
                     return JsonResponse({"success": True, "message": "ยืนยันรหัสผ่านบุคลากรสำเร็จ"})
                 else:
                     record_failed_attempt(request, action="verify_pwd", max_attempts=5, lock_minutes=5)
                     return JsonResponse({"success": False, "message": "รหัสผ่านบัญชีบุคลากรไม่ถูกต้อง"}, status=401)
             else:
+                staff_acc = next(
+                    (
+                        st
+                        for st in accounts.get("staff", [])
+                        if st.get("username", "").lower() == target_staff.lower()
+                        or st.get("email", "").lower() == target_staff.lower()
+                    ),
+                    None,
+                )
+                if staff_acc:
+                    if staff_acc.get("password_hash") == hashed_pass or staff_acc.get("password_plain") == password:
+                        reset_failed_attempts(request, action="verify_pwd")
+                        return JsonResponse({"success": True, "message": "ยืนยันรหัสผ่านบุคลากรสำเร็จ"})
+                    else:
+                        record_failed_attempt(request, action="verify_pwd", max_attempts=5, lock_minutes=5)
+                        return JsonResponse({"success": False, "message": "รหัสผ่านบัญชีบุคลากรไม่ถูกต้อง"}, status=401)
+
                 record_failed_attempt(request, action="verify_pwd", max_attempts=5, lock_minutes=5)
                 return JsonResponse({"success": False, "message": "ไม่พบบัญชีบุคลากรนี้ในระบบ"}, status=401)
 
@@ -1254,6 +1310,27 @@ def verify_current_user_password_api(request):
         clean_sid = re.sub(r"[^0-9a-zA-Z]", "", target_sid)
 
         if active_role == "student" or target_sid or clean_sid:
+            student_db = (
+                Student.objects.filter(student_id=target_sid, is_active=True).first()
+                or Student.objects.filter(student_id__iexact=target_sid, is_active=True).first()
+            )
+            if not student_db and clean_sid:
+                for s in Student.objects.filter(is_active=True):
+                    if re.sub(r"[^0-9a-zA-Z]", "", s.student_id) == clean_sid:
+                        student_db = s
+                        break
+
+            if student_db and (student_db.password_hash or student_db.password_plain):
+                if student_db.password_hash == hashed_pass or student_db.password_plain == password:
+                    reset_failed_attempts(request, action="verify_pwd")
+                    return JsonResponse({"success": True, "message": "ยืนยันรหัสผ่านสำเร็จ"})
+                else:
+                    record_failed_attempt(request, action="verify_pwd", max_attempts=5, lock_minutes=5)
+                    return JsonResponse(
+                        {"success": False, "message": "รหัสผ่านของรหัสนักศึกษานี้ไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง"},
+                        status=401,
+                    )
+
             student_acc = next(
                 (
                     s
@@ -1263,11 +1340,11 @@ def verify_current_user_password_api(request):
                 ),
                 None,
             )
-            if student_acc:
+            if student_acc and (student_acc.get("password_hash") or student_acc.get("password_plain")):
                 if (
                     student_acc.get("password_hash") == hashed_pass
-                    or student_acc.get("password") == password
                     or student_acc.get("password_plain") == password
+                    or student_acc.get("password") == password
                 ):
                     reset_failed_attempts(request, action="verify_pwd")
                     return JsonResponse({"success": True, "message": "ยืนยันรหัสผ่านสำเร็จ"})
