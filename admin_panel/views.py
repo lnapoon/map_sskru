@@ -27,9 +27,35 @@ from .models import (
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_FILE = BASE_DIR / "data" / "buildings.json"
+ROSTER_FILE = BASE_DIR / "data" / "students_roster.json"
+ACCOUNTS_FILE = BASE_DIR / "data" / "user_accounts.json"
+RESETS_FILE = BASE_DIR / "data" / "password_resets.json"
+LOGS_FILE = BASE_DIR / "data" / "user_activity_logs.json"
 
 
 # ─── Helpers ────────────────────────────────────────────────────────────────
+
+
+def read_json_file(file_path, default=None):
+    if default is None:
+        default = []
+    try:
+        if not file_path.exists():
+            return default
+        with open(file_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return default
+
+
+def write_json_file(file_path, data):
+    try:
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        return True
+    except Exception:
+        return False
 
 
 def read_buildings():
@@ -329,22 +355,7 @@ def get_device_info(user_agent):
 def log_user_activity(user_id, name, role, email="", request=None):
     """บันทึกประวัติการเข้าใช้งานของผู้ใช้ (Admin, Staff, Student)"""
     try:
-        logs_file = BASE_DIR / "data" / "user_activity_logs.json"
-
-        # Helper to read JSON
-        def read_json_file(path, default):
-            if not path.exists():
-                return default
-            with open(path, "r", encoding="utf-8") as f:
-                return json.load(f)
-
-        # Helper to write JSON
-        def write_json_file(path, data):
-            path.parent.mkdir(parents=True, exist_ok=True)
-            with open(path, "w", encoding="utf-8") as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
-
-        logs = read_json_file(logs_file, default=[])
+        logs = read_json_file(LOGS_FILE, default=[])
 
         device, os_name, browser = ("Desktop", "macOS", "Safari")
         ip = "127.0.0.1"
@@ -397,7 +408,7 @@ def log_user_activity(user_id, name, role, email="", request=None):
         # 2. Save to JSON file as fallback
         logs.insert(0, entry)
         logs = logs[:100]
-        write_json_file(logs_file, logs)
+        write_json_file(LOGS_FILE, logs)
     except Exception as e:
         print(f"Error logging user activity: {e}")
 
@@ -461,12 +472,7 @@ def admin_dashboard(request):
 
     # Today active users
     today_date_str = now.strftime("%d/%m/%Y")
-    logs_file = BASE_DIR / "data" / "user_activity_logs.json"
-    if logs_file.exists():
-        with open(logs_file, "r", encoding="utf-8") as f:
-            all_logs = json.load(f)
-    else:
-        all_logs = []
+    all_logs = read_json_file(LOGS_FILE, default=[])
     today_users = [u for u in all_logs if u.get("date_formatted") == today_date_str]
     if not today_users:
         today_users = all_logs[:10]
@@ -1064,31 +1070,6 @@ def admin_analytics_api(request):
 
 # ─── Student Verification & Registration APIs ─────────────────────────────────
 
-ROSTER_FILE = BASE_DIR / "data" / "students_roster.json"
-ACCOUNTS_FILE = BASE_DIR / "data" / "user_accounts.json"
-
-
-def read_json_file(file_path, default=None):
-    if default is None:
-        default = []
-    try:
-        if not file_path.exists():
-            return default
-        with open(file_path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        return default
-
-
-def write_json_file(file_path, data):
-    try:
-        file_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(file_path, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-        return True
-    except Exception:
-        return False
-
 
 @csrf_exempt
 def student_verify_api(request):
@@ -1624,9 +1605,6 @@ def student_register_page(request):
 def staff_register_page(request):
     """หน้าสำหรับสมัครสมาชิกบุคลากรโดยเฉพาะ"""
     return render(request, "admin_panel/register_staff.html")
-
-
-RESETS_FILE = BASE_DIR / "data" / "password_resets.json"
 
 
 @csrf_exempt
