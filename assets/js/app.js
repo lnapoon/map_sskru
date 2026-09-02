@@ -1111,10 +1111,10 @@ function initPDPAConsent() {
   if (!isConsentGiven) {
     openPDPAModal();
   } else {
-    // Automatically start live GPS positioning
+    // Automatically attempt silent live GPS positioning
     setTimeout(() => {
       if (typeof trackUserLocation === 'function') {
-        trackUserLocation();
+        trackUserLocation(true);
       }
     }, 800);
   }
@@ -1129,7 +1129,7 @@ function initPDPAConsent() {
       }
       setTimeout(() => {
         if (typeof trackUserLocation === 'function') {
-          trackUserLocation();
+          trackUserLocation(true);
         }
       }, 300);
     };
@@ -2553,9 +2553,11 @@ function updateLocationPosition(pos) {
   }
 }
 
-function trackUserLocation() {
+function trackUserLocation(isSilent = false) {
   if (!navigator.geolocation) {
-    showModal("ไม่รองรับ GPS", "อุปกรณ์ของคุณไม่รองรับบริการตรวจหาพิกัดตำแหน่งภูมิศาสตร์", "info");
+    if (!isSilent) {
+      showModal("ไม่รองรับ GPS", "อุปกรณ์ของคุณไม่รองรับบริการตรวจหาพิกัดตำแหน่งภูมิศาสตร์", "info");
+    }
     return;
   }
 
@@ -2576,7 +2578,9 @@ function trackUserLocation() {
     navigator.geolocation.clearWatch(watchPositionId);
   }
 
-  showToast("กำลังค้นหาพิกัดตำแหน่ง GPS สดของคุณ...");
+  if (!isSilent) {
+    showToast("กำลังค้นหาพิกัดตำแหน่ง GPS สดของคุณ...");
+  }
 
   // Get initial position immediately
   navigator.geolocation.getCurrentPosition(
@@ -2586,18 +2590,21 @@ function trackUserLocation() {
       // Start continuous watch position for live navigation tracking
       watchPositionId = navigator.geolocation.watchPosition(
         (pos) => updateLocationPosition(pos),
-        (err) => console.log("Watch GPS error:", err),
+        (err) => console.log("Watch GPS live update note:", err),
         { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 }
       );
     },
     (err) => {
-      let errMsg = "ไม่สามารถเข้าถึงสิทธิ์ตำแหน่ง GPS ได้ กรุณาเปิดบริการตำแหน่งที่ตั้งบนเบราว์เซอร์";
-      if (err.code === err.PERMISSION_DENIED) {
-        errMsg = "สิทธิ์การเข้าถึงตำแหน่ง GPS ถูกปฏิเสธ กรุณาอนุญาตเข้าสิทธิ์พิกัดบนเบราว์เซอร์ (กดปุ่มสัญลักษณ์แม่กุญแจตรงแถบ URL)";
+      console.log("GPS Location query result:", err);
+      if (!isSilent) {
+        let errMsg = "ไม่สามารถเข้าถึงสิทธิ์ตำแหน่ง GPS ได้ กรุณาเปิดบริการตำแหน่งที่ตั้งบนเบราว์เซอร์";
+        if (err.code === err.PERMISSION_DENIED) {
+          errMsg = "สิทธิ์การเข้าถึงตำแหน่ง GPS ถูกปฏิเสธ กรุณาอนุญาตเข้าถึงสิทธิ์พิกัดบนเบราว์เซอร์ (กดปุ่มสัญลักษณ์แม่กุญแจตรงแถบ URL หรือการตั้งค่า Safari/Chrome)";
+        }
+        showModal("ระบุตำแหน่งพิกัดผิดพลาด", errMsg, "warning");
       }
-      showModal("ระบุตำแหน่งพิกัดผิดพลาด", errMsg, "warning");
     },
-    { enableHighAccuracy: true, timeout: 10000 }
+    { enableHighAccuracy: true, timeout: 8000 }
   );
 }
 
