@@ -467,7 +467,19 @@
             window.location.href = data.role === 'admin' ? '/admin/dashboard/' : '/';
           }
         } else {
-          await showSskruAlert({ title: 'เข้าสู่ระบบไม่สำเร็จ', message: data.message || 'Username/Email หรือรหัสผ่านไม่ถูกต้อง', type: 'error' });
+          if (data.requires_approval) {
+            await showSskruAlert({
+              title: '⏳ อยู่ระหว่างรอการอนุมัติสิทธิ์',
+              message: data.message || 'บัญชีของคุณอยู่ระหว่างรอผู้ดูแลระบบ (Admin) ยืนยันสิทธิ์การใช้งาน กรุณารอแอดมินอนุมัติก่อนเข้าสู่ระบบ',
+              type: 'warning'
+            });
+          } else {
+            await showSskruAlert({
+              title: 'เข้าสู่ระบบไม่สำเร็จ',
+              message: data.message || 'Username/Email หรือรหัสผ่านไม่ถูกต้อง',
+              type: 'error'
+            });
+          }
         }
       } catch (e) {
         await showSskruAlert({ title: 'เกิดข้อผิดพลาด', message: 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', type: 'error' });

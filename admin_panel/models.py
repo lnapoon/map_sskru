@@ -80,6 +80,7 @@ class StaffUser(models.Model):
     password_hash = models.CharField(max_length=128, verbose_name="รหัสผ่าน (Hash)")
     password_plain = models.CharField(max_length=128, blank=True, null=True, verbose_name="รหัสผ่าน (Plain)")
     is_active = models.BooleanField(default=True, verbose_name="สถานะใช้งาน")
+    is_approved = models.BooleanField(default=False, verbose_name="อนุมัติแล้ว")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

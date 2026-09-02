@@ -158,9 +158,9 @@ if ($action) {
         $clean_sid = str_replace('-', '', $sid);
         $expected = 'stu' . $clean_sid;
         
-        if (strpos($email, $expected) === false || strpos($email, 'sskru.ac.th') === false) {
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'อีเมลไม่ถูกต้อง ต้องเป็นรูปแบบ ' . $expected . '@sskru.ac.th']);
+            echo json_encode(['success' => false, 'message' => 'รูปแบบอีเมลไม่ถูกต้อง']);
             exit();
         }
         
@@ -198,9 +198,7 @@ if ($action) {
         echo json_encode([
             'success' => true,
             'email' => $email,
-            'token' => $token,
-            'otp' => $otp,
-            'message' => 'ระบบได้ส่งลิงก์ยืนยันตัวตนไปยัง ' . $email . ' เรียบร้อยแล้ว'
+            'message' => 'ระบบได้ส่งรหัส OTP ยืนยันสิทธิ์ไปยังอีเมล ' . $email . ' เรียบร้อยแล้ว (รหัสมีอายุ 15 นาที)'
         ]);
         exit();
     }
@@ -545,15 +543,31 @@ if ($action) {
             exit();
         }
         
+        // Check duplicate
+        foreach ($accounts['staff'] as $st) {
+            if (strtolower($st['username'] ?? '') === strtolower($user) || strtolower($st['email'] ?? '') === strtolower($email)) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Username หรือ Email นี้มีอยู่ในระบบแล้ว']);
+                exit();
+            }
+        }
+
         $hashed = hash('sha256', $pass);
         $accounts['staff'][] = [
             'username' => $user,
             'email' => $email,
             'password_hash' => $hashed,
+            'password_plain' => $pass,
+            'is_approved' => false,
             'created_at' => date('c')
         ];
         file_put_contents($accounts_file, json_encode($accounts, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-        echo json_encode(['success' => true, 'username' => $user, 'message' => 'สมัครสมาชิกบุคลากรสำเร็จ']);
+        echo json_encode([
+            'success' => true,
+            'requires_approval' => true,
+            'username' => $user,
+            'message' => 'สมัครสมาชิกบุคลากรสำเร็จ! บัญชีของคุณอยู่ระหว่างรอผู้ดูแลระบบ (Admin) ตรวจสอบและอนุมัติสิทธิ์การเข้าใช้งานก่อนเข้าสู่ระบบ'
+        ]);
         exit();
     }
 
@@ -606,7 +620,18 @@ if ($action) {
         
         $hashed = hash('sha256', $pass);
         foreach ($accounts['staff'] as $st) {
-            if (($st['username'] === $ident || $st['email'] === $ident) && $st['password_hash'] === $hashed) {
+            if ((strtolower($st['username'] ?? '') === strtolower($ident) || strtolower($st['email'] ?? '') === strtolower($ident)) && ($st['password_hash'] === $hashed || ($st['password_plain'] ?? '') === $pass)) {
+                $is_app = $st['is_approved'] ?? false;
+                if (!$is_app) {
+                    http_response_code(403);
+                    echo json_encode([
+                        'success' => false,
+                        'requires_approval' => true,
+                        'message' => 'บัญชีของคุณอยู่ระหว่างรอผู้ดูแลระบบ (Admin) ยืนยัน/อนุมัติสิทธิ์การใช้งาน กรุณารอการอนุมัติก่อนเข้าสู่ระบบ'
+                    ]);
+                    exit();
+                }
+
                 unset($_SESSION['staff_login_failed']);
                 unset($_SESSION['staff_login_lock']);
                 $_SESSION['user_role'] = 'staff';

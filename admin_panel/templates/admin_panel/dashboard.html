@@ -631,6 +631,15 @@
       <div class="nav-icon"><i class="fa-solid fa-user-graduate"></i></div>
       จัดการนักศึกษา
     </button>
+    <button class="nav-item" onclick="showSection('staff')" id="nav-staff">
+      <div class="nav-icon"><i class="fa-solid fa-user-tie"></i></div>
+      จัดการบุคลากร
+      {% if pending_staff_count > 0 %}
+      <span class="nav-badge" style="background:#ef4444; color:#ffffff;" id="sidebar-staff-badge">{{ pending_staff_count }}</span>
+      {% else %}
+      <span class="nav-badge" style="display:none;" id="sidebar-staff-badge">0</span>
+      {% endif %}
+    </button>
     <button class="nav-item" onclick="showSection('visitors')" id="nav-visitors">
       <div class="nav-icon"><i class="fa-solid fa-users"></i></div>
       ผู้เข้าชม
@@ -709,6 +718,9 @@
           </button>
           <button class="quick-act-btn" onclick="showSection('students')">
             <i class="fa-solid fa-user-graduate"></i> จัดการนักศึกษา
+          </button>
+          <button class="quick-act-btn" onclick="showSection('staff')">
+            <i class="fa-solid fa-user-tie"></i> จัดการบุคลากร {% if pending_staff_count > 0 %}<span style="background:#ef4444; color:white; border-radius:10px; padding:1px 7px; font-size:11px; margin-left:4px; font-weight:700;">รออนุมัติ {{ pending_staff_count }}</span>{% endif %}
           </button>
           <a href="/" class="quick-act-btn" style="background:white; color:#1e40af; text-decoration: none;">
             <i class="fa-solid fa-map-location-dot"></i> ดูหน้าแผนที่
@@ -881,6 +893,64 @@
             </thead>
             <tbody id="students-table-body">
               <!-- Students populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ SECTION: STAFF ══ -->
+    <section class="section" id="section-staff">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+        <div>
+          <h2 style="margin: 0; display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-user-tie" style="color: #7e22ce;"></i> รายชื่อบุคลากรและอาจารย์ (จัดการสิทธิ์การเข้าใช้งาน)
+          </h2>
+          <p style="margin: 4px 0 0; font-size: 13px; color: var(--text-muted, #64748b);">
+            ตรวจสอบและอนุมัติสิทธิ์การเข้าใช้งานสำหรับบุคลากรใหม่ และจัดการบัญชีบุคลากรทั้งหมด
+          </p>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-outline" onclick="loadStaff()"><i class="fa-solid fa-rotate"></i> รีเฟรช</button>
+          <button class="btn btn-primary" onclick="openStaffModal()"><i class="fa-solid fa-user-plus"></i> เพิ่มบุคลากร</button>
+        </div>
+      </div>
+
+      <!-- Staff Filter Tabs & Summary Strip -->
+      <div style="display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; justify-content: space-between;">
+        <div style="display: flex; gap: 8px;" id="staff-filter-buttons">
+          <button class="btn btn-sm btn-filter-staff active" data-filter="all" onclick="filterStaffList('all', this)" style="border-radius: 20px; font-size: 13px; padding: 6px 14px; font-weight: 600;">
+            ทั้งหมด (<span id="count-staff-all">0</span>)
+          </button>
+          <button class="btn btn-sm btn-filter-staff" data-filter="pending" onclick="filterStaffList('pending', this)" style="border-radius: 20px; font-size: 13px; padding: 6px 14px; background: #fffbeb; color: #b45309; border: 1px solid #fde68a; font-weight: 600;">
+            ⏳ รออนุมัติ (<span id="count-staff-pending">0</span>)
+          </button>
+          <button class="btn btn-sm btn-filter-staff" data-filter="approved" onclick="filterStaffList('approved', this)" style="border-radius: 20px; font-size: 13px; padding: 6px 14px; background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; font-weight: 600;">
+            🟢 อนุมัติแล้ว (<span id="count-staff-approved">0</span>)
+          </button>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div class="input-wrapper" style="position: relative;">
+            <i class="fa-solid fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 13px;"></i>
+            <input type="text" id="search-staff-input" onkeyup="handleStaffSearch(this.value)" placeholder="ค้นหา Username หรือ Email..." style="padding: 7px 14px 7px 34px; border: 1.5px solid #cbd5e1; border-radius: 10px; font-size: 13px; width: 220px;" />
+          </div>
+        </div>
+      </div>
+
+      <div class="card p-0">
+        <div class="table-container">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>ชื่อผู้ใช้ (Username)</th>
+                <th>อีเมล (Email)</th>
+                <th>สถานะการอนุมัติ</th>
+                <th>วันที่สมัคร/สร้าง</th>
+                <th style="text-align:center;">จัดการสิทธิ์</th>
+              </tr>
+            </thead>
+            <tbody id="staff-table-body">
+              <!-- Staff populated by JS -->
             </tbody>
           </table>
         </div>
@@ -1155,6 +1225,42 @@
   </div>
 </div>
 
+<!-- Add/Edit Staff Modal -->
+<div class="modal-overlay" id="staff-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="staff-modal-title"><i class="fa-solid fa-user-plus"></i> เพิ่มบุคลากร</div>
+      <button class="modal-close" onclick="closeStaffModal()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="form-staff-edit-id">
+      <div class="form-group">
+        <label class="form-label">ชื่อผู้ใช้ (Username)</label>
+        <input type="text" class="form-control" id="form-staff-username" placeholder="เช่น ajarn_somchai">
+      </div>
+      <div class="form-group">
+        <label class="form-label">อีเมล (Email)</label>
+        <input type="email" class="form-control" id="form-staff-email" placeholder="เช่น somchai@sskru.ac.th">
+      </div>
+      <div class="form-group" id="form-staff-pass-group">
+        <label class="form-label" id="form-staff-pass-label">กำหนดรหัสผ่าน (Password)</label>
+        <input type="password" class="form-control" id="form-staff-pass" placeholder="กรอกรหัสผ่าน">
+      </div>
+      <div class="form-group">
+        <label class="form-label">สถานะการอนุมัติสิทธิ์</label>
+        <select class="form-control" id="form-staff-approved">
+          <option value="true" selected>🟢 อนุมัติสิทธิ์ทันที (Approved)</option>
+          <option value="false">🟡 รออนุมัติ (Pending)</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeStaffModal()">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveStaff()"><i class="fa-solid fa-floppy-disk"></i> บันทึกข้อมูล</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="building-modal">
   <div class="modal" style="width: min(600px, 95vw);">
     <div class="modal-header">
@@ -1269,10 +1375,15 @@ function showSection(name) {
   document.getElementById('section-' + name).classList.add('active');
   document.getElementById('nav-' + name)?.classList.add('active');
 
+  if (name === 'staff') {
+    loadStaff();
+  }
+
   const titles = {
     overview: ['ภาพรวม', 'ระบบ'],
     buildings: ['จัดการ', 'อาคาร'],
     students: ['จัดการ', 'นักศึกษา'],
+    staff: ['จัดการ', 'บุคลากร'],
     visitors: ['ผู้เข้าชม', 'ทั้งหมด'],
     analytics: ['สถิติ', 'การใช้งาน'],
   };
@@ -1647,6 +1758,295 @@ async function deleteStudent(id, name) {
   }
 }
 
+// ─── Staff Management ─────────────────────────────────────────────────────
+
+let allStaffData = [];
+let currentStaffFilter = 'all';
+let editingStaffId = null;
+
+function openStaffModal(editData) {
+  editingStaffId = null;
+  document.getElementById('form-staff-edit-id').value = '';
+  document.getElementById('form-staff-username').value = '';
+  document.getElementById('form-staff-email').value = '';
+  document.getElementById('form-staff-pass').value = '';
+  document.getElementById('form-staff-approved').value = 'true';
+  document.getElementById('form-staff-username').disabled = false;
+  document.getElementById('form-staff-pass-group').style.display = 'block';
+
+  if (editData) {
+    editingStaffId = editData.id;
+    document.getElementById('form-staff-edit-id').value = editData.id;
+    document.getElementById('form-staff-username').value = editData.username;
+    document.getElementById('form-staff-username').disabled = true;
+    document.getElementById('form-staff-email').value = editData.email;
+    document.getElementById('form-staff-approved').value = editData.is_approved ? 'true' : 'false';
+    document.getElementById('form-staff-pass-label').textContent = 'เปลี่ยนรหัสผ่านใหม่ (เว้นว่างหากไม่เปลี่ยน)';
+    document.getElementById('staff-modal-title').innerHTML = '<i class="fa-solid fa-pen-to-square"></i> แก้ไขข้อมูลบุคลากร';
+  } else {
+    document.getElementById('form-staff-pass-label').textContent = 'กำหนดรหัสผ่าน (Password)';
+    document.getElementById('staff-modal-title').innerHTML = '<i class="fa-solid fa-user-plus"></i> เพิ่มบุคลากร';
+  }
+  document.getElementById('staff-modal').classList.add('open');
+}
+
+function closeStaffModal() {
+  editingStaffId = null;
+  document.getElementById('staff-modal').classList.remove('open');
+}
+
+async function loadStaff() {
+  try {
+    const res = await fetch('/admin/api/staff/', { credentials: 'same-origin' });
+    const data = await res.json();
+    if (data.success) {
+      allStaffData = data.data || [];
+      updateStaffBadgesAndFilter();
+    }
+  } catch (err) {
+    console.error('loadStaff error:', err);
+  }
+}
+
+function updateStaffBadgesAndFilter() {
+  const total = allStaffData.length;
+  const pending = allStaffData.filter(s => !s.is_approved).length;
+  const approved = allStaffData.filter(s => s.is_approved).length;
+
+  const countAll = document.getElementById('count-staff-all');
+  const countPending = document.getElementById('count-staff-pending');
+  const countApproved = document.getElementById('count-staff-approved');
+
+  if (countAll) countAll.textContent = total;
+  if (countPending) countPending.textContent = pending;
+  if (countApproved) countApproved.textContent = approved;
+
+  // Update sidebar pending badge
+  const sideBadge = document.getElementById('sidebar-staff-badge');
+  if (sideBadge) {
+    if (pending > 0) {
+      sideBadge.style.display = 'inline-block';
+      sideBadge.textContent = pending;
+    } else {
+      sideBadge.style.display = 'none';
+    }
+  }
+
+  filterStaffList(currentStaffFilter);
+}
+
+function filterStaffList(filterType, btnEl) {
+  currentStaffFilter = filterType;
+  if (btnEl) {
+    document.querySelectorAll('.btn-filter-staff').forEach(b => b.classList.remove('active'));
+    btnEl.classList.add('active');
+  }
+
+  const query = (document.getElementById('search-staff-input')?.value || '').trim().toLowerCase();
+  let list = allStaffData;
+  if (filterType === 'pending') {
+    list = list.filter(s => !s.is_approved);
+  } else if (filterType === 'approved') {
+    list = list.filter(s => s.is_approved);
+  }
+
+  if (query) {
+    list = list.filter(s =>
+      (s.username && s.username.toLowerCase().includes(query)) ||
+      (s.email && s.email.toLowerCase().includes(query))
+    );
+  }
+
+  renderStaffTable(list);
+}
+
+function handleStaffSearch(query) {
+  filterStaffList(currentStaffFilter);
+}
+
+function renderStaffTable(staffList) {
+  const tbody = document.getElementById('staff-table-body');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  if (staffList.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5" style="text-align: center; padding: 32px; color: #94a3b8;">
+          <div style="font-size: 28px; margin-bottom: 8px;">👔</div>
+          <div style="font-weight: 600; font-size: 14px; color: #64748b;">ไม่พบข้อมูลบุคลากร</div>
+          <div style="font-size: 12px; color: #94a3b8; margin-top: 4px;">ลองเปลี่ยนตัวกรอง หรือคลิก "เพิ่มบุคลากร"</div>
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  staffList.forEach(s => {
+    const isApproved = s.is_approved;
+    const dateFormatted = s.created_at_formatted || new Date(s.created_at).toLocaleDateString('th-TH');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <div style="width:32px; height:32px; border-radius:8px; background:#f3e8ff; color:#7e22ce; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0;">
+            <i class="fa-solid fa-user-tie"></i>
+          </div>
+          <div>
+            <span style="font-weight:700; color:var(--text, #1e293b);">${s.username}</span>
+          </div>
+        </div>
+      </td>
+      <td>
+        <span style="color:#475569; font-size:13px;"><i class="fa-regular fa-envelope" style="color:#94a3b8; margin-right:4px;"></i>${s.email}</span>
+      </td>
+      <td>
+        ${isApproved
+          ? '<span class="status-pill status-active" style="background:#dcfce7; color:#15803d; border:1px solid #bbf7d0;"><i class="fa-solid fa-circle-check"></i> อนุมัติแล้ว</span>'
+          : '<span class="status-pill status-pending" style="background:#fef3c7; color:#b45309; border:1px solid #fde68a;"><i class="fa-solid fa-clock"></i> รออนุมัติ</span>'
+        }
+      </td>
+      <td style="color:#64748b; font-size:12.5px;">${dateFormatted}</td>
+      <td style="text-align:center;">
+        <div class="action-btn-group" style="justify-content:center;">
+          ${!isApproved
+            ? `<button class="btn btn-sm btn-primary" onclick="toggleStaffApproval(${s.id}, false, '${s.username}')" style="padding:4px 12px; font-size:12px; border-radius:8px; background:linear-gradient(135deg, #10b981, #059669); border:none;" title="อนุมัติสิทธิ์การใช้งาน">
+                <i class="fa-solid fa-check"></i> อนุมัติ
+               </button>`
+            : `<button class="btn btn-sm btn-outline" onclick="toggleStaffApproval(${s.id}, true, '${s.username}')" style="padding:4px 8px; font-size:12px; border-radius:8px; color:#64748b;" title="ระงับสิทธิ์ชั่วคราว">
+                <i class="fa-solid fa-ban"></i> ระงับ
+               </button>`
+          }
+          <button class="action-btn edit" onclick='editStaff(${JSON.stringify(s).replace(/'/g, "&#39;")})' title="แก้ไขข้อมูล">
+            <i class="fa-solid fa-pen-to-square"></i>
+          </button>
+          <button class="action-btn del" onclick="deleteStaff(${s.id}, '${s.username}')" title="ลบบัญชีบุคลากร">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function editStaff(staffData) {
+  openStaffModal(staffData);
+}
+
+async function toggleStaffApproval(staffId, currentStatus, username) {
+  const newStatus = !currentStatus;
+  
+  if (currentStatus) {
+    const ok = await showSskruConfirm({
+      title: 'ยืนยันการระงับสิทธิ์',
+      message: `คุณต้องการระงับสิทธิ์เข้าใช้งานของบุคลากร "${username}" ใช่หรือไม่?`,
+      icon: 'fa-user-lock',
+      type: 'danger',
+      confirmText: 'ยืนยันระงับสิทธิ์',
+      cancelText: 'ยกเลิก'
+    });
+    if (!ok) return;
+  }
+
+  try {
+    const res = await fetch('/admin/api/staff/', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ id: staffId, is_approved: newStatus })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast(newStatus ? `อนุมัติสิทธิ์ให้ "${username}" เรียบร้อยแล้ว` : `ระงับสิทธิ์ "${username}" แล้ว`, 'success');
+      loadStaff();
+    } else {
+      showToast(data.message || 'เกิดข้อผิดพลาด', 'error');
+    }
+  } catch (err) {
+    showToast('เกิดข้อผิดพลาดในการเชื่อมต่อ', 'error');
+  }
+}
+
+async function saveStaff() {
+  const username = document.getElementById('form-staff-username').value.trim();
+  const email = document.getElementById('form-staff-email').value.trim();
+  const pass = document.getElementById('form-staff-pass').value.trim();
+  const isApproved = document.getElementById('form-staff-approved').value === 'true';
+
+  if (!editingStaffId && (!username || !email || !pass)) {
+    showToast('กรุณากรอก Username, Email และรหัสผ่านให้ครบถ้วน', 'error');
+    return;
+  }
+
+  if (editingStaffId && !email) {
+    showToast('กรุณากรอกอีเมล', 'error');
+    return;
+  }
+
+  if (editingStaffId) {
+    // PUT edit
+    const body = { id: editingStaffId, email: email, is_approved: isApproved };
+    if (pass) body.password = pass;
+    const res = await fetch('/admin/api/staff/', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('บันทึกข้อมูลบุคลากรสำเร็จ', 'success');
+      closeStaffModal();
+      loadStaff();
+    } else {
+      showToast(data.message || 'เกิดข้อผิดพลาด', 'error');
+    }
+  } else {
+    // POST create
+    const res = await fetch('/admin/api/staff/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ username: username, email: email, password: pass, is_approved: isApproved })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('เพิ่มบุคลากรสำเร็จ', 'success');
+      closeStaffModal();
+      loadStaff();
+    } else {
+      showToast(data.message || 'เกิดข้อผิดพลาด', 'error');
+    }
+  }
+}
+
+async function deleteStaff(id, username) {
+  const ok = await showSskruConfirm({
+    title: 'ยืนยันการลบบัญชีบุคลากร',
+    message: `คุณต้องการลบบัญชีบุคลากร "${username}" ใช่หรือไม่?`,
+    icon: 'fa-user-xmark',
+    type: 'danger',
+    confirmText: 'ยืนยันลบ',
+    cancelText: 'ยกเลิก'
+  });
+  if (!ok) return;
+
+  const res = await fetch('/admin/api/staff/', {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'same-origin',
+    body: JSON.stringify({ id })
+  });
+  const data = await res.json();
+  if (data.success) {
+    showToast('ลบบัญชีบุคลากรสำเร็จ', 'success');
+    loadStaff();
+  } else {
+    showToast(data.message || 'เกิดข้อผิดพลาด', 'error');
+  }
+}
+
 // ── SSKRU Custom Confirmation Dialog Engine for Dashboard ──
 window.showSskruConfirm = function({
   title = "ยืนยันการทำรายการ",
@@ -1738,10 +2138,11 @@ function toggleAdminTheme() {
   showToast(newTheme === 'dark' ? 'สลับเข้าสู่โหมดมืด (Dark Mode)' : 'สลับเข้าสู่โหมดสว่าง (Light Mode)', 'success');
 }
 
-// Load theme and students on page load
+// Load theme, students, and staff on page load
 document.addEventListener('DOMContentLoaded', () => {
   initAdminTheme();
   loadStudents();
+  loadStaff();
 });
 </script>
 </body>

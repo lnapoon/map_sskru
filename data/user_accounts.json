@@ -55,6 +55,14 @@
       "password_hash": "e516ec3e2077f60cd857582120d2a230277c124f2db1abacf5db8525b5dcca77",
       "password_plain": "113333555555",
       "created_at": "2026-09-02T14:06:52.082437"
+    },
+    {
+      "student_id": "6812732122",
+      "name": "นาย รฐนันท์ วสุนันต์",
+      "faculty": "มหาวิทยาลัยราชภัฏศรีสะเกษ",
+      "password_hash": "ef797c8118f02dfb649607dd5d3f8c7623048c9c063d532cc95c5ed7a898a64f",
+      "password_plain": "12345678",
+      "created_at": "2026-09-02T17:38:08.567488"
     }
   ],
   "staff": [
@@ -62,26 +70,15 @@
       "email": "mpoontv1234@gmail.com",
       "username": "poon_staff",
       "password_hash": "91df923741250d13d1d5bf907f0f0ffa8f0e1b4175b4a0015501c40859b87744",
+      "is_approved": true,
       "created_at": "2026-09-02T00:54:56.748546"
     },
     {
       "email": "mpoontv022@gmail.com",
       "username": "poon",
       "password_hash": "944c0533242b363788a46eae05b982069f17724030ca780af603d478b4d461e9",
+      "is_approved": true,
       "created_at": "2026-09-02T02:06:46.426689"
-    },
-    {
-      "email": "staff_general@test.com",
-      "username": "generalstaff1",
-      "password_hash": "b9c950640e1b3740e98acb93e669c65766f6670dd1609ba91ff41052ba48c6f3",
-      "created_at": "2026-09-02T02:15:34.442495"
-    },
-    {
-      "email": "ajarn_test@sskru.ac.th",
-      "username": "ajarn_test_sskru",
-      "password_hash": "17d27165302dab22349ac9558e8be5e01c6af5a7cb1f3455bd842f9c87ace3b4",
-      "password_plain": "staff_pass_123",
-      "created_at": "2026-09-02T10:46:18.502865"
     }
   ]
 }

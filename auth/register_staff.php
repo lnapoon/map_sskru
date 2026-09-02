@@ -282,12 +282,12 @@ require_once __DIR__ . '/config.php';
         const data = await res.json();
         if (data.success) {
           await showSskruAlert({
-            title: '🎉 สมัครสมาชิกสำเร็จ!',
-            message: 'ยินดีต้อนรับ คุณ ' + data.username + ' เข้าสู่ระบบเรียบร้อยแล้ว',
+            title: '🎉 สมัครสมาชิกบุคลากรสำเร็จ!',
+            message: 'ระบบได้รับข้อมูลบัญชี (' + data.username + ') แล้ว กรุณารอผู้ดูแลระบบ (Admin) ตรวจสอบและอนุมัติสิทธิ์การใช้งานก่อนเข้าสู่ระบบ',
             type: 'success',
-            buttonText: 'เข้าสู่หน้าหลัก'
+            buttonText: 'ไปที่หน้าเข้าสู่ระบบ'
           });
-          window.location.href = window.location.pathname.endsWith('.php') ? 'index.php' : '/';
+          window.location.href = window.location.pathname.endsWith('.php') ? 'login.php' : '/login/';
         } else {
           await showSskruAlert({ title: 'สมัครสมาชิกไม่สำเร็จ', message: data.message || 'ไม่สามารถสมัครสมาชิกได้', type: 'error' });
         }

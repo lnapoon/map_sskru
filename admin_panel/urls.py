@@ -12,6 +12,7 @@ urlpatterns = [
     path('api/buildings/<int:building_id>/',      views.admin_building_detail_api,   name='admin_building_detail'),
     path('api/analytics/',                        views.admin_analytics_api,         name='admin_analytics'),
     path('api/students/',                         views.admin_students_api,          name='admin_students'),
+    path('api/staff/',                            views.admin_staff_api,             name='admin_staff'),
     
     # Auth APIs
     path('api/auth/status/',                      views.auth_status_api,             name='auth_status'),

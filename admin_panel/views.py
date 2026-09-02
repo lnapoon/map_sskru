@@ -493,6 +493,11 @@ def admin_dashboard(request):
     # Recent visitors
     recent_visitors = VisitorLog.objects.select_related().order_by("-timestamp")[:20]
 
+    # Staff stats
+    total_staff = StaffUser.objects.count()
+    pending_staff_count = StaffUser.objects.filter(is_approved=False).count()
+    approved_staff_count = StaffUser.objects.filter(is_approved=True).count()
+
     # Buildings data
     buildings = read_buildings()
 
@@ -501,6 +506,9 @@ def admin_dashboard(request):
         "today_visitors": today_visitors,
         "total_buildings": len(buildings),
         "nav_count": nav_count,
+        "total_staff": total_staff,
+        "pending_staff_count": pending_staff_count,
+        "approved_staff_count": approved_staff_count,
         "chart_labels": json.dumps(chart_labels),
         "chart_data": json.dumps(chart_data),
         "device_stats": list(device_stats),
@@ -910,6 +918,134 @@ def admin_students_api(request):
     return JsonResponse({"success": False, "message": "Method not allowed"}, status=405)
 
 
+@csrf_exempt
+def admin_staff_api(request):
+    """API จัดการข้อมูลบุคลากร (Admin only)"""
+    if not validate_admin_token(request):
+        return JsonResponse({"success": False, "message": "Unauthorized"}, status=401)
+
+    if request.method == "GET":
+        staff_list = list(
+            StaffUser.objects.values(
+                "id", "username", "email", "is_approved", "is_active", "created_at"
+            ).order_by("-created_at")
+        )
+        for s in staff_list:
+            if s.get("created_at"):
+                s["created_at_formatted"] = (
+                    timezone.localtime(s["created_at"]).strftime("%d/%m/%Y %H:%M")
+                    if timezone.is_aware(s["created_at"])
+                    else s["created_at"].strftime("%d/%m/%Y %H:%M")
+                )
+        return JsonResponse({"success": True, "data": staff_list})
+
+    elif request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            username = data.get("username", "").strip()
+            email = data.get("email", "").strip().lower()
+            password = data.get("password", "").strip()
+            is_approved = data.get("is_approved", True)
+
+            if not username or not email or not password:
+                return JsonResponse(
+                    {"success": False, "message": "กรุณากรอกข้อมูลให้ครบถ้วน"}, status=400
+                )
+
+            if StaffUser.objects.filter(username__iexact=username).exists() or StaffUser.objects.filter(email__iexact=email).exists():
+                return JsonResponse(
+                    {"success": False, "message": "Username หรือ Email นี้มีอยู่ในระบบแล้ว"}, status=400
+                )
+
+            hashed_pass = hashlib.sha256(password.encode("utf-8")).hexdigest()
+            staff = StaffUser.objects.create(
+                username=username,
+                email=email,
+                password_hash=hashed_pass,
+                password_plain=password,
+                is_approved=is_approved,
+                is_active=True,
+            )
+
+            # Sync JSON
+            accounts = read_json_file(ACCOUNTS_FILE, default={"students": [], "staff": []})
+            accounts["staff"].append({
+                "username": username,
+                "email": email,
+                "password_hash": hashed_pass,
+                "password_plain": password,
+                "is_approved": is_approved,
+                "created_at": datetime.now().isoformat(),
+            })
+            write_json_file(ACCOUNTS_FILE, accounts)
+
+            return JsonResponse({"success": True, "message": "เพิ่มข้อมูลบุคลากรสำเร็จ"})
+        except Exception as e:
+            return JsonResponse({"success": False, "message": str(e)}, status=400)
+
+    elif request.method == "PUT":
+        try:
+            data = json.loads(request.body)
+            sid = data.get("id")
+            staff = StaffUser.objects.filter(id=sid).first()
+            if not staff:
+                return JsonResponse({"success": False, "message": "ไม่พบข้อมูลบุคลากร"}, status=404)
+
+            # If action is toggle approval
+            if "is_approved" in data:
+                staff.is_approved = bool(data["is_approved"])
+            if "is_active" in data:
+                staff.is_active = bool(data["is_active"])
+            if "email" in data and data["email"].strip():
+                staff.email = data["email"].strip().lower()
+            if "password" in data and data["password"].strip():
+                new_p = data["password"].strip()
+                staff.password_hash = hashlib.sha256(new_p.encode("utf-8")).hexdigest()
+                staff.password_plain = new_p
+
+            staff.save()
+
+            # Sync JSON
+            accounts = read_json_file(ACCOUNTS_FILE, default={"students": [], "staff": []})
+            for s in accounts.get("staff", []):
+                if s.get("username", "").lower() == staff.username.lower() or s.get("email", "").lower() == staff.email.lower():
+                    s["is_approved"] = staff.is_approved
+                    s["email"] = staff.email
+                    if "password" in data and data["password"].strip():
+                        s["password_hash"] = staff.password_hash
+                        s["password_plain"] = staff.password_plain
+                    break
+            write_json_file(ACCOUNTS_FILE, accounts)
+
+            status_text = "อนุมัติสิทธิ์เรียบร้อยแล้ว" if staff.is_approved else "ระงับ/ยกเลิกการอนุมัติแล้ว"
+            return JsonResponse({"success": True, "message": f"อัปเดตข้อมูลสำเร็จ ({status_text})"})
+        except Exception as e:
+            return JsonResponse({"success": False, "message": str(e)}, status=400)
+
+    elif request.method == "DELETE":
+        try:
+            data = json.loads(request.body)
+            sid = data.get("id")
+            staff = StaffUser.objects.filter(id=sid).first()
+            if staff:
+                username = staff.username
+                staff.delete()
+
+                # Sync JSON
+                accounts = read_json_file(ACCOUNTS_FILE, default={"students": [], "staff": []})
+                accounts["staff"] = [
+                    s for s in accounts.get("staff", [])
+                    if s.get("username", "").lower() != username.lower()
+                ]
+                write_json_file(ACCOUNTS_FILE, accounts)
+
+            return JsonResponse({"success": True, "message": "ลบข้อมูลบุคลากรสำเร็จ"})
+        except Exception as e:
+            return JsonResponse({"success": False, "message": str(e)}, status=400)
+
+    return JsonResponse({"success": False, "message": "Method not allowed"}, status=405)
+
+
 def admin_analytics_api(request):
     """ส่งข้อมูล analytics (Admin only)"""
     if not validate_admin_token(request):
@@ -1139,7 +1275,7 @@ def student_register_api(request):
 
 @csrf_exempt
 def staff_register_api(request):
-    """สมัครสมาชิกบุคลากรและอาจารย์ (บันทึกตรงลง PostgreSQL Database)"""
+    """สมัครสมาชิกบุคลากรและอาจารย์ (บันทึกตรงลง PostgreSQL Database) - ต้องรอแอดมินอนุมัติ"""
     if request.method != "POST":
         return JsonResponse(
             {"success": False, "message": "Method not allowed"}, status=405
@@ -1165,13 +1301,14 @@ def staff_register_api(request):
 
         hashed_pass = hashlib.sha256(password.encode("utf-8")).hexdigest()
 
-        # 1. Save to PostgreSQL
+        # 1. Save to PostgreSQL with is_approved=False
         StaffUser.objects.create(
             username=username,
             email=email,
             password_hash=hashed_pass,
             password_plain=password,
             is_active=True,
+            is_approved=False,
         )
 
         # 2. Save to JSON backup
@@ -1181,17 +1318,20 @@ def staff_register_api(request):
             "username": username,
             "password_hash": hashed_pass,
             "password_plain": password,
+            "is_approved": False,
             "created_at": datetime.now().isoformat(),
         }
         accounts["staff"].append(new_staff)
         write_json_file(ACCOUNTS_FILE, accounts)
 
-        if hasattr(request, "session"):
-            request.session["staff_username"] = username
-            request.session["user_role"] = "staff"
-
+        # Do NOT auto-login new staff, approval is required from admin
         return JsonResponse(
-            {"success": True, "message": "สมัครสมาชิกบุคลากรสำเร็จ!", "username": username}
+            {
+                "success": True,
+                "requires_approval": True,
+                "message": "สมัครสมาชิกบุคลากรสำเร็จ! บัญชีของคุณอยู่ระหว่างรอผู้ดูแลระบบ (Admin) ตรวจสอบและอนุมัติสิทธิ์การเข้าใช้งานก่อนเข้าสู่ระบบ",
+                "username": username,
+            }
         )
     except Exception as e:
         return JsonResponse({"success": False, "message": str(e)}, status=500)
@@ -1199,7 +1339,7 @@ def staff_register_api(request):
 
 @csrf_exempt
 def staff_login_api(request):
-    """เข้าสู่ระบบบุคลากร/ผู้ดูแลระบบ ด้วย Username หรือ Email"""
+    """เข้าสู่ระบบบุคลากร/ผู้ดูแลระบบ ด้วย Username หรือ Email (ตรวจสิทธิ์การอนุมัติ)"""
     if request.method != "POST":
         return JsonResponse(
             {"success": False, "message": "Method not allowed"}, status=405
@@ -1255,11 +1395,13 @@ def staff_login_api(request):
         staff_found = False
         staff_username = ""
         staff_email = ""
+        staff_is_approved = False
 
         if staff_match_db and (staff_match_db.password_hash == hashed_pass or staff_match_db.password_plain == password):
             staff_found = True
             staff_username = staff_match_db.username
             staff_email = staff_match_db.email
+            staff_is_approved = staff_match_db.is_approved
         else:
             accounts = read_json_file(ACCOUNTS_FILE, default={"students": [], "staff": []})
             staff_match_json = next(
@@ -1278,8 +1420,20 @@ def staff_login_api(request):
                 staff_found = True
                 staff_username = staff_match_json.get("username")
                 staff_email = staff_match_json.get("email", "")
+                staff_is_approved = staff_match_json.get("is_approved", False)
 
         if staff_found:
+            # Check if admin has approved this staff user
+            if not staff_is_approved:
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "requires_approval": True,
+                        "message": "บัญชีของคุณอยู่ระหว่างรอผู้ดูแลระบบ (Admin) ยืนยัน/อนุมัติสิทธิ์การใช้งาน กรุณารอการอนุมัติก่อนเข้าสู่ระบบ",
+                    },
+                    status=403,
+                )
+
             reset_failed_attempts(request, action="staff_login")
             if hasattr(request, "session"):
                 # Clear student and admin session tokens to prevent role bleeding
@@ -1301,7 +1455,7 @@ def staff_login_api(request):
                     "success": True,
                     "role": "staff",
                     "redirect": "/",
-                    "message": f'ยินดีต้อนรับ คุณ {staff_username}',
+                    "message": f"ยินดีต้อนรับ คุณ {staff_username}",
                 }
             )
 
@@ -1525,7 +1679,7 @@ def student_request_reset_api(request):
                 status=404,
             )
 
-        # Generate Secure Token & OTP
+        # Generate Secure Token & OTP (สุ่มรหัส OTP 6 หลักตามปกติ)
         token = secrets.token_hex(24)
         otp = str(secrets.randbelow(900000) + 100000)
         expires_at_dt = timezone.now() + timedelta(minutes=15)
@@ -1633,14 +1787,9 @@ def student_request_reset_api(request):
         return JsonResponse(
             {
                 "success": True,
-                "message": f"ระบบได้ส่งลิงก์และรหัสยืนยันสิทธิ์ไปยังอีเมล {email} เรียบร้อยแล้ว (รหัสมีอายุ 15 นาที)",
+                "message": f"ระบบได้ส่งรหัส OTP ยืนยันสิทธิ์ไปยังอีเมล {email} เรียบร้อยแล้ว (รหัสมีอายุ 15 นาที)",
                 "email": email,
-                "token": token,
-                "otp": otp,
-                "student_name": student_name,
-                "student_id": student_id,
                 "email_sent": email_sent,
-                "verify_url": verify_url,
             }
         )
     except Exception as e:
