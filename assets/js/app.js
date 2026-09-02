@@ -977,10 +977,10 @@ const DEFAULT_CONNECTIONS = [
 ];
 
 const GEOFENCE = {
-  latMin: 15.111500,
-  latMax: 15.127500,
-  lngMin: 104.353000,
-  lngMax: 104.365000
+  latMin: 15.100000,
+  latMax: 15.140000,
+  lngMin: 104.340000,
+  lngMax: 104.380000
 };
 
 // --- 2. Linear Calibration Equations (Convention Hall / Education Center) ---
@@ -2478,8 +2478,8 @@ function updateLocationPosition(pos) {
   if (isInsideCampus) {
     userPixelCoords = gpsToMap(lat, lng);
     // Boundary clamp with safe padding
-    userPixelCoords[0] = Math.max(20, Math.min(1004, userPixelCoords[0]));
-    userPixelCoords[1] = Math.max(20, Math.min(1516, userPixelCoords[1]));
+    userPixelCoords[0] = Math.max(30, Math.min(994, userPixelCoords[0]));
+    userPixelCoords[1] = Math.max(30, Math.min(1506, userPixelCoords[1]));
   } else {
     // Find closest campus gate to user's real GPS position
     let closestGate = campusGates[0];
@@ -2497,7 +2497,7 @@ function updateLocationPosition(pos) {
   // Create or update glowing live radar marker
   const userIcon = L.divIcon({
     html: `
-      <div class="user-live-gps-wrapper" title="พิกัดปัจจุบัน: ${lat.toFixed(5)}, ${lng.toFixed(5)}">
+      <div class="user-live-gps-wrapper" title="พิกัด: ${lat.toFixed(5)}, ${lng.toFixed(5)}">
         <div class="user-live-gps-radar"></div>
         <div class="user-live-gps-dot"></div>
       </div>
@@ -2511,15 +2511,15 @@ function updateLocationPosition(pos) {
     userMarker.setLatLng(userPixelCoords);
     userMarker.setIcon(userIcon);
   } else {
-    userMarker = L.marker(userPixelCoords, { icon: userIcon, zIndexOffset: 1000 }).addTo(map);
+    userMarker = L.marker(userPixelCoords, { icon: userIcon, zIndexOffset: 3000 }).addTo(map);
   }
 
-  const tooltipText = isInsideCampus
-    ? `📍 ตำแหน่งของคุณ (GPS สด ภายใน มรภ.ศรีสะเกษ)`
-    : `📍 ตำแหน่งของคุณ (อยู่นอกวิทยาเขต: ${lat.toFixed(4)}, ${lng.toFixed(4)} ห่าง ${distFormatted})`;
+  const popupContent = isInsideCampus
+    ? `<div style="text-align:center; font-family:Sarabun,sans-serif; font-size:13px; font-weight:700; color:#1e293b; padding:2px 4px;"><i class="fa-solid fa-location-dot" style="color:#2563eb; margin-right:4px;"></i>ตำแหน่งปัจจุบันของคุณ<br><span style="font-size:11px; font-weight:400; color:#64748b;">(ภายใน มรภ.ศรีสะเกษ: ${lat.toFixed(5)}, ${lng.toFixed(5)})</span></div>`
+    : `<div style="text-align:center; font-family:Sarabun,sans-serif; font-size:13px; font-weight:700; color:#1e293b; padding:2px 4px;"><i class="fa-solid fa-location-dot" style="color:#2563eb; margin-right:4px;"></i>ตำแหน่งของคุณ (อยู่นอก ม.)<br><span style="font-size:11px; font-weight:400; color:#64748b;">ห่าง ${distFormatted} (${lat.toFixed(5)}, ${lng.toFixed(5)})</span></div>`;
 
-  userMarker.unbindTooltip();
-  userMarker.bindTooltip(tooltipText, { permanent: false, direction: 'top' });
+  userMarker.unbindPopup();
+  userMarker.bindPopup(popupContent).openPopup();
 
   // Update navigation source dropdown option
   const navSourceSelect = document.getElementById("select-nav-source");
@@ -2533,8 +2533,9 @@ function updateLocationPosition(pos) {
     opt.textContent = isInsideCampus ? "📍 ตำแหน่งปัจจุบันของฉัน (GPS สด)" : `📍 ตำแหน่งของฉัน (${distFormatted} จาก ม.)`;
   }
 
+  map.flyTo(userPixelCoords, 1, { animate: true, duration: 1 });
+
   if (isInsideCampus) {
-    map.setView(userPixelCoords, 1, { animate: true });
     showToast("📍 เชื่อมต่อสัญญาณ GPS สดภายใน มรภ.ศรีสะเกษ เรียบร้อยแล้ว");
   } else {
     showToast(`📍 จับตำแหน่ง GPS สด: ${lat.toFixed(4)}, ${lng.toFixed(4)} (ห่างจากมหาวิทยาลัย ${distFormatted})`);
@@ -2549,18 +2550,6 @@ function trackUserLocation(isSilent = false) {
     return;
   }
 
-  // Check PDPA and Location Permission status
-  const isGranted = localStorage.getItem("sskru_pdpa_consent") === "granted" || localStorage.getItem("sskru_data_consent") === "granted";
-  if (!isGranted) {
-    const overlay = document.getElementById("pdpa-modal-overlay");
-    if (overlay) {
-      overlay.classList.add("active");
-      overlay.style.display = "flex";
-      showToast("กรุณากดยินยอมเปิดสิทธิ์การเข้าถึงตำแหน่งพิกัด GPS บนป๊อปอัปก่อนใช้งาน");
-      return;
-    }
-  }
-
   // Clear previous watcher if active
   if (watchPositionId !== null) {
     navigator.geolocation.clearWatch(watchPositionId);
@@ -2570,7 +2559,7 @@ function trackUserLocation(isSilent = false) {
     showToast("กำลังค้นหาพิกัดตำแหน่ง GPS สดของคุณ...");
   }
 
-  // Get initial position immediately
+  // Directly call native browser geolocation prompt
   navigator.geolocation.getCurrentPosition(
     (pos) => {
       updateLocationPosition(pos);
@@ -2587,12 +2576,12 @@ function trackUserLocation(isSilent = false) {
       if (!isSilent) {
         let errMsg = "ไม่สามารถเข้าถึงสิทธิ์ตำแหน่ง GPS ได้ กรุณาเปิดบริการตำแหน่งที่ตั้งบนเบราว์เซอร์";
         if (err.code === err.PERMISSION_DENIED) {
-          errMsg = "สิทธิ์การเข้าถึงตำแหน่ง GPS ถูกปฏิเสธ กรุณาอนุญาตเข้าถึงสิทธิ์พิกัดบนเบราว์เซอร์ (กดปุ่มสัญลักษณ์แม่กุญแจตรงแถบ URL หรือการตั้งค่า Safari/Chrome)";
+          errMsg = "สิทธิ์การเข้าถึงตำแหน่ง GPS ถูกปฏิเสธ กรุณากดอนุญาตสิทธิ์ตำแหน่งบนเบราว์เซอร์ (คลิกที่แถบ URL เพื่ออนุญาต Location)";
         }
         showModal("ระบุตำแหน่งพิกัดผิดพลาด", errMsg, "warning");
       }
     },
-    { enableHighAccuracy: true, timeout: 8000 }
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
   );
 }
 
