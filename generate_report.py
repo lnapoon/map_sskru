@@ -109,37 +109,22 @@ def create_report():
 
     doc.add_heading("2.1 ผังแสดงความสัมพันธ์ของข้อมูล (Entity-Relationship Diagram : ER-Diagram)", level=2)
     p_er = doc.add_paragraph(
-        "โครงสร้างฐานข้อมูลของระบบประกอบด้วย 8 Entity หลัก โดยมีความสัมพันธ์แบบ 1 ต่อ กลุ่ม (1:N) ระหว่างข้อมูลผู้เยี่ยมชมและประวัติกิจกรรมการใช้งาน ดังนี้:"
+        "โครงสร้างฐานข้อมูลของระบบประกอบด้วย 8 Entity หลัก โดยมีความสัมพันธ์แบบ 1 ต่อ กลุ่ม (1:N) ระหว่างข้อมูลผู้เยี่ยมชมและประวัติกิจกรรมการใช้งาน ดังแสดงในแผนผัง ER-Diagram ด้านล่างนี้:"
     )
     p_er.paragraph_format.first_line_indent = Inches(0.5)
 
-    # Text-based ER diagram representation for clear document viewing
-    p_dia = doc.add_paragraph()
-    p_dia.paragraph_format.left_indent = Inches(0.3)
-    p_dia.add_run(
-        "┌──────────────────────┐         1:N          ┌──────────────────────┐\n"
-        "│     VISITOR_LOG      │ ───────────────────< │      USER_EVENT      │\n"
-        "│  PK: id              │                      │  PK: id              │\n"
-        "│  session_id, ip      │                      │  FK: visitor_id      │\n"
-        "└──────────────────────┘                      │  event_type, data    │\n"
-        "                                              └──────────────────────┘\n"
-        "┌──────────────────────┐                      ┌──────────────────────┐\n"
-        "│       STUDENT        │                      │      STAFF_USER      │\n"
-        "│  PK: id              │                      │  PK: id              │\n"
-        "│  UK: student_id      │                      │  UK: username, email │\n"
-        "└──────────────────────┘                      └──────────────────────┘\n"
-        "┌──────────────────────┐                      ┌──────────────────────┐\n"
-        "│       BUILDING       │                      │  USER_ACTIVITY_LOG   │\n"
-        "│  PK: id              │                      │  PK: id              │\n"
-        "│  UK: building_id     │                      │  user_id, role, ip   │\n"
-        "└──────────────────────┘                      └──────────────────────┘\n"
-        "┌──────────────────────┐                      ┌──────────────────────┐\n"
-        "│ PASSWORD_RESET_TOKEN │                      │    ADMIN_SESSION     │\n"
-        "│  PK: id, UK: token   │                      │  PK: id, UK: token   │\n"
-        "└──────────────────────┘                      └──────────────────────┘\n"
-    )
-    p_dia.runs[0].font.name = 'Courier New'
-    p_dia.runs[0].font.size = Pt(11)
+    # Embed High-Res ER Diagram Image
+    img_path = "/Users/monphrakan/Mark_map/images/er_diagram_hd.png"
+    if os.path.exists(img_path):
+        p_img = doc.add_paragraph()
+        p_img.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        doc.add_picture(img_path, width=Inches(6.2))
+        p_cap = doc.add_paragraph()
+        p_cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p_cap_run = p_cap.add_run("รูปที่ 2.1: ผังแสดงความสัมพันธ์ของข้อมูล (Entity-Relationship Diagram)")
+        p_cap_run.font.size = Pt(13)
+        p_cap_run.font.italic = True
+        p_cap_run.font.color.rgb = RGBColor(0x64, 0x74, 0x8B)
 
     doc.add_heading("2.2 พจนานุกรมข้อมูล (Data Dictionary & Attribute Specifications)", level=2)
 
