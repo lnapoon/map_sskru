@@ -360,12 +360,12 @@ require_once __DIR__ . '/config.php';
           </button>
         </form>
 
-        <div class="sub-link-container" style="display: flex; flex-direction: column; gap: 8px;">
-          <a href="/register/student/" class="sub-link" id="link-reg-student">
-            <i class="fa-solid fa-user-plus"></i> ยังไม่ได้ลงทะเบียน? กดยืนยันตัวตนและลงทะเบียนนักศึกษาที่นี่
+        <div class="sub-link-container" style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; gap: 8px; font-size: 13px;">
+          <a href="/register/student/" class="sub-link" id="link-reg-student" style="font-weight: 600; color: #2563eb;">
+            <i class="fa-solid fa-user-plus"></i> ลงทะเบียนครั้งแรก
           </a>
-          <a href="/reset_password/student/" class="sub-link" id="link-reset-student" style="color: #64748b; font-size: 12.5px;">
-            <i class="fa-solid fa-key"></i> ลืมรหัสผ่านนักศึกษา? รีเซ็ตรหัสผ่านด้วยอีเมลองค์กร (stu&lt;รหัส&gt;@sskru.ac.th)
+          <a href="/reset_password/student/" class="sub-link" id="link-reset-student" style="color: #64748b;">
+            <i class="fa-solid fa-key"></i> ลืมรหัสผ่าน?
           </a>
         </div>
       </div>
@@ -395,12 +395,12 @@ require_once __DIR__ . '/config.php';
           </button>
         </form>
 
-        <div class="sub-link-container" style="display: flex; flex-direction: column; gap: 8px; margin-top: 14px;">
-          <a href="reset_password_staff.php" class="sub-link" id="link-reset-staff" style="color: #2563eb; font-weight: 600;">
-            <i class="fa-solid fa-key"></i> ลืมรหัสผ่านบุคลากร? กู้คืนรหัสผ่านที่นี่
+        <div class="sub-link-container" style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; gap: 8px; font-size: 13px;">
+          <a href="register_staff.php" class="sub-link" id="link-reg-staff" style="font-weight: 600; color: #2563eb;">
+            <i class="fa-solid fa-user-plus"></i> สมัครสมาชิกบุคลากร
           </a>
-          <a href="register_staff.php" class="sub-link" id="link-reg-staff">
-            <i class="fa-solid fa-user-plus"></i> ยังไม่มีบัญชีบุคลากร? สมัครสมาชิกบุคลากรใหม่ที่นี่
+          <a href="reset_password_staff.php" class="sub-link" id="link-reset-staff" style="color: #64748b;">
+            <i class="fa-solid fa-key"></i> ลืมรหัสผ่าน?
           </a>
         </div>
       </div>
