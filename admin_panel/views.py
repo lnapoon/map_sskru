@@ -14,7 +14,16 @@ from django.utils import timezone
 from django.db.models import Count
 from django.db.models.functions import TruncDate
 
-from .models import VisitorLog, UserEvent, AdminSession, Student, StaffUser, PasswordResetToken
+from .models import (
+    VisitorLog,
+    UserEvent,
+    AdminSession,
+    Student,
+    StaffUser,
+    PasswordResetToken,
+    Building,
+    UserActivityLog,
+)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_FILE = BASE_DIR / "data" / "buildings.json"
@@ -24,12 +33,42 @@ DATA_FILE = BASE_DIR / "data" / "buildings.json"
 
 
 def read_buildings():
+    """อ่านข้อมูลอาคารจาก PostgreSQL Database เป็นหลัก (Fallback to JSON file)"""
     try:
-        if not DATA_FILE.exists():
-            return []
-        with open(DATA_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
+        if Building.objects.exists():
+            b_list = []
+            for b in Building.objects.all().order_by("building_id"):
+                b_list.append(
+                    {
+                        "id": b.building_id,
+                        "name": b.name,
+                        "nameEn": b.name_en,
+                        "category": b.category,
+                        "code": b.code or str(b.building_id),
+                        "coords": [b.coord_x, b.coord_y],
+                        "realCoords": (
+                            [b.lat, b.lng]
+                            if b.lat is not None and b.lng is not None
+                            else []
+                        ),
+                        "description": b.description,
+                        "phone": b.phone,
+                        "tags": b.tags if isinstance(b.tags, list) else [],
+                        "image": b.image,
+                    }
+                )
+            return b_list
+        if DATA_FILE.exists():
+            with open(DATA_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        return []
     except Exception:
+        if DATA_FILE.exists():
+            try:
+                with open(DATA_FILE, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            except Exception:
+                pass
         return []
 
 
@@ -120,6 +159,40 @@ def sync_remote_stores_background(data):
 
 
 def write_buildings(data):
+    """บันทึกข้อมูลอาคารลงทั้ง PostgreSQL Database และไฟล์ JSON"""
+    # 1. Update PostgreSQL Database
+    try:
+        current_ids = set()
+        for b in data:
+            b_id = b.get("id")
+            if b_id is None:
+                continue
+            current_ids.add(b_id)
+            coords = b.get("coords", [0, 0])
+            real_coords = b.get("realCoords", [None, None])
+            Building.objects.update_or_create(
+                building_id=b_id,
+                defaults={
+                    "name": b.get("name", ""),
+                    "name_en": b.get("nameEn", ""),
+                    "category": b.get("category", "academic"),
+                    "code": str(b.get("code", b_id)),
+                    "coord_x": coords[0] if len(coords) > 0 else 0,
+                    "coord_y": coords[1] if len(coords) > 1 else 0,
+                    "lat": real_coords[0] if real_coords and len(real_coords) > 0 else None,
+                    "lng": real_coords[1] if real_coords and len(real_coords) > 1 else None,
+                    "description": b.get("description", ""),
+                    "phone": b.get("phone", ""),
+                    "tags": b.get("tags", []),
+                    "image": b.get("image", None),
+                },
+            )
+        # Delete removed buildings from DB
+        Building.objects.exclude(building_id__in=current_ids).delete()
+    except Exception as e:
+        print("Database sync error for buildings:", e)
+
+    # 2. Write to JSON File
     try:
         DATA_FILE.parent.mkdir(parents=True, exist_ok=True)
         with open(DATA_FILE, "w", encoding="utf-8") as f:
@@ -128,7 +201,7 @@ def write_buildings(data):
         print("Error writing buildings file database:", e)
         return False
 
-    # Trigger asynchronous background sync to remote databases
+    # 3. Background Sync to Remote Stores
     threading.Thread(
         target=sync_remote_stores_background, args=(data,), daemon=True
     ).start()
@@ -308,6 +381,20 @@ def log_user_activity(user_id, name, role, email="", request=None):
             "date_formatted": now.strftime("%d/%m/%Y"),
         }
 
+        # 1. Save to PostgreSQL Database
+        try:
+            UserActivityLog.objects.create(
+                user_id=str(user_id),
+                user_name=name,
+                role=role,
+                email=email,
+                ip_address=ip,
+                device=f"{device} ({os_name} - {browser})"
+            )
+        except Exception as db_err:
+            print("Database log activity error:", db_err)
+
+        # 2. Save to JSON file as fallback
         logs.insert(0, entry)
         logs = logs[:100]
         write_json_file(logs_file, logs)

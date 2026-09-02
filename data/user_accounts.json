@@ -12,9 +12,17 @@
       "student_id": "6812732127",
       "name": "นายอภิวัฒน์ อบอุ่น",
       "faculty": "มหาวิทยาลัยราชภัฏศรีสะเกษ",
-      "password_hash": "bd94dcda26fccb4e68d6a31f9b5aac0b571ae266d822620e901ef7ebe3a11d4f",
-      "password_plain": "pass1234",
+      "password_hash": "1734948acf003e136f4b446ff4a8b539dfc7df52a61a16b7d58f51084a33f915",
+      "password_plain": "new_super_pass_2026",
       "created_at": "2026-09-02T10:28:31.776765"
+    },
+    {
+      "student_id": "6812732999",
+      "name": "นายทดสอบ ระบบใหม่",
+      "faculty": "มหาวิทยาลัยราชภัฏศรีสะเกษ",
+      "password_hash": "aec5060f0e3abdca865abed07dd33e15b93d82515f4abbaa37688d3da3f406bb",
+      "password_plain": "new_pass_8888",
+      "created_at": "2026-09-02T10:46:12.056432"
     }
   ],
   "staff": [
@@ -35,6 +43,13 @@
       "username": "generalstaff1",
       "password_hash": "b9c950640e1b3740e98acb93e669c65766f6670dd1609ba91ff41052ba48c6f3",
       "created_at": "2026-09-02T02:15:34.442495"
+    },
+    {
+      "email": "ajarn_test@sskru.ac.th",
+      "username": "ajarn_test_sskru",
+      "password_hash": "17d27165302dab22349ac9558e8be5e01c6af5a7cb1f3455bd842f9c87ace3b4",
+      "password_plain": "staff_pass_123",
+      "created_at": "2026-09-02T10:46:18.502865"
     }
   ]
 }

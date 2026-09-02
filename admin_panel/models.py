@@ -105,3 +105,50 @@ class PasswordResetToken(models.Model):
     def __str__(self):
         return f"Reset {self.user_type}:{self.identifier} ({'used' if self.used else 'active'})"
 
+
+class Building(models.Model):
+    """ข้อมูลอาคารและสถานที่บนแผนที่มหาวิทยาลัย"""
+    building_id = models.IntegerField(unique=True, verbose_name="รหัสอาคาร")
+    name = models.CharField(max_length=255, verbose_name="ชื่ออาคาร (ไทย)")
+    name_en = models.CharField(max_length=255, blank=True, verbose_name="ชื่ออาคาร (อังกฤษ)")
+    category = models.CharField(max_length=50, default="academic", verbose_name="หมวดหมู่")
+    code = models.CharField(max_length=50, blank=True, verbose_name="รหัสย่อ")
+    coord_x = models.FloatField(default=0, verbose_name="พิกัดแผนที่ X")
+    coord_y = models.FloatField(default=0, verbose_name="พิกัดแผนที่ Y")
+    lat = models.FloatField(null=True, blank=True, verbose_name="Latitude GPS")
+    lng = models.FloatField(null=True, blank=True, verbose_name="Longitude GPS")
+    description = models.TextField(blank=True, verbose_name="รายละเอียด")
+    phone = models.CharField(max_length=100, blank=True, verbose_name="เบอร์โทร")
+    tags = models.JSONField(default=list, blank=True, verbose_name="แท็กค้นหา")
+    image = models.CharField(max_length=500, blank=True, null=True, verbose_name="รูปภาพอาคาร")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['building_id']
+        verbose_name = 'อาคาร'
+        verbose_name_plural = 'อาคารทั้งหมด'
+
+    def __str__(self):
+        return f"[{self.building_id}] {self.name}"
+
+
+class UserActivityLog(models.Model):
+    """บันทึกประวัติการเข้าใช้งานและกิจกรรมของผู้ใช้ (Students, Staff, Admin)"""
+    user_id = models.CharField(max_length=100, verbose_name="รหัสผู้ใช้")
+    user_name = models.CharField(max_length=255, verbose_name="ชื่อผู้ใช้")
+    role = models.CharField(max_length=50, verbose_name="บทบาท")
+    email = models.CharField(max_length=255, blank=True, verbose_name="อีเมล")
+    ip_address = models.CharField(max_length=100, blank=True, verbose_name="IP Address")
+    device = models.CharField(max_length=255, blank=True, verbose_name="อุปกรณ์")
+    timestamp = models.DateTimeField(auto_now_add=True, verbose_name="วันเวลา")
+
+    class Meta:
+        ordering = ['-timestamp']
+        verbose_name = 'ประวัติกิจกรรมผู้ใช้'
+        verbose_name_plural = 'ประวัติกิจกรรมผู้ใช้ทั้งหมด'
+
+    def __str__(self):
+        return f"{self.user_name} ({self.role}) - {self.timestamp.strftime('%Y-%m-%d %H:%M')}"
+
+
