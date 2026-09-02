@@ -1833,8 +1833,22 @@ def staff_request_reset_api(request):
         # Generate Secure Token & OTP
         token = secrets.token_hex(24)
         otp = str(secrets.randbelow(900000) + 100000)
+        expires_at_dt = timezone.now() + timedelta(minutes=15)
         expires_at = (datetime.now() + timedelta(minutes=15)).isoformat()
 
+        # 1. Save to PostgreSQL Database
+        PasswordResetToken.objects.filter(identifier=target_username, used=False).delete()
+        PasswordResetToken.objects.create(
+            user_type="staff",
+            identifier=target_username,
+            email=target_email,
+            token=token,
+            otp=otp,
+            expires_at=expires_at_dt,
+            used=False,
+        )
+
+        # 2. Save to JSON file as fallback
         resets = read_json_file(RESETS_FILE, default=[])
         resets = [
             r
@@ -1940,7 +1954,7 @@ def staff_request_reset_api(request):
 
 @csrf_exempt
 def staff_verify_reset_token_api(request):
-    """ขั้นตอนที่ 2: ตรวจสอบความถูกต้องของ Token หรือ OTP ยืนยันสิทธิ์สำหรับบุคลากร"""
+    """ขั้นตอนที่ 2: ตรวจสอบความถูกต้องของ Token หรือ OTP ยืนยันสิทธิ์สำหรับบุคลากร (Database First)"""
     if request.method != "POST":
         return JsonResponse(
             {"success": False, "message": "Method not allowed"}, status=405
@@ -1951,6 +1965,33 @@ def staff_verify_reset_token_api(request):
         token = str(data.get("token") or "").strip()
         otp = str(data.get("otp") or "").strip()
 
+        # 1. Look up in PostgreSQL
+        if token:
+            db_reset = PasswordResetToken.objects.filter(token=token, used=False).first()
+        elif otp:
+            db_reset = PasswordResetToken.objects.filter(otp=otp, used=False).first()
+        else:
+            db_reset = None
+
+        if db_reset:
+            if timezone.now() > db_reset.expires_at:
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "message": "ลิงก์ยืนยันตัวตนหมดอายุแล้ว กรุณาทำรายการใหม่อีกครั้ง",
+                    },
+                    status=400,
+                )
+            return JsonResponse(
+                {
+                    "success": True,
+                    "token": db_reset.token,
+                    "username": db_reset.identifier,
+                    "email": db_reset.email,
+                }
+            )
+
+        # 2. Look up in JSON file
         resets = read_json_file(RESETS_FILE, default=[])
         matched = None
         for r in resets:
@@ -1992,7 +2033,7 @@ def staff_verify_reset_token_api(request):
 
 @csrf_exempt
 def staff_confirm_new_password_api(request):
-    """ขั้นตอนที่ 3: บันทึกรหัสผ่านใหม่สำหรับบัญชีบุคลากรหลังจากยืนยันสิทธิ์อีเมลสำเร็จ"""
+    """ขั้นตอนที่ 3: บันทึกรหัสผ่านใหม่สำหรับบัญชีบุคลากรหลังจากยืนยันสิทธิ์สำเร็จ (PostgreSQL Database)"""
     if request.method != "POST":
         return JsonResponse(
             {"success": False, "message": "Method not allowed"}, status=405
@@ -2008,31 +2049,58 @@ def staff_confirm_new_password_api(request):
                 {"success": False, "message": "ข้อมูลไม่ครบถ้วน"}, status=400
             )
 
-        resets = read_json_file(RESETS_FILE, default=[])
-        matched = next(
-            (r for r in resets if r.get("token") == token and not r.get("used")), None
-        )
+        username = None
+        email = None
 
-        if not matched:
-            return JsonResponse(
-                {"success": False, "message": "Token ยืนยันสิทธิ์ไม่ถูกต้องหรือหมดอายุ"},
-                status=400,
+        # 1. Check in PostgreSQL
+        db_token = PasswordResetToken.objects.filter(token=token, used=False).first()
+        if db_token:
+            if timezone.now() > db_token.expires_at:
+                return JsonResponse(
+                    {"success": False, "message": "Token หมดอายุแล้ว กรุณาทำรายการใหม่อีกครั้ง"},
+                    status=400,
+                )
+            username = db_token.identifier
+            email = db_token.email
+            db_token.used = True
+            db_token.save()
+
+        # 2. Check in JSON
+        if not username:
+            resets = read_json_file(RESETS_FILE, default=[])
+            matched = next(
+                (r for r in resets if r.get("token") == token and not r.get("used")), None
             )
+            if not matched:
+                return JsonResponse(
+                    {"success": False, "message": "Token ยืนยันสิทธิ์ไม่ถูกต้องหรือหมดอายุ"},
+                    status=400,
+                )
+            exp = datetime.fromisoformat(matched.get("expires_at"))
+            if datetime.now() > exp:
+                return JsonResponse(
+                    {"success": False, "message": "Token หมดอายุแล้ว กรุณาทำรายการใหม่อีกครั้ง"},
+                    status=400,
+                )
+            username = matched.get("username")
+            email = matched.get("email")
+            matched["used"] = True
+            write_json_file(RESETS_FILE, resets)
 
-        exp = datetime.fromisoformat(matched.get("expires_at"))
-        if datetime.now() > exp:
-            return JsonResponse(
-                {"success": False, "message": "Token หมดอายุแล้ว กรุณาทำรายการใหม่อีกครั้ง"},
-                status=400,
-            )
-
-        username = matched.get("username")
-        email = matched.get("email")
-
-        # Update Accounts DB
-        accounts = read_json_file(ACCOUNTS_FILE, default={"students": [], "staff": []})
         hashed_pass = hashlib.sha256(new_password.encode("utf-8")).hexdigest()
 
+        # 3. Update StaffUser in PostgreSQL
+        staff_db = (
+            StaffUser.objects.filter(username__iexact=username).first()
+            or StaffUser.objects.filter(email__iexact=email).first()
+        )
+        if staff_db:
+            staff_db.password_hash = hashed_pass
+            staff_db.password_plain = new_password
+            staff_db.save()
+
+        # 4. Update JSON accounts
+        accounts = read_json_file(ACCOUNTS_FILE, default={"students": [], "staff": []})
         staff_acc = next(
             (
                 acc
@@ -2056,14 +2124,10 @@ def staff_confirm_new_password_api(request):
             )
         write_json_file(ACCOUNTS_FILE, accounts)
 
-        # Mark token used
-        matched["used"] = True
-        write_json_file(RESETS_FILE, resets)
-
         return JsonResponse(
             {
                 "success": True,
-                "message": "สร้างและตั้งรหัสผ่านใหม่สำหรับบุคลากรสำเร็จ! ท่านสามารถเข้าสู่ระบบด้วยรหัสผ่านใหม่ได้ทันที",
+                "message": "ตั้งรหัสผ่านใหม่สำเร็จ! ท่านสามารถเข้าสู่ระบบด้วยรหัสผ่านใหม่ได้ทันที",
             }
         )
     except Exception as e:
