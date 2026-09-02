@@ -236,6 +236,24 @@
     .form-input:focus + .input-icon, .form-input:focus ~ .input-icon {
       color: var(--primary-light);
     }
+    .btn-toggle-pw {
+      position: absolute;
+      right: 12px;
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 15px;
+      cursor: pointer;
+      padding: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.2s;
+      z-index: 5;
+    }
+    .btn-toggle-pw:hover {
+      color: var(--primary-light);
+    }
 
     .btn-primary {
       width: 100%;
@@ -327,7 +345,10 @@
             <label class="form-label">รหัสผ่าน (Password)</label>
             <div class="input-wrapper">
               <i class="fa-solid fa-lock input-icon"></i>
-              <input type="password" id="login-student-pass" class="form-input" placeholder="กรอกรหัสผ่าน" required />
+              <input type="password" id="login-student-pass" class="form-input" style="padding-right: 42px;" placeholder="กรอกรหัสผ่าน" required />
+              <button type="button" class="btn-toggle-pw" onclick="togglePasswordVisibility('login-student-pass', this)" title="แสดง/ซ่อนรหัสผ่าน">
+                <i class="fa-solid fa-eye"></i>
+              </button>
             </div>
           </div>
           <button type="submit" class="btn-primary">
@@ -359,7 +380,10 @@
             <label class="form-label">รหัสผ่าน (Password)</label>
             <div class="input-wrapper">
               <i class="fa-solid fa-lock input-icon"></i>
-              <input type="password" id="staff-password" class="form-input" placeholder="กรอกรหัสผ่าน" required />
+              <input type="password" id="staff-password" class="form-input" style="padding-right: 42px;" placeholder="กรอกรหัสผ่าน" required />
+              <button type="button" class="btn-toggle-pw" onclick="togglePasswordVisibility('staff-password', this)" title="แสดง/ซ่อนรหัสผ่าน">
+                <i class="fa-solid fa-eye"></i>
+              </button>
             </div>
           </div>
           <button type="submit" class="btn-primary">
@@ -447,6 +471,24 @@
         }
       } catch (e) {
         alert('เกิดข้อผิดพลาดในการเข้าสู่ระบบ');
+      }
+    }
+    function togglePasswordVisibility(inputId, btn) {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      const icon = btn.querySelector('i');
+      if (input.type === 'password') {
+        input.type = 'text';
+        if (icon) {
+          icon.classList.remove('fa-eye');
+          icon.classList.add('fa-eye-slash');
+        }
+      } else {
+        input.type = 'password';
+        if (icon) {
+          icon.classList.remove('fa-eye-slash');
+          icon.classList.add('fa-eye');
+        }
       }
     }
   </script>

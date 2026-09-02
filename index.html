@@ -722,9 +722,12 @@
           เพื่อความปลอดภัยของข้อมูลส่วนบุคคล กรุณากรอกรหัสผ่านบัญชีของคุณเพื่อปลดล็อคการแสดงผล
         </p>
         <div class="form-group" style="margin-bottom:12px;">
-          <div class="input-wrapper" style="position:relative;">
-            <i class="fa-solid fa-key" style="position:absolute; left:12px; top:12px; color:#94a3b8; font-size:14px;"></i>
-            <input type="password" id="privacy-password-input" class="form-input" style="width:100%; padding:10px 14px 10px 38px; border-radius:10px; border:1.5px solid #cbd5e1; font-size:13px;" placeholder="กรอกรหัสผ่านของคุณ" />
+          <div class="input-wrapper" style="position:relative; display:flex; align-items:center;">
+            <i class="fa-solid fa-key" style="position:absolute; left:12px; color:#94a3b8; font-size:14px;"></i>
+            <input type="password" id="privacy-password-input" class="form-input" style="width:100%; padding:10px 38px 10px 38px; border-radius:10px; border:1.5px solid #cbd5e1; font-size:13px;" placeholder="กรอกรหัสผ่านของคุณ" />
+            <button type="button" onclick="togglePasswordVisibility('privacy-password-input', this)" style="position:absolute; right:10px; background:none; border:none; color:#94a3b8; cursor:pointer; font-size:14px; padding:4px;" title="แสดง/ซ่อนรหัสผ่าน">
+              <i class="fa-solid fa-eye"></i>
+            </button>
           </div>
           <div id="privacy-error-msg" style="color:#ef4444; font-size:12px; margin-top:6px; display:none;"></div>
         </div>
