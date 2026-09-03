@@ -2,7 +2,7 @@ import json
 import os
 import subprocess
 
-BASE_DIR = "/Users/monphrakan/Mark_map"
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MYSQL_BIN = "/Applications/XAMPP/xamppfiles/bin/mysql"
 
 def escape_sql(val):

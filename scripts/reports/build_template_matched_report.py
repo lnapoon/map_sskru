@@ -41,6 +41,8 @@ def add_p(doc, text="", font_name="Angsana New", size_pt=16, bold=False, align=N
         set_font_run(run, font_name, size_pt, bold)
     return p
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 def create_template_matched_report():
     doc = Document()
 
@@ -56,7 +58,7 @@ def create_template_matched_report():
     # ═════════════════════════════════════════════════════════════════════════
     
     # University Logo
-    logo_path = "/Users/monphrakan/Mark_map/images/image1.png"
+    logo_path = os.path.join(BASE_DIR, "images", "image1.png")
     if os.path.exists(logo_path):
         p_logo = doc.add_paragraph()
         p_logo.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -146,7 +148,7 @@ def create_template_matched_report():
     add_p(doc, "แผนภาพความสัมพันธ์ของข้อมูล (E-R Diagram)", font_name="Angsana New", size_pt=18, bold=True, align=WD_ALIGN_PARAGRAPH.CENTER, space_after=10)
 
     # Embed ER Diagram image
-    erd_img = "/Users/monphrakan/Mark_map/images/er_diagram_hd.png"
+    erd_img = os.path.join(BASE_DIR, "images", "er_diagram_hd.png")
     if os.path.exists(erd_img):
         p_erd = doc.add_paragraph()
         p_erd.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -301,8 +303,8 @@ def create_template_matched_report():
     add_p(doc, "การอนุมัติสิทธิ์: แอดมินสามารถตรวจสอบรายชื่อบุคลากรที่สมัครเข้ามา และกดยืนยันอนุมัติสิทธิ์ (Approve) ได้ทันที", font_name="Angsana New", size_pt=16)
     add_p(doc, "รายงานสถิติ: แสดงกราฟสถิติผู้เข้าชมรายสัปดาห์, สัดส่วนอุปกรณ์ (iOS/Android/Desktop) และจัดอันดับอาคารยอดนิยมที่มีการสืบค้นและนำทางมากที่สุด", font_name="Angsana New", size_pt=16)
 
-    # Save to both target file and report file
-    output_path = "/Users/monphrakan/Mark_map/SSKRU_Campus_Map_Report.docx"
+    # Save to report file in docs/
+    output_path = os.path.join(BASE_DIR, "docs", "SSKRU_Campus_Map_Report.docx")
     doc.save(output_path)
     print(f"Template-matched report generated successfully at: {output_path}")
 

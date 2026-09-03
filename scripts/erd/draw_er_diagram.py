@@ -1,5 +1,8 @@
+import os
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 def draw_er_diagram():
     fig, ax = plt.subplots(figsize=(20, 13), dpi=300)
@@ -213,7 +216,7 @@ def draw_er_diagram():
     ax.set_ylim(0, 13)
 
     plt.tight_layout()
-    output_img = "/Users/monphrakan/Mark_map/images/er_diagram_hd.png"
+    output_img = os.path.join(BASE_DIR, "images", "er_diagram_hd.png")
     plt.savefig(output_img, dpi=300, bbox_inches='tight', facecolor='#F8FAFC')
     plt.close()
     print(f"High-res ER Diagram generated at: {output_img}")

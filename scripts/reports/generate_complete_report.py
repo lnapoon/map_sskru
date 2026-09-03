@@ -71,6 +71,8 @@ def add_body_paragraph(doc, text, indent=True):
     run.font.color.rgb = RGBColor(0x1E, 0x29, 0x3B)
     return p
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 def create_complete_report():
     doc = Document()
     
@@ -177,7 +179,7 @@ def create_complete_report():
     )
 
     # Embed High-Res ER Diagram Image
-    img_path = "/Users/monphrakan/Mark_map/images/er_diagram_hd.png"
+    img_path = os.path.join(BASE_DIR, "images", "er_diagram_hd.png")
     if os.path.exists(img_path):
         p_img = doc.add_paragraph()
         p_img.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -419,7 +421,7 @@ def create_complete_report():
         run.font.size = Pt(16)
 
     # Save final docx
-    output_path = "/Users/monphrakan/Mark_map/SSKRU_Campus_Map_Report.docx"
+    output_path = os.path.join(BASE_DIR, "docs", "SSKRU_Campus_Map_Report.docx")
     doc.save(output_path)
     print(f"Complete report generated at: {output_path}")
 

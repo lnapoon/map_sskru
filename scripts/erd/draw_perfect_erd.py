@@ -1,7 +1,10 @@
+import os
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.path import Path
 import matplotlib.font_manager as fm
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 def setup_font():
     # Find best available font that supports both Thai and English
@@ -321,7 +324,7 @@ def draw_erd():
     ax.set_ylim(0, 15)
 
     plt.tight_layout()
-    output_img = "/Users/monphrakan/Mark_map/images/er_diagram_hd.png"
+    output_img = os.path.join(BASE_DIR, "images", "er_diagram_hd.png")
     plt.savefig(output_img, dpi=300, bbox_inches='tight', facecolor='#F8FAFC')
     plt.close()
     print(f"High-Precision ER Diagram generated at: {output_img}")

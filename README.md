@@ -24,6 +24,7 @@ Mark_map/
 │   │   └── 📄 styles.css                  # Glassmorphic Design System
 │   ├── 📁 js/
 │   │   ├── 📄 app.js                      # โค้ดแผนที่ Leaflet, Dijkstra, Admin Tools
+│   │   ├── 📄 dialog.js                   # Custom Dialog Modal Helpers
 │   │   └── 📄 sw.js                       # Service Worker (PWA Offline)
 │   └── 📄 manifest.json                   # Web App Manifest (PWA)
 │
@@ -47,12 +48,29 @@ Mark_map/
 │   ├── 📄 password_resets.json            # Token & OTP รีเซ็ตรหัสผ่าน
 │   └── 📄 pdpa_policy.json                # นโยบายความเป็นส่วนตัว (PDPA)
 │
-├── 📂 database/                           # ═══ สคริปต์จัดการฐานข้อมูล ═══
-│   └── 📄 migrate_schema.py              # สร้าง 8 ตาราง Relational ใน phpMyAdmin
+├── 📂 database/                           # ═══ สคริปต์และไฟล์ฐานข้อมูล MySQL ═══
+│   ├── 📄 migrate_schema.py              # สร้าง 8 ตาราง Relational ใน phpMyAdmin
+│   ├── 📄 sync_to_mysql.py                # Sync ข้อมูล JSON เข้าตาราง MySQL
+│   ├── 📄 full_sync.sql                   # SQL Script สำหรับ Full Sync
+│   └── 📄 sskru_map_dump.sql              # Database Dump File
 │
-├── 📂 images/                             # ═══ รูปภาพแผนที่ ═══
+├── 📂 docs/                               # ═══ เอกสารและรายงานวิชาการ ═══
+│   └── 📄 SSKRU_Campus_Map_Report.docx    # รายงานฉบับสมบูรณ์ (พร้อม ERD & รูปเล่ม)
+│
+├── 📂 scripts/                            # ═══ สคริปต์เครื่องมือเสริม (Utilities) ═══
+│   ├── 📁 reports/                        # สคริปต์สร้างไฟล์รายงาน Word
+│   │   ├── 📄 build_template_matched_report.py
+│   │   ├── 📄 generate_complete_report.py
+│   │   └── 📄 generate_report.py
+│   └── 📁 erd/                            # สคริปต์วาดไดอะแกรม ER-Diagram HD
+│       ├── 📄 draw_perfect_erd.py
+│       ├── 📄 draw_complete_connected_erd.py
+│       └── 📄 draw_er_diagram.py
+│
+├── 📂 images/                             # ═══ รูปภาพแผนที่และ Asset กราฟิก ═══
 │   ├── 🖼️ Map.png                         # แผนที่ 3D ความละเอียดสูง (3072×2048)
-│   └── 🖼️ Map_original.png               # ภาพถ่ายทางอากาศต้นฉบับ
+│   ├── 🖼️ Map_original.png               # ภาพถ่ายทางอากาศต้นฉบับ
+│   └── 🖼️ er_diagram_hd.png               # แผนภาพ E-R Diagram ความคมชัดสูง (300 DPI)
 │
 ├── 📂 deploy/                             # ═══ ไฟล์สำหรับ Deploy ═══
 │   ├── 📄 build_vercel.sh                 # Build Script สำหรับ Vercel

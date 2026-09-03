@@ -21,6 +21,8 @@ def set_cell_margins(cell, top=100, bottom=100, left=150, right=150):
         tcMar.append(node)
     tcPr.append(tcMar)
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 def create_report():
     doc = Document()
     
@@ -114,7 +116,7 @@ def create_report():
     p_er.paragraph_format.first_line_indent = Inches(0.5)
 
     # Embed High-Res ER Diagram Image
-    img_path = "/Users/monphrakan/Mark_map/images/er_diagram_hd.png"
+    img_path = os.path.join(BASE_DIR, "images", "er_diagram_hd.png")
     if os.path.exists(img_path):
         p_img = doc.add_paragraph()
         p_img.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -305,8 +307,8 @@ def create_report():
     )
     p_pdpa.paragraph_format.first_line_indent = Inches(0.5)
 
-    # Save to project folder
-    output_path = "/Users/monphrakan/Mark_map/SSKRU_Campus_Map_Report.docx"
+    # Save to docs folder
+    output_path = os.path.join(BASE_DIR, "docs", "SSKRU_Campus_Map_Report.docx")
     doc.save(output_path)
     print(f"Report created successfully at: {output_path}")
 
