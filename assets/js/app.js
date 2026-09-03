@@ -1714,10 +1714,10 @@ async function handleLogout() {
 
 // Load dataset (Instant initial render + ultra-fast async background sync)
 async function loadBuildingsData() {
-  const CURRENT_DATA_VER = "v15.0";
-  if (localStorage.getItem("sskru_data_version") !== CURRENT_DATA_VER) {
+  const CURRENT_DATA_VER = "v16.0_" + Date.now();
+  if (localStorage.getItem("sskru_data_version") !== "v16.0") {
     localStorage.removeItem("sskru_buildings");
-    localStorage.setItem("sskru_data_version", CURRENT_DATA_VER);
+    localStorage.setItem("sskru_data_version", "v16.0");
   }
 
   // 1. Instant Render from local memory / cache (0ms delay!)
@@ -1738,14 +1738,19 @@ async function loadBuildingsData() {
   populateDropdownSelectors();
   renderMarkers();
 
-  // 2. Fast Async Sync from Backend API / Static JSON with 1.2s timeout
+  // 2. Fast Async Sync from Backend API / Static JSON with cache busting
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 1200);
+  const timeoutId = setTimeout(() => controller.abort(), 2000);
 
-  const endpoints = ['/api/buildings', '/admin/api/buildings/', 'auth/api.php', 'data/buildings.json'];
+  const isPhpEnv = window.location.pathname.endsWith('.php') || window.location.pathname.includes('sskru_map') || window.location.pathname.includes('Mark_map');
+  const cacheBuster = `?t=${Date.now()}`;
+  const endpoints = isPhpEnv
+    ? ['auth/api.php' + cacheBuster, 'data/buildings.json' + cacheBuster, '/api/buildings' + cacheBuster]
+    : ['/api/buildings' + cacheBuster, '/admin/api/buildings/' + cacheBuster, 'auth/api.php' + cacheBuster, 'data/buildings.json' + cacheBuster];
+
   for (const ep of endpoints) {
     try {
-      const response = await fetch(ep, { signal: controller.signal });
+      const response = await fetch(ep, { signal: controller.signal, cache: 'no-store' });
       if (response.ok) {
         const json = await response.json();
         const dataArr = json.data || (Array.isArray(json) ? json : null);
