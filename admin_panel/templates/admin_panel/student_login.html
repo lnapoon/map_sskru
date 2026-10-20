@@ -154,28 +154,190 @@
       padding: 4px;
       border-radius: 14px;
       border: 1px solid #e2e8f0;
+      gap: 4px;
     }
     .role-btn {
       flex: 1;
-      padding: 11px 12px;
+      padding: 10px 8px;
       border: none;
       background: transparent;
       color: var(--text-secondary);
       font-family: inherit;
-      font-size: 13.5px;
+      font-size: 12.5px;
       font-weight: 600;
       cursor: pointer;
       border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
+      gap: 5px;
       transition: all 0.25s ease;
+      white-space: nowrap;
     }
     .role-btn.active {
       background: var(--primary);
       color: white;
       box-shadow: 0 4px 12px rgba(26, 79, 160, 0.3);
+    }
+    .role-btn#tab-guest.active {
+      background: linear-gradient(135deg, #0284c7, #0ea5e9);
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);
+    }
+
+    /* Guest Card & Direct Entry */
+    .guest-card-box {
+      text-align: center;
+      padding: 6px 2px 2px;
+    }
+    .guest-card-icon {
+      width: 58px;
+      height: 58px;
+      margin: 0 auto 12px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, rgba(2,132,199,0.12), rgba(14,165,233,0.22));
+      color: #0284c7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      box-shadow: 0 6px 16px rgba(2,132,199,0.15);
+    }
+    .guest-card-title {
+      font-size: 16.5px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 5px;
+    }
+    .guest-card-subtitle {
+      font-size: 12.5px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin-bottom: 14px;
+    }
+    .guest-badge-notice {
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      color: #0369a1;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-align: left;
+      margin-bottom: 14px;
+      line-height: 1.4;
+    }
+    .guest-badge-notice i {
+      font-size: 16px;
+      color: #0284c7;
+      flex-shrink: 0;
+    }
+    .guest-features-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      text-align: left;
+      margin-bottom: 18px;
+    }
+    .guest-feature-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 9px 12px;
+      transition: all 0.2s;
+    }
+    .guest-feature-item:hover {
+      border-color: #cbd5e1;
+      background: #ffffff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+    .guest-feature-item .feat-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      background: #e0f2fe;
+      color: #0284c7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13.5px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .guest-feature-item .feat-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .guest-feature-item .feat-title {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .guest-feature-item .feat-desc {
+      font-size: 11.5px;
+      color: var(--text-secondary);
+      line-height: 1.35;
+    }
+    .btn-guest-start {
+      background: linear-gradient(135deg, #0284c7, #0ea5e9);
+      box-shadow: 0 4px 16px rgba(2, 132, 199, 0.35);
+    }
+    .btn-guest-start:hover {
+      box-shadow: 0 6px 20px rgba(2, 132, 199, 0.45);
+    }
+    .guest-direct-entry {
+      margin-top: 14px;
+      text-align: center;
+    }
+    .guest-direct-divider {
+      position: relative;
+      text-align: center;
+      margin: 14px 0 10px;
+    }
+    .guest-direct-divider::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: #e2e8f0;
+    }
+    .guest-direct-divider span {
+      position: relative;
+      background: #ffffff;
+      padding: 0 10px;
+      font-size: 11.5px;
+      color: #94a3b8;
+    }
+    .btn-guest-direct {
+      width: 100%;
+      padding: 10px 14px;
+      background: #f0f9ff;
+      border: 1.5px dashed #7dd3fc;
+      border-radius: 12px;
+      color: #0369a1;
+      font-family: inherit;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      transition: all 0.2s ease;
+    }
+    .btn-guest-direct:hover {
+      background: #e0f2fe;
+      border-color: #0284c7;
+      color: #0c4a6e;
+      border-style: solid;
+      box-shadow: 0 2px 10px rgba(2, 132, 199, 0.15);
     }
 
     .card-body {
@@ -323,10 +485,13 @@
     <!-- Main Role Switcher Tabs -->
     <div class="role-switcher">
       <button class="role-btn active" id="tab-student" onclick="switchRole('student')">
-        <i class="fa-solid fa-user-graduate"></i> สำหรับนักศึกษา
+        <i class="fa-solid fa-user-graduate"></i> นักศึกษา
       </button>
       <button class="role-btn" id="tab-staff" onclick="switchRole('staff')">
-        <i class="fa-solid fa-user-tie"></i> สำหรับบุคลากร
+        <i class="fa-solid fa-user-tie"></i> บุคลากร
+      </button>
+      <button class="role-btn" id="tab-guest" onclick="switchRole('guest')">
+        <i class="fa-solid fa-person-walking-luggage"></i> บุคคลทั่วไป
       </button>
     </div>
 
@@ -364,6 +529,13 @@
             <i class="fa-solid fa-key"></i> ลืมรหัสผ่าน?
           </a>
         </div>
+
+        <div class="guest-direct-entry">
+          <div class="guest-direct-divider"><span>หรือเข้าชมทั่วไป</span></div>
+          <button type="button" class="btn-guest-direct" onclick="handleGuestLogin()">
+            <i class="fa-solid fa-person-walking-luggage"></i> ผู้มาติดต่อ / บุคคลทั่วไป เข้าดูแผนที่ได้เลย
+          </button>
+        </div>
       </div>
 
       <!-- 2. STAFF LOGIN PANEL -->
@@ -399,6 +571,59 @@
             <i class="fa-solid fa-key"></i> ลืมรหัสผ่าน?
           </a>
         </div>
+
+        <div class="guest-direct-entry">
+          <div class="guest-direct-divider"><span>หรือเข้าชมทั่วไป</span></div>
+          <button type="button" class="btn-guest-direct" onclick="handleGuestLogin()">
+            <i class="fa-solid fa-person-walking-luggage"></i> ผู้มาติดต่อ / บุคคลทั่วไป เข้าดูแผนที่ได้เลย
+          </button>
+        </div>
+      </div>
+
+      <!-- 3. GUEST / VISITOR PANEL -->
+      <div class="panel-content" id="panel-guest">
+        <div class="guest-card-box">
+          <div class="guest-card-icon">
+            <i class="fa-solid fa-map-location-dot"></i>
+          </div>
+          <h2 class="guest-card-title">เข้าชมแผนที่สำหรับบุคคลทั่วไป</h2>
+          <p class="guest-card-subtitle">
+            ยินดีต้อนรับผู้ปกครอง แขกผู้มีเกียรติ และผู้ใหญ่ที่เข้ามาติดต่อเยี่ยมชมมหาวิทยาลัยราชภัฏศรีสะเกษ
+          </p>
+
+          <div class="guest-badge-notice">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>เข้าดูแผนที่และใช้งานระบบนำทางได้ทันที โดยไม่ต้องลงทะเบียนหรือกรอกรหัสผ่าน</span>
+          </div>
+
+          <div class="guest-features-grid">
+            <div class="guest-feature-item">
+              <div class="feat-icon"><i class="fa-solid fa-building-columns"></i></div>
+              <div class="feat-text">
+                <span class="feat-title">ค้นหาอาคาร & จุดสำคัญ</span>
+                <span class="feat-desc">ค้นหาตึกเรียน อาคารสำนักงาน คณะ ศูนย์บริการ และสถานที่ต่างๆ ใน มรภ.ศรีสะเกษ</span>
+              </div>
+            </div>
+            <div class="guest-feature-item">
+              <div class="feat-icon"><i class="fa-solid fa-location-crosshairs"></i></div>
+              <div class="feat-text">
+                <span class="feat-title">ระบบนำทางเดินเท้า GPS</span>
+                <span class="feat-desc">ระบุพิกัดตำแหน่งจริงและคำนวณเส้นทางเดินเท้าไปยังอาคารเป้าหมาย</span>
+              </div>
+            </div>
+            <div class="guest-feature-item">
+              <div class="feat-icon"><i class="fa-solid fa-shield-halved"></i></div>
+              <div class="feat-text">
+                <span class="feat-title">โหมดผู้เยี่ยมชม (ไม่มีข้อมูลนักศึกษา)</span>
+                <span class="feat-desc">ไม่มีข้อมูลนักศึกษาหรือประวัติส่วนบุคคลใดๆ สะดวก รวดเร็ว และเป็นส่วนตัว</span>
+              </div>
+            </div>
+          </div>
+
+          <button type="button" class="btn-primary btn-guest-start" onclick="handleGuestLogin()">
+            <i class="fa-solid fa-compass"></i> เข้าสู่แผนที่ทันที (สำหรับบุคคลทั่วไป)
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -416,12 +641,40 @@
       }
     }
 
+    // Check query params for tab switching (e.g. ?role=guest)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('role') === 'guest') {
+      switchRole('guest');
+    } else if (urlParams.get('role') === 'staff') {
+      switchRole('staff');
+    }
+
     function switchRole(role) {
       document.querySelectorAll('.role-btn').forEach(btn => btn.classList.remove('active'));
       document.querySelectorAll('.panel-content').forEach(panel => panel.classList.remove('active'));
       
-      document.getElementById('tab-' + role).classList.add('active');
-      document.getElementById('panel-' + role).classList.add('active');
+      const tabEl = document.getElementById('tab-' + role);
+      const panelEl = document.getElementById('panel-' + role);
+      if (tabEl) tabEl.classList.add('active');
+      if (panelEl) panelEl.classList.add('active');
+    }
+
+    async function handleGuestLogin() {
+      const isPhp = window.location.pathname.endsWith('.php');
+      const apiEndpoint = isPhp ? 'auth/api.php?action=guest_login' : '/admin/api/auth/guest_login/';
+      try {
+        await fetch(apiEndpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({})
+        });
+      } catch (e) {
+        console.warn('Guest login session error', e);
+      }
+      localStorage.setItem('sskru_guest_mode', 'true');
+      localStorage.setItem('sskru_data_consent', 'granted');
+      localStorage.setItem('sskru_pdpa_consent', 'granted');
+      window.location.href = isPhp ? 'index.php' : '/';
     }
 
     async function handleStudentLogin(e) {
@@ -438,6 +691,9 @@
         });
         const data = await res.json();
         if (data.success) {
+          localStorage.removeItem('sskru_guest_mode');
+          localStorage.setItem('sskru_data_consent', 'granted');
+          localStorage.setItem('sskru_pdpa_consent', 'granted');
           window.location.href = isPhp ? 'index.php' : '/';
         } else {
           await showSskruAlert({ title: 'เข้าสู่ระบบไม่สำเร็จ', message: data.message || 'รหัสนักศึกษาหรือรหัสผ่านไม่ถูกต้อง', type: 'error' });
@@ -461,6 +717,7 @@
         });
         const data = await res.json();
         if (data.success) {
+          localStorage.removeItem('sskru_guest_mode');
           localStorage.setItem('sskru_data_consent', 'granted');
           localStorage.setItem('sskru_pdpa_consent', 'granted');
           if (isPhp) {

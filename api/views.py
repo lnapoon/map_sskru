@@ -127,13 +127,14 @@ def write_buildings(data):
     return True
 
 def index_view(request):
-    # Check if admin, student, or staff
+    # Check if admin, student, staff, or guest
     from admin_panel.views import validate_admin_token
     is_admin = validate_admin_token(request)
     is_student = request.session.get('student_id') is not None
     is_staff = (request.session.get('user_role') == 'staff') or ('staff_username' in request.session)
+    is_guest = request.session.get('user_role') == 'guest'
     
-    if not (is_admin or is_student or is_staff):
+    if not (is_admin or is_student or is_staff or is_guest):
         return redirect('/login/')
         
     index_file = BASE_DIR / 'index.html'

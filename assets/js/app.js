@@ -1170,7 +1170,7 @@ function toggleTheme() {
 }
 
 // Global User Info
-let currentUserInfo = { isAdmin: false, isStudent: false, isStaff: false, staffUsername: '', studentId: '', studentName: '' };
+let currentUserInfo = { isAdmin: false, isStudent: false, isStaff: false, isGuest: true, staffUsername: '', studentId: '', studentName: '' };
 
 function isUserAdmin() {
   return Boolean(isAdminMode || currentUserInfo.isAdmin || document.querySelector(".app-container")?.classList.contains("admin-active"));
@@ -1183,11 +1183,13 @@ async function fetchAuthStatus() {
     const res = await fetch(endpoint, { credentials: 'same-origin' });
     const data = await res.json();
     if (data.success) {
-      isAdminMode = data.isAdmin;
+      isAdminMode = Boolean(data.isAdmin);
+      const isGuestMode = Boolean(data.isGuest || (!data.isAdmin && !data.isStudent && !data.isStaff));
       currentUserInfo = {
-        isAdmin: data.isAdmin,
-        isStudent: data.isStudent,
-        isStaff: data.isStaff,
+        isAdmin: Boolean(data.isAdmin),
+        isStudent: Boolean(data.isStudent),
+        isStaff: Boolean(data.isStaff),
+        isGuest: isGuestMode,
         staffUsername: data.staffUsername || '',
         studentId: data.studentId || '',
         studentName: data.studentName || '',
@@ -1225,26 +1227,48 @@ function updateDrawerUserInfo() {
   const isAdmin = currentUserInfo.isAdmin || isAdminMode || document.querySelector(".app-container")?.classList.contains("admin-active");
   
   if (isAdmin) {
-    usernameEl.textContent = 'ผู้ดูแลระบบ (Admin)';
-    subtitleEl.textContent = 'สิทธิ์: จัดการอาคาร, ลากหมุด, จัดการนักศึกษา';
-    avatarEl.innerHTML = '<i class="fa-solid fa-user-shield"></i>';
+    if (usernameEl) usernameEl.textContent = 'ผู้ดูแลระบบ (Admin)';
+    if (subtitleEl) subtitleEl.textContent = 'สิทธิ์: จัดการอาคาร, ลากหมุด, จัดการนักศึกษา';
+    if (avatarEl) {
+      avatarEl.innerHTML = '<i class="fa-solid fa-user-shield"></i>';
+      avatarEl.style.background = '';
+    }
     if (btnDrawerDash) btnDrawerDash.style.display = 'flex';
     if (adminDivider) adminDivider.style.display = 'block';
   } else if (currentUserInfo.isStaff && currentUserInfo.staffUsername) {
-    usernameEl.textContent = currentUserInfo.staffUsername;
-    subtitleEl.textContent = 'สิทธิ์: บุคลากร / อาจารย์';
-    avatarEl.innerHTML = '<i class="fa-solid fa-user-tie"></i>';
+    if (usernameEl) usernameEl.textContent = currentUserInfo.staffUsername;
+    if (subtitleEl) subtitleEl.textContent = 'สิทธิ์: บุคลากร / อาจารย์';
+    if (avatarEl) {
+      avatarEl.innerHTML = '<i class="fa-solid fa-user-tie"></i>';
+      avatarEl.style.background = '';
+    }
     if (btnDrawerDash) btnDrawerDash.style.display = 'none';
     if (adminDivider) adminDivider.style.display = 'none';
   } else if (currentUserInfo.isStudent && currentUserInfo.studentName) {
-    usernameEl.textContent = currentUserInfo.studentName;
-    subtitleEl.textContent = `รหัส: ${currentUserInfo.studentId}`;
-    avatarEl.innerHTML = '<i class="fa-solid fa-user-graduate"></i>';
+    if (usernameEl) usernameEl.textContent = currentUserInfo.studentName;
+    if (subtitleEl) subtitleEl.textContent = `รหัส: ${currentUserInfo.studentId}`;
+    if (avatarEl) {
+      avatarEl.innerHTML = '<i class="fa-solid fa-user-graduate"></i>';
+      avatarEl.style.background = '';
+    }
     if (btnDrawerDash) btnDrawerDash.style.display = 'none';
     if (adminDivider) adminDivider.style.display = 'none';
   } else {
+    // Visitor / Guest mode
+    if (usernameEl) usernameEl.textContent = 'ผู้เยี่ยมชมมหาวิทยาลัย';
+    if (subtitleEl) subtitleEl.textContent = 'บุคคลทั่วไป / ผู้ใหญ่ที่เข้ามาเยี่ยมชม';
+    if (avatarEl) {
+      avatarEl.innerHTML = '<i class="fa-solid fa-person-walking-luggage"></i>';
+      avatarEl.style.background = 'linear-gradient(135deg, #0284c7, #0ea5e9)';
+    }
     if (btnDrawerDash) btnDrawerDash.style.display = 'none';
     if (adminDivider) adminDivider.style.display = 'none';
+  }
+
+  const profileBtnSpan = document.querySelector('#btn-drawer-profile span');
+  if (profileBtnSpan) {
+    const isGuest = !currentUserInfo.isAdmin && !currentUserInfo.isStaff && !currentUserInfo.isStudent;
+    profileBtnSpan.textContent = isGuest ? 'ข้อมูลผู้เยี่ยมชม' : 'โปรไฟล์ของฉัน';
   }
 }
 
@@ -1257,6 +1281,31 @@ function updateProfilePrivacyDisplay() {
   const toggleBtn = document.getElementById('btn-toggle-privacy');
   const toggleLabel = document.getElementById('privacy-toggle-label');
   const privacyIcon = document.getElementById('privacy-icon');
+
+  const isGuest = !currentUserInfo.isAdmin && !currentUserInfo.isStaff && !currentUserInfo.isStudent;
+
+  if (isGuest) {
+    if (fullnameLockedEl) {
+      fullnameLockedEl.textContent = 'บุคคลทั่วไป / ผู้ใหญ่ที่เข้ามาเยี่ยมชม';
+      fullnameLockedEl.classList.remove('privacy-masked');
+    }
+    if (idEl) {
+      idEl.textContent = 'ไม่มี (โหมดผู้เยี่ยมชมภายนอก)';
+      idEl.classList.remove('privacy-masked');
+    }
+    if (emailLockedEl) {
+      emailLockedEl.textContent = '— (ไม่มีข้อมูลส่วนบุคคล)';
+      emailLockedEl.classList.remove('privacy-masked');
+    }
+    if (toggleBtn) {
+      toggleBtn.style.display = 'none';
+    }
+    return;
+  }
+
+  if (toggleBtn) {
+    toggleBtn.style.display = 'inline-flex';
+  }
 
   const rawName = currentUserInfo.isAdmin 
     ? 'ผู้ดูแลระบบหลัก SSKRU' 
@@ -1332,7 +1381,7 @@ function populateProfilePanel() {
     if (nameEl) nameEl.textContent = savedNick ? `${savedNick} (Admin)` : 'ผู้ดูแลระบบ (Admin)';
     if (roleEl) {
       roleEl.textContent = 'ผู้ดูแลระบบ';
-      roleEl.classList.add('admin');
+      roleEl.className = 'profile-role-badge admin';
     }
     if (accessEl) accessEl.textContent = 'จัดการอาคาร, ลากหมุด, แก้ไขข้อมูล';
     if (avatarEl) {
@@ -1344,7 +1393,7 @@ function populateProfilePanel() {
     if (nameEl) nameEl.textContent = savedNick ? `${rawName} (${savedNick})` : rawName;
     if (roleEl) {
       roleEl.textContent = 'บุคลากร / อาจารย์';
-      roleEl.classList.remove('admin');
+      roleEl.className = 'profile-role-badge';
     }
     if (accessEl) accessEl.textContent = 'ดูแผนที่และค้นหาอาคาร';
     if (avatarEl) {
@@ -1356,12 +1405,50 @@ function populateProfilePanel() {
     if (nameEl) nameEl.textContent = savedNick ? `${rawName} (${savedNick})` : rawName;
     if (roleEl) {
       roleEl.textContent = 'นักศึกษา';
-      roleEl.classList.remove('admin');
+      roleEl.className = 'profile-role-badge';
     }
     if (accessEl) accessEl.textContent = 'ดูแผนที่และค้นหาอาคาร';
     if (avatarEl) {
       avatarEl.className = 'profile-avatar-large';
       avatarEl.innerHTML = '<i class="fa-solid fa-user-graduate"></i>';
+    }
+  } else {
+    // Visitor / Guest mode
+    if (nameEl) nameEl.textContent = savedNick ? `ผู้เยี่ยมชม (${savedNick})` : 'ผู้เยี่ยมชมมหาวิทยาลัย';
+    if (roleEl) {
+      roleEl.textContent = 'บุคคลทั่วไป / ผู้เยี่ยมชม';
+      roleEl.className = 'profile-role-badge guest';
+    }
+    if (accessEl) accessEl.textContent = 'ดูแผนที่ ค้นหาอาคาร และนำทางเดินเท้า (บุคคลทั่วไป)';
+    if (avatarEl) {
+      avatarEl.className = 'profile-avatar-large guest';
+      avatarEl.innerHTML = '<i class="fa-solid fa-person-walking-luggage"></i>';
+    }
+  }
+
+  // Visitor vs Student profile section visibility
+  const editableSec = document.querySelector('.profile-editable-section');
+  const isGuest = !currentUserInfo.isAdmin && !currentUserInfo.isStaff && !currentUserInfo.isStudent;
+  if (editableSec) {
+    editableSec.style.display = isGuest ? 'none' : 'block';
+  }
+
+  const profileHeaderTitle = document.querySelector('.profile-panel-header h3');
+  if (profileHeaderTitle) {
+    profileHeaderTitle.textContent = isGuest ? 'ข้อมูลผู้เยี่ยมชม' : 'โปรไฟล์ผู้ใช้';
+  }
+
+  document.querySelectorAll('.profile-info-card.locked .locked-badge').forEach(b => {
+    b.style.display = isGuest ? 'none' : '';
+  });
+
+  // Adjust Logout / Exit button text
+  const btnLogout = document.getElementById('btn-profile-logout');
+  if (btnLogout) {
+    if (isGuest) {
+      btnLogout.innerHTML = '<i class="fa-solid fa-arrow-right-from-bracket"></i> กลับไปหน้าเข้าสู่ระบบ';
+    } else {
+      btnLogout.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> ออกจากระบบ';
     }
   }
 
@@ -1690,16 +1777,20 @@ function closeProfilePanel() {
 }
 
 async function handleLogout() {
+  const isGuest = !currentUserInfo.isAdmin && !currentUserInfo.isStaff && !currentUserInfo.isStudent;
   const ok = await showSskruConfirm({
-    title: 'ต้องการออกจากระบบใช่หรือไม่?',
-    message: 'เมื่อออกจากระบบ ท่านจะต้องเข้าสู่ระบบใหม่เพื่อเข้าถึงข้อมูลส่วนตัวและสิทธิ์การใช้งาน',
+    title: isGuest ? 'ต้องการกลับไปหน้าเข้าสู่ระบบใช่หรือไม่?' : 'ต้องการออกจากระบบใช่หรือไม่?',
+    message: isGuest 
+      ? 'เมื่อออกจากโหมดผู้เยี่ยมชม ระบบจะพาท่านกลับไปยังหน้าเข้าสู่ระบบหลัก' 
+      : 'เมื่อออกจากระบบ ท่านจะต้องเข้าสู่ระบบใหม่เพื่อเข้าถึงข้อมูลส่วนตัวและสิทธิ์การใช้งาน',
     icon: 'fa-arrow-right-from-bracket',
-    type: 'danger',
-    confirmText: 'ออกจากระบบ',
+    type: isGuest ? 'warning' : 'danger',
+    confirmText: isGuest ? 'กลับหน้าล็อกอิน' : 'ออกจากระบบ',
     cancelText: 'ยกเลิก'
   });
 
   if (ok) {
+    localStorage.removeItem('sskru_guest_mode');
     const isPhp = window.location.pathname.endsWith('.php');
     if (isPhp) {
       try {

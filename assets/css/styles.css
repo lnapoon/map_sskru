@@ -3271,6 +3271,10 @@ body.dark-theme .toast-container {
   background: linear-gradient(135deg, #f59e0b, #ea580c);
   box-shadow: 0 8px 24px rgba(245,158,11,0.3);
 }
+.profile-avatar-large.guest {
+  background: linear-gradient(135deg, #0284c7, #0ea5e9);
+  box-shadow: 0 8px 24px rgba(2, 132, 199, 0.35);
+}
 
 .profile-name {
   font-size: 18px;
@@ -3292,6 +3296,10 @@ body.dark-theme .toast-container {
 .profile-role-badge.admin {
   background: rgba(245,158,11,0.1);
   color: #d97706;
+}
+.profile-role-badge.guest {
+  background: rgba(14, 165, 233, 0.12);
+  color: #0284c7;
 }
 
 /* Profile Editable Section */

@@ -37,16 +37,32 @@ if ($action) {
         $is_admin = ($_SESSION['user_role'] ?? '') === 'admin' || isset($_SESSION['admin_token']);
         $is_student = isset($_SESSION['student_id']);
         $is_staff = ($_SESSION['user_role'] ?? '') === 'staff' || isset($_SESSION['staff_username']);
+        $is_guest = ($_SESSION['user_role'] ?? '') === 'guest' || (!$is_admin && !$is_student && !$is_staff);
 
         echo json_encode([
             'success' => true,
+            'role' => $is_admin ? 'admin' : ($is_staff ? 'staff' : ($is_student ? 'student' : 'guest')),
             'isAdmin' => $is_admin,
             'isStudent' => $is_student,
             'isStaff' => $is_staff,
+            'isGuest' => $is_guest,
             'staffUsername' => $_SESSION['staff_username'] ?? '',
             'studentId' => $_SESSION['student_id'] ?? '',
             'studentName' => $_SESSION['student_name'] ?? '',
         ]);
+        exit();
+    }
+
+    if ($action === 'guest_login') {
+        if (session_status() === PHP_SESSION_NONE) { session_start(); }
+        unset($_SESSION['student_id']);
+        unset($_SESSION['student_name']);
+        unset($_SESSION['staff_username']);
+        unset($_SESSION['staff_email']);
+        unset($_SESSION['admin_token']);
+        $_SESSION['user_role'] = 'guest';
+        log_user_activity_php('GUEST', 'ผู้เยี่ยมชมมหาวิทยาลัย', 'guest', 'guest@sskru.ac.th');
+        echo json_encode(['success' => true, 'role' => 'guest', 'redirect' => 'index.php']);
         exit();
     }
 

@@ -682,6 +682,10 @@ def auth_status_api(request):
         user_role = "student"
         student_id = request.session.get("student_id", "")
         student_name = request.session.get("student_name", "")
+    else:
+        user_role = "guest"
+
+    is_guest = not is_admin and not is_staff and not is_student
 
     return JsonResponse(
         {
@@ -690,6 +694,7 @@ def auth_status_api(request):
             "isAdmin": is_admin,
             "isStudent": is_student,
             "isStaff": is_staff,
+            "isGuest": is_guest,
             "staffUsername": staff_username,
             "studentId": student_id,
             "studentName": student_name,
@@ -698,8 +703,20 @@ def auth_status_api(request):
 
 
 def student_login_page(request):
-    """หน้าต่างล็อกอินสำหรับนักศึกษา"""
+    """หน้าต่างล็อกอินสำหรับนักศึกษา บุคลากร และบุคคลทั่วไป"""
     return render(request, "admin_panel/student_login.html")
+
+
+@csrf_exempt
+def guest_login_api(request):
+    """API สำหรับเข้าใช้งานแผนที่ในฐานะผู้เยี่ยมชม / บุคคลทั่วไป"""
+    request.session.flush()
+    request.session["user_role"] = "guest"
+    try:
+        log_user_activity("GUEST", "ผู้เยี่ยมชมมหาวิทยาลัย", "guest", "guest@sskru.ac.th")
+    except Exception:
+        pass
+    return JsonResponse({"success": True, "role": "guest", "redirect": "/"})
 
 
 @csrf_exempt
