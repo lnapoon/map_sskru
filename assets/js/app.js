@@ -1076,6 +1076,7 @@ let adminBuildings = [];
 document.addEventListener("DOMContentLoaded", async () => {
   initTheme();
   initPDPAConsent();
+  updateNavbarAuthUI();
   await fetchAuthStatus();
   initMap();
   init3dEngine();
@@ -1269,6 +1270,93 @@ function updateDrawerUserInfo() {
   if (profileBtnSpan) {
     const isGuest = !currentUserInfo.isAdmin && !currentUserInfo.isStaff && !currentUserInfo.isStudent;
     profileBtnSpan.textContent = isGuest ? 'ข้อมูลผู้เยี่ยมชม' : 'โปรไฟล์ของฉัน';
+  }
+
+  updateNavbarAuthUI();
+}
+
+function updateNavbarAuthUI() {
+  const isPhp = window.location.pathname.endsWith('.php');
+  const loginUrl = isPhp ? 'auth/login.php' : '/login/';
+  const navLogin = document.getElementById('btn-nav-login');
+  const navLoginMobile = document.getElementById('btn-nav-login-mobile');
+  const isGuest = !currentUserInfo.isAdmin && !currentUserInfo.isStaff && !currentUserInfo.isStudent;
+
+  if (navLogin) {
+    if (isGuest) {
+      navLogin.href = loginUrl;
+      navLogin.className = 'nav-btn nav-auth-btn';
+      navLogin.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> <span>เข้าสู่ระบบ</span>';
+      navLogin.title = 'เข้าสู่ระบบสำหรับนักศึกษาและบุคลากร';
+      navLogin.onclick = null;
+    } else {
+      navLogin.href = '#';
+      navLogin.className = 'nav-btn nav-auth-btn logged-in';
+      const displayName = currentUserInfo.isAdmin 
+        ? 'ผู้ดูแลระบบ' 
+        : (currentUserInfo.isStaff 
+            ? (currentUserInfo.staffUsername || 'บุคลากร') 
+            : (currentUserInfo.studentName ? currentUserInfo.studentName.split(' ')[0] : (currentUserInfo.studentId || 'นักศึกษา')));
+      const roleIcon = currentUserInfo.isAdmin ? 'fa-user-shield' : (currentUserInfo.isStaff ? 'fa-user-tie' : 'fa-user-graduate');
+      navLogin.innerHTML = `<i class="fa-solid ${roleIcon}"></i> <span>${displayName}</span>`;
+      navLogin.title = 'ดูโปรไฟล์ของคุณ';
+      navLogin.onclick = (e) => {
+        e.preventDefault();
+        openProfilePanel();
+      };
+    }
+  }
+
+  if (navLoginMobile) {
+    if (isGuest) {
+      navLoginMobile.href = loginUrl;
+      navLoginMobile.className = 'nav-icon-btn nav-auth-mobile-btn';
+      navLoginMobile.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i>';
+      navLoginMobile.title = 'เข้าสู่ระบบ (นักศึกษา / บุคลากร)';
+      navLoginMobile.onclick = null;
+    } else {
+      navLoginMobile.href = '#';
+      navLoginMobile.className = 'nav-icon-btn';
+      const roleIcon = currentUserInfo.isAdmin ? 'fa-user-shield' : (currentUserInfo.isStaff ? 'fa-user-tie' : 'fa-user-graduate');
+      navLoginMobile.innerHTML = `<i class="fa-solid ${roleIcon}"></i>`;
+      navLoginMobile.title = 'ดูโปรไฟล์ของคุณ';
+      navLoginMobile.onclick = (e) => {
+        e.preventDefault();
+        openProfilePanel();
+      };
+    }
+  }
+
+  // Also adjust Drawer logout button for guest vs logged in user
+  const drawerLogoutBtn = document.getElementById('btn-drawer-logout');
+  if (drawerLogoutBtn) {
+    const iconWrapper = drawerLogoutBtn.querySelector('.drawer-nav-icon');
+    const labelSpan = drawerLogoutBtn.querySelector('span');
+    if (isGuest) {
+      if (iconWrapper) {
+        iconWrapper.className = 'drawer-nav-icon';
+        iconWrapper.style.background = 'rgba(37,99,235,0.15)';
+        iconWrapper.style.color = '#2563eb';
+        iconWrapper.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i>';
+      }
+      if (labelSpan) labelSpan.textContent = 'เข้าสู่ระบบ (นศ./บุคลากร)';
+      drawerLogoutBtn.onclick = () => {
+        closeSideDrawer();
+        window.location.href = loginUrl;
+      };
+    } else {
+      if (iconWrapper) {
+        iconWrapper.className = 'drawer-nav-icon danger';
+        iconWrapper.style.background = '';
+        iconWrapper.style.color = '';
+        iconWrapper.innerHTML = '<i class="fa-solid fa-right-from-bracket"></i>';
+      }
+      if (labelSpan) labelSpan.textContent = 'ออกจากระบบ';
+      drawerLogoutBtn.onclick = () => {
+        closeSideDrawer();
+        handleLogout();
+      };
+    }
   }
 }
 

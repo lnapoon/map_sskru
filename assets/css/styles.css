@@ -905,6 +905,7 @@ body.dark-theme .hours-day-row.closed .hours-day-time {
   transition: all var(--transition-fast);
   white-space: nowrap;
   cursor: pointer;
+  text-decoration: none;
 }
 
 .nav-btn.primary {
@@ -935,6 +936,49 @@ body.dark-theme .hours-day-row.closed .hours-day-time {
   color: #ffffff;
   transform: translateY(-1.5px);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+}
+
+.nav-btn.nav-auth-btn {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+  text-decoration: none;
+}
+
+.nav-btn.nav-auth-btn:hover {
+  background: linear-gradient(135deg, #3b82f6, #1e40af);
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.55);
+  color: #ffffff;
+}
+
+.nav-btn.nav-auth-btn.logged-in {
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.nav-btn.nav-auth-btn.logged-in:hover {
+  background: rgba(255, 255, 255, 0.28);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-1.5px);
+  color: #ffffff;
+}
+
+.nav-icon-btn.nav-auth-mobile-btn {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 3px 10px rgba(37, 99, 235, 0.4);
+  text-decoration: none;
+}
+
+.nav-icon-btn.nav-auth-mobile-btn:hover {
+  background: linear-gradient(135deg, #3b82f6, #1e40af);
+  color: #ffffff;
+  transform: translateY(-1.5px) scale(1.05);
 }
 
 /* Mobile-only icon buttons */

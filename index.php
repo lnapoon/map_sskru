@@ -284,6 +284,10 @@ require_once __DIR__ . '/auth/config.php';
 
       <!-- Desktop Action Buttons -->
       <div class="nav-actions" id="nav-desktop-actions">
+        <a href="auth/login.php" class="nav-btn nav-auth-btn" id="btn-nav-login" aria-label="เข้าสู่ระบบ นักศึกษาและบุคลากร" title="เข้าสู่ระบบสำหรับนักศึกษาและบุคลากร">
+          <i class="fa-solid fa-right-to-bracket"></i>
+          <span>เข้าสู่ระบบ</span>
+        </a>
         <button class="nav-btn secondary" id="btn-univ-info-trigger" aria-label="ข้อมูลมหาวิทยาลัย">
           <i class="fa-solid fa-circle-info"></i> ข้อมูลติดต่อ
         </button>
@@ -294,6 +298,9 @@ require_once __DIR__ . '/auth/config.php';
 
       <!-- Mobile Actions -->
       <div class="nav-mobile-actions">
+        <a href="auth/login.php" class="nav-icon-btn nav-auth-mobile-btn" id="btn-nav-login-mobile" aria-label="เข้าสู่ระบบ" title="เข้าสู่ระบบ (นักศึกษา / บุคลากร)">
+          <i class="fa-solid fa-right-to-bracket"></i>
+        </a>
         <button class="nav-icon-btn theme-toggle-btn" id="btn-theme-toggle-mobile" aria-label="สลับโทนสี" title="สลับโทนสี (สว่าง/มืด)">
           <i class="fa-solid fa-moon"></i>
         </button>

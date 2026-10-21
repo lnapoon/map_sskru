@@ -151,6 +151,32 @@ require_once __DIR__ . '/config.php';
       font-weight: 400;
     }
 
+    .btn-back-to-map {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      color: rgba(255,255,255,0.9);
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.18);
+      padding: 6px 12px;
+      border-radius: 20px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      transition: all 0.2s ease;
+      z-index: 10;
+      border: 1px solid rgba(255,255,255,0.25);
+    }
+    .btn-back-to-map:hover {
+      background: rgba(255,255,255,0.3);
+      color: #ffffff;
+      transform: translateX(-2px);
+    }
+
     .role-switcher {
       display: flex;
       background: #f1f5f9;
@@ -479,6 +505,9 @@ require_once __DIR__ . '/config.php';
 
   <div class="login-card">
     <div class="card-header">
+      <a href="../index.php" class="btn-back-to-map" id="link-back-map" title="กลับสู่แผนที่มหาวิทยาลัย">
+        <i class="fa-solid fa-arrow-left"></i> กลับหน้าแผนที่
+      </a>
       <div class="university-badge">
         <i class="fa-solid fa-graduation-cap"></i>
       </div>
