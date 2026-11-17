@@ -15,5 +15,22 @@ db.sqlite3
 node_modules/
 npm-debug.log
 
-# System
+# System & Office temp files
 .DS_Store
+~$*
+
+# Project Docs, Blender 3D Models & Report Scripts (Local only)
+docs/
+scripts/
+*.blend
+*.blend1
+
+# Backup / Draft / Report-only Images (Keep only images/Map.png)
+images/Map_old_backup.png
+images/Map_original.png
+images/er_diagram_hd.png
+images/image*.png
+
+# Runtime OTP Tokens & Activity Logs
+data/password_resets.json
+data/user_activity_logs.json

@@ -523,9 +523,6 @@ require_once __DIR__ . '/config.php';
       <button class="role-btn" id="tab-staff" onclick="switchRole('staff')">
         <i class="fa-solid fa-user-tie"></i> บุคลากร
       </button>
-      <button class="role-btn" id="tab-guest" onclick="switchRole('guest')">
-        <i class="fa-solid fa-person-walking-luggage"></i> บุคคลทั่วไป
-      </button>
     </div>
 
     <div class="card-body">
@@ -562,13 +559,6 @@ require_once __DIR__ . '/config.php';
             <i class="fa-solid fa-key"></i> ลืมรหัสผ่าน?
           </a>
         </div>
-
-        <div class="guest-direct-entry">
-          <div class="guest-direct-divider"><span>หรือเข้าชมทั่วไป</span></div>
-          <button type="button" class="btn-guest-direct" onclick="handleGuestLogin()">
-            <i class="fa-solid fa-person-walking-luggage"></i> ผู้มาติดต่อ / บุคคลทั่วไป เข้าดูแผนที่ได้เลย
-          </button>
-        </div>
       </div>
 
       <!-- 2. STAFF LOGIN PANEL -->
@@ -604,59 +594,6 @@ require_once __DIR__ . '/config.php';
             <i class="fa-solid fa-key"></i> ลืมรหัสผ่าน?
           </a>
         </div>
-
-        <div class="guest-direct-entry">
-          <div class="guest-direct-divider"><span>หรือเข้าชมทั่วไป</span></div>
-          <button type="button" class="btn-guest-direct" onclick="handleGuestLogin()">
-            <i class="fa-solid fa-person-walking-luggage"></i> ผู้มาติดต่อ / บุคคลทั่วไป เข้าดูแผนที่ได้เลย
-          </button>
-        </div>
-      </div>
-
-      <!-- 3. GUEST / VISITOR PANEL -->
-      <div class="panel-content" id="panel-guest">
-        <div class="guest-card-box">
-          <div class="guest-card-icon">
-            <i class="fa-solid fa-map-location-dot"></i>
-          </div>
-          <h2 class="guest-card-title">เข้าชมแผนที่สำหรับบุคคลทั่วไป</h2>
-          <p class="guest-card-subtitle">
-            ยินดีต้อนรับผู้ปกครอง แขกผู้มีเกียรติ และผู้ใหญ่ที่เข้ามาติดต่อเยี่ยมชมมหาวิทยาลัยราชภัฏศรีสะเกษ
-          </p>
-
-          <div class="guest-badge-notice">
-            <i class="fa-solid fa-circle-check"></i>
-            <span>เข้าดูแผนที่และใช้งานระบบนำทางได้ทันที โดยไม่ต้องลงทะเบียนหรือกรอกรหัสผ่าน</span>
-          </div>
-
-          <div class="guest-features-grid">
-            <div class="guest-feature-item">
-              <div class="feat-icon"><i class="fa-solid fa-building-columns"></i></div>
-              <div class="feat-text">
-                <span class="feat-title">ค้นหาอาคาร & จุดสำคัญ</span>
-                <span class="feat-desc">ค้นหาตึกเรียน อาคารสำนักงาน คณะ ศูนย์บริการ และสถานที่ต่างๆ ใน มรภ.ศรีสะเกษ</span>
-              </div>
-            </div>
-            <div class="guest-feature-item">
-              <div class="feat-icon"><i class="fa-solid fa-location-crosshairs"></i></div>
-              <div class="feat-text">
-                <span class="feat-title">ระบบนำทางเดินเท้า GPS</span>
-                <span class="feat-desc">ระบุพิกัดตำแหน่งจริงและคำนวณเส้นทางเดินเท้าไปยังอาคารเป้าหมาย</span>
-              </div>
-            </div>
-            <div class="guest-feature-item">
-              <div class="feat-icon"><i class="fa-solid fa-shield-halved"></i></div>
-              <div class="feat-text">
-                <span class="feat-title">โหมดผู้เยี่ยมชม (ไม่มีข้อมูลนักศึกษา)</span>
-                <span class="feat-desc">ไม่มีข้อมูลนักศึกษาหรือประวัติส่วนบุคคลใดๆ สะดวก รวดเร็ว และเป็นส่วนตัว</span>
-              </div>
-            </div>
-          </div>
-
-          <button type="button" class="btn-primary btn-guest-start" onclick="handleGuestLogin()">
-            <i class="fa-solid fa-compass"></i> เข้าสู่แผนที่ทันที (สำหรับบุคคลทั่วไป)
-          </button>
-        </div>
       </div>
     </div>
   </div>
@@ -673,10 +610,10 @@ require_once __DIR__ . '/config.php';
       }
     }
 
-    // Check query params for tab switching (e.g. ?role=guest)
+    // Check query params for tab switching (e.g. ?role=staff)
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('role') === 'guest') {
-      switchRole('guest');
+      window.location.href = '../index.php';
     } else if (urlParams.get('role') === 'staff') {
       switchRole('staff');
     }
@@ -689,24 +626,6 @@ require_once __DIR__ . '/config.php';
       const panelEl = document.getElementById('panel-' + role);
       if (tabEl) tabEl.classList.add('active');
       if (panelEl) panelEl.classList.add('active');
-    }
-
-    async function handleGuestLogin() {
-      const isPhp = window.location.pathname.endsWith('.php');
-      const apiEndpoint = isPhp ? 'api.php?action=guest_login' : '/admin/api/auth/guest_login/';
-      try {
-        await fetch(apiEndpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({})
-        });
-      } catch (e) {
-        console.warn('Guest login session error', e);
-      }
-      localStorage.setItem('sskru_guest_mode', 'true');
-      localStorage.setItem('sskru_data_consent', 'granted');
-      localStorage.setItem('sskru_pdpa_consent', 'granted');
-      window.location.href = isPhp ? 'index.php' : '/';
     }
 
     async function handleStudentLogin(e) {
